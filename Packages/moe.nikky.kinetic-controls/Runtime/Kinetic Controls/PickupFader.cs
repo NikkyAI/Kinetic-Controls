@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using nikkyai.Base;
-using nikkyai.Kinetic_Controls.Drivers;
+using nikkyai.kineticcontrols.common;
+using nikkyai.kineticcontrols.driver;
 using Texel;
 using TMPro;
 using UdonSharp;
@@ -13,7 +13,7 @@ using VRC.SDKBase;
 
 // ReSharper disable ForCanBeConvertedToForeach
 
-namespace nikkyai.Kinetic_Controls
+namespace nikkyai.kineticcontrols
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class PickupFader : ACLBase

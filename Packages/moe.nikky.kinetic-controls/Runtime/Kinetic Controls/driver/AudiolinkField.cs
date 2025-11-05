@@ -1,4 +1,4 @@
-﻿namespace nikkyai.Kinetic_Controls.Drivers
+﻿namespace nikkyai.kineticcontrols.driver
 {
     internal enum AudiolinkField
     {

@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using VRC;
 
-namespace nikkyai.Kinetic_Controls.Drivers
+namespace nikkyai.kineticcontrols.driver
 {
     public class FloatTextDriver : FloatDriver
     {

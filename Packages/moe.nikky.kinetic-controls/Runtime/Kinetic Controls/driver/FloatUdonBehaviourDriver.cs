@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using VRC.Udon;
 
-namespace nikkyai.Kinetic_Controls.Drivers
+namespace nikkyai.kineticcontrols.driver
 {
     public class FloatUdonBehaviourDriver : FloatDriver
     {

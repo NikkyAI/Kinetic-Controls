@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using nikkyai.Base;
-using nikkyai.Kinetic_Controls.Drivers;
+using nikkyai.kineticcontrols.common;
+using nikkyai.kineticcontrols.driver;
 using Texel;
 using TMPro;
 using UdonSharp;
@@ -14,13 +14,11 @@ using VRC.Udon.Serialization.OdinSerializer;
 
 // ReSharper disable ForCanBeConvertedToForeach
 
-namespace nikkyai.Kinetic_Controls
+namespace nikkyai.kineticcontrols
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class PickupLever : ACLBase
     {
-        
-        
         [SerializeField] private Axis axis = Axis.Z;
         [SerializeField] private Vector3 forwardVector = Vector3.forward;
         [SerializeField] private Transform leverBase;

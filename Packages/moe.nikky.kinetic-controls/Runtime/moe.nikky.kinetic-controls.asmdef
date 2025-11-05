@@ -1,25 +1,25 @@
 {
-    "name": "moe.nikky.kinetic-controls",
-    "rootNamespace": "nikkyai",
-    "references": [
-        "VRC.SDK3",
-        "VRC.SDKBase",
-        "UdonSharp.Runtime",
-        "moe.nikky.core",
-        "com.texelsaur.common",
-        "com.texelsaur.misc",
-        "AudioLink",
-        "VRC.Udon",
-        "Unity.TextMeshPro",
-        "VRC.Udon.Serialization.OdinSerializer"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  "name": "moe.nikky.kinetic-controls",
+  "rootNamespace": "nikkyai",
+  "references": [
+    "VRC.SDK3",
+    "VRC.SDKBase",
+    "UdonSharp.Runtime",
+    "moe.nikky.core",
+    "com.texelsaur.common",
+    "com.texelsaur.misc",
+    "AudioLink",
+    "VRC.Udon",
+    "Unity.TextMeshPro",
+    "VRC.Udon.Serialization.OdinSerializer"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
 }
