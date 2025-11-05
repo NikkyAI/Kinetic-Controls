@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: PickupFader
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 94a74598e337c2c43a83ef5d2246cf29, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 658fa6012c9c7fc4bba3291f4c0aaaa3, type: 2}
   udonAssembly: 
   assemblyError: 
-  sourceCsScript: {fileID: 11500000, guid: 93ea7aa8f6d94b589d46b97347ddb4a8, type: 3}
+  sourceCsScript: {fileID: 11500000, guid: c73614fdea2d8074c955fdd0ccc64abf, type: 3}
   scriptVersion: 2
   compiledVersion: 2
   behaviourSyncMode: 4
   hasInteractEvent: 0
-  scriptID: -3374780722581766460
+  scriptID: -4322441080772869532
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -787,7 +787,7 @@ MonoBehaviour:
       Data: 40|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.Kinetic_Controls.Axis, Assembly-CSharp
+      Data: nikkyai.kineticcontrols.Axis, moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 
@@ -1453,7 +1453,7 @@ MonoBehaviour:
       Data: 83|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.Kinetic_Controls.Drivers.FloatDriver[], Assembly-CSharp
+      Data: nikkyai.kineticcontrols.driver.FloatDriver[], moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 

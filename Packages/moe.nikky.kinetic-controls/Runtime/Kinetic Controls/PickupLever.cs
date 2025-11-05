@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using nikkyai.kineticcontrols.common;
+using nikkyai.Kinetic_Controls.common;
 using nikkyai.kineticcontrols.driver;
 using Texel;
 using TMPro;
@@ -163,6 +163,7 @@ namespace nikkyai.kineticcontrols
         
         protected override void _Init()
         {
+            Log("Init");
             SetupValuesAndComponents();
             UpdateSmoothing();
             FindPickupTrigger();
@@ -190,13 +191,12 @@ namespace nikkyai.kineticcontrols
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupValuesAndComponents()
         {
-             _axisVector[(int)axis] = 1;
+            _axisVector = Vector3.zero;
+            _axisVector[(int)axis] = 1;
             // _updateFloatSynced = UpdateFloatSynced;
             _minValue = range.x;
             _maxValue = range.y;
             _normalizedDefault = Mathf.InverseLerp(_minValue, _maxValue, defaultValue);
-
-            _axisVector[(int)axis] = 1;
 
             // while (_minRot > 180) _minRot -= 360;
             // while (_minRot < -180) _minRot += 360;

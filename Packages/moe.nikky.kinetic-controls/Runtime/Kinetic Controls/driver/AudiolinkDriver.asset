@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: AudiolinkDriver
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: f78d82cda2e99cb458a62b329c88222b, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 81610231ef215d145ad7689bc9187c38, type: 2}
   udonAssembly: 
   assemblyError: 
-  sourceCsScript: {fileID: 11500000, guid: c1ec819b0b9846a98fbbea47124b71e8, type: 3}
+  sourceCsScript: {fileID: 11500000, guid: 16ac68964e90ec84b935756a24c1f698, type: 3}
   scriptVersion: 2
   compiledVersion: 2
   behaviourSyncMode: 4
   hasInteractEvent: 0
-  scriptID: -7729248870649108716
+  scriptID: -2744945311872420815
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -685,7 +685,7 @@ MonoBehaviour:
       Data: 35|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.Kinetic_Controls.Drivers.AudiolinkField, Assembly-CSharp
+      Data: nikkyai.kineticcontrols.driver.AudiolinkField, moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 

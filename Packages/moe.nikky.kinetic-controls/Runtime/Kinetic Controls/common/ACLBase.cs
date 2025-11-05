@@ -1,7 +1,7 @@
 ﻿using Texel;
 using VRC.SDKBase;
 
-namespace nikkyai.kineticcontrols.common
+namespace nikkyai.Kinetic_Controls.common
 {
     
     public abstract class ACLBase: LoggerBase

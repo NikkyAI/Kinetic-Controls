@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: FloatUdonDriver
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: cadc052c5326532428bddecae68ee74d, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: fe4c9fb4472e0d24dbe895c613bb37d4, type: 2}
   udonAssembly: 
   assemblyError: 
-  sourceCsScript: {fileID: 11500000, guid: 198872ae62514c8186ba012d76e6b0a1, type: 3}
+  sourceCsScript: {fileID: 11500000, guid: fa0a39884770f834f958cf1e952ac03f, type: 3}
   scriptVersion: 2
   compiledVersion: 2
   behaviourSyncMode: 4
   hasInteractEvent: 0
-  scriptID: 6067279463892822067
+  scriptID: 7551876616618659890
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 

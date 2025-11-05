@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: FloatSmoothingRateDriver
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: b2a1289a658092f46b3f952e67707e3e, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 794bebac10d146547b972df0b1cbad16, type: 2}
   udonAssembly: 
   assemblyError: 
-  sourceCsScript: {fileID: 11500000, guid: 863f5014901f469395e24aedbc1f995c, type: 3}
+  sourceCsScript: {fileID: 11500000, guid: 0a87049f93f0f7d478fd0084f8019f84, type: 3}
   scriptVersion: 2
   compiledVersion: 2
   behaviourSyncMode: 4
   hasInteractEvent: 0
-  scriptID: 5512970244746800003
+  scriptID: 1143614389907624021
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -685,7 +685,7 @@ MonoBehaviour:
       Data: 35|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.Kinetic_Controls.PickupFader[], Assembly-CSharp
+      Data: nikkyai.kineticcontrols.PickupFader[], moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 
@@ -760,7 +760,7 @@ MonoBehaviour:
       Data: 41|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.Kinetic_Controls.PickupLever[], Assembly-CSharp
+      Data: nikkyai.kineticcontrols.PickupLever[], moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 
