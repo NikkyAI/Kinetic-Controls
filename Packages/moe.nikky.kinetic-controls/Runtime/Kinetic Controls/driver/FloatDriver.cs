@@ -1,7 +1,7 @@
 ﻿using nikkyai.Kinetic_Controls.common;
 using UdonSharp;
 
-namespace nikkyai.kineticcontrols.driver
+namespace nikkyai.Kinetic_Controls.driver
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public abstract class FloatDriver: LoggerBase

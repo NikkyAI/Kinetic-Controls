@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using static VRC.SDKBase.VRCShader;
 
-namespace nikkyai.kineticcontrols.driver
+namespace nikkyai.Kinetic_Controls.driver
 {
     public class AudiolinkDriver: FloatDriver
     {

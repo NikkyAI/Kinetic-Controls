@@ -20,7 +20,7 @@ MonoBehaviour:
   compiledVersion: 2
   behaviourSyncMode: 4
   hasInteractEvent: 0
-  scriptID: -2744945311872420815
+  scriptID: 3822559234590911357
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -685,7 +685,7 @@ MonoBehaviour:
       Data: 35|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.kineticcontrols.driver.AudiolinkField, moe.nikky.kinetic-controls
+      Data: nikkyai.Kinetic_Controls.driver.AudiolinkField, moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 

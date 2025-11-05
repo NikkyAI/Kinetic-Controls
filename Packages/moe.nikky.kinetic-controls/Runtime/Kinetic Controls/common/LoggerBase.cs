@@ -16,7 +16,7 @@ namespace nikkyai.Kinetic_Controls.common
 
         protected void LogError(string message)
         {
-            Debug.LogError($"[{LogPrefix}] {message}");
+            Debug.LogError($"[{LogPrefix} {name}] {message}");
 // #if UNITY_EDITOR && !COMPILER_UDONSHARP
 //             Debug.LogError($"[{LogPrefix}] {message}", gameObject);
 // #else
@@ -33,7 +33,7 @@ namespace nikkyai.Kinetic_Controls.common
 
         protected void LogWarning(string message)
         {
-            Debug.LogWarning($"[{LogPrefix}] {message}");
+            Debug.LogWarning($"[{LogPrefix} {name}] {message}");
 // #if UNITY_EDITOR && !COMPILER_UDONSHARP
 //             Debug.LogWarning($"[{LogPrefix}] {message}", gameObject);
 // #else
@@ -50,7 +50,7 @@ namespace nikkyai.Kinetic_Controls.common
 
         protected void Log(string message)
         {
-            Debug.Log($"[{LogPrefix}] {message}");
+            Debug.Log($"[{LogPrefix} {name}] {message}");
 // #if UNITY_EDITOR && !COMPILER_UDONSHARP
 //             Debug.Log($"[{LogPrefix}] {message}", gameObject);
 // #else

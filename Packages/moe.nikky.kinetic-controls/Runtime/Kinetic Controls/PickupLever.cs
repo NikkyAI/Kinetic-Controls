@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using nikkyai.Kinetic_Controls;
 using nikkyai.Kinetic_Controls.common;
+using nikkyai.Kinetic_Controls.driver;
 using nikkyai.kineticcontrols.driver;
 using Texel;
 using TMPro;
@@ -118,7 +120,7 @@ namespace nikkyai.kineticcontrols
         [SerializeField]
         private DebugLog debugLog;
 
-        protected override string LogPrefix => nameof(PickupFader);
+        protected override string LogPrefix => nameof(PickupLever);
 
         protected override DebugLog DebugLog
         {
@@ -185,26 +187,44 @@ namespace nikkyai.kineticcontrols
             );
             UpdatePickupPosition();
 
+            Log("Init Done");
             // pickup.transform.SetPositionAndRotation(pickupReset.position, pickupReset.rotation);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupValuesAndComponents()
         {
+            Log("SetupValuesAndComponents");
             _axisVector = Vector3.zero;
             _axisVector[(int)axis] = 1;
             // _updateFloatSynced = UpdateFloatSynced;
             _minValue = range.x;
             _maxValue = range.y;
             _normalizedDefault = Mathf.InverseLerp(_minValue, _maxValue, defaultValue);
+            Log($"_normalizedDefault: {_normalizedDefault}");
 
             // while (_minRot > 180) _minRot -= 360;
             // while (_minRot < -180) _minRot += 360;
             // while (_maxRot > 180) _maxRot -= 360;
             // while (_maxRot < -180) _maxRot += 360;
 
-            minLimit.localRotation = Quaternion.AngleAxis(minRot, _axisVector);
-            maxLimit.localRotation = Quaternion.AngleAxis(maxRot, _axisVector);
+            if (minLimit)
+            {
+                minLimit.localRotation = Quaternion.AngleAxis(minRot, _axisVector);
+            }
+            else
+            {
+                LogError("minLimit is not set");
+            }
+
+            if (maxLimit)
+            {
+                maxLimit.localRotation = Quaternion.AngleAxis(maxRot, _axisVector);
+            }
+            else
+            {
+                LogError("maxLimit is not set");
+            }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             minLimit.transform.MarkDirty();
@@ -215,10 +235,15 @@ namespace nikkyai.kineticcontrols
             smoothingTargetNormalized = _normalizedDefault;
             enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
             
-            //TODO: move into running in editor
-            _floatDrivers = GetComponents<FloatDriver>();
-            Log($"found {_floatDrivers.Length} drivers");
+            //TODO: move into running in editor ?
+            Log("Searching for float drivers");
+            _floatDrivers = gameObject.GetComponents<FloatDriver>();
+            if (_floatDrivers != null)
+            {
+                Log($"found {_floatDrivers.Length} drivers");
+            }
 
+            Log("Searching for leverBase");
             if (leverBase == null)
             {
                 leverBase = this.transform;
@@ -230,6 +255,7 @@ namespace nikkyai.kineticcontrols
         {
             if (pickupTrigger == null)
             {
+                LogWarning("PickupTrigger not found");
                 pickupTrigger = gameObject.GetComponent<PickupTrigger>();
             }
         }
@@ -238,6 +264,7 @@ namespace nikkyai.kineticcontrols
         {
             if (pickupTrigger)
             {
+                Log("SetupPickupTrigger");
                 pickupTrigger.accessControl = accessControl;
                 pickupTrigger.enforceACL = UseACL;
                 pickupTrigger._Register(PickupTrigger.EVENT_PICKUP, this, nameof(_OnPickup));
@@ -254,6 +281,7 @@ namespace nikkyai.kineticcontrols
         {
             if (pickupTrigger)
             {
+                Log("SetupPickup");
                 if (pickup == null)
                 {
                     pickup = pickupTrigger.GetComponent<VRC_Pickup>();

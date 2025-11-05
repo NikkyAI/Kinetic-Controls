@@ -1,4 +1,4 @@
-﻿namespace nikkyai.kineticcontrols
+﻿namespace nikkyai.Kinetic_Controls
 {
     public enum Axis
     {

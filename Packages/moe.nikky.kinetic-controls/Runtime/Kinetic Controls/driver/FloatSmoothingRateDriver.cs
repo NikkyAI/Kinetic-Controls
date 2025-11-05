@@ -1,7 +1,8 @@
-﻿using UnityEngine;
+﻿using nikkyai.kineticcontrols;
+using UnityEngine;
 using VRC;
 
-namespace nikkyai.kineticcontrols.driver
+namespace nikkyai.Kinetic_Controls.driver
 {
     public class FloatSmoothingRateDriver : FloatDriver
     {

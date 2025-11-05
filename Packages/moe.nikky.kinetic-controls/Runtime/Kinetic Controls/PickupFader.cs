@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using nikkyai.Kinetic_Controls;
 using nikkyai.Kinetic_Controls.common;
+using nikkyai.Kinetic_Controls.driver;
 using nikkyai.kineticcontrols.driver;
 using Texel;
 using TMPro;

@@ -787,7 +787,7 @@ MonoBehaviour:
       Data: 40|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.kineticcontrols.Axis, moe.nikky.kinetic-controls
+      Data: nikkyai.Kinetic_Controls.Axis, moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 
@@ -1453,7 +1453,7 @@ MonoBehaviour:
       Data: 83|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.kineticcontrols.driver.FloatDriver[], moe.nikky.kinetic-controls
+      Data: nikkyai.Kinetic_Controls.driver.FloatDriver[], moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 
