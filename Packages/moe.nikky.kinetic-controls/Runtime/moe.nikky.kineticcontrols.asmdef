@@ -1,6 +1,5 @@
 {
-  "name": "moe.nikky.kinetic-controls",
-  "rootNamespace": "nikkyai",
+  "name": "moe.nikky.kineticcontrols",
   "references": [
     "VRC.SDK3",
     "VRC.SDKBase",

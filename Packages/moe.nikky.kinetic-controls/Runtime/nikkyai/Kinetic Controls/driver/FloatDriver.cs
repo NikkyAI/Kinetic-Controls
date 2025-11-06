@@ -1,4 +1,4 @@
-﻿using nikkyai.Kinetic_Controls.common;
+﻿using nikkyai.common;
 using UdonSharp;
 
 namespace nikkyai.Kinetic_Controls.driver

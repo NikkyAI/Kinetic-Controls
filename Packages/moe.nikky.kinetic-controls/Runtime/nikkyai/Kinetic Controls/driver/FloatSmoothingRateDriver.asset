@@ -685,7 +685,7 @@ MonoBehaviour:
       Data: 35|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.kineticcontrols.PickupFader[], moe.nikky.kinetic-controls
+      Data: nikkyai.Kinetic_Controls.PickupFader[], moe.nikky.kineticcontrols
     - Name: 
       Entry: 8
       Data: 
@@ -760,7 +760,7 @@ MonoBehaviour:
       Data: 41|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.kineticcontrols.PickupLever[], moe.nikky.kinetic-controls
+      Data: nikkyai.Kinetic_Controls.PickupLever[], moe.nikky.kineticcontrols
     - Name: 
       Entry: 8
       Data: 
