@@ -1,0 +1,24 @@
+{
+  "name": "moe.nikky.kinetic-controls",
+  "rootNamespace": "nikkyai",
+  "references": [
+    "VRC.SDK3",
+    "VRC.SDKBase",
+    "VRC.Udon",
+    "UdonSharp.Runtime",
+    "moe.nikky.core",
+    "com.texelsaur.common",
+    "com.texelsaur.misc",
+    "Unity.TextMeshPro",
+    "VRC.Udon.Serialization.OdinSerializer"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
