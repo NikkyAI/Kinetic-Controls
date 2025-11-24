@@ -315,6 +315,7 @@ namespace nikkyai.Kinetic_Controls
         {
             _isHeldLocally = true;
             _syncedIsBeingManipulated = true;
+            Log($"Desktop Pickup with target at {_syncedValueNormalized}");
             RequestSerialization();
         }
 
@@ -323,6 +324,7 @@ namespace nikkyai.Kinetic_Controls
         {
             _isHeldLocally = false;
             _syncedIsBeingManipulated = false;
+            Log($"Desktop Drop with target at {_syncedValueNormalized}");
             RequestSerialization();
         }
 
@@ -413,6 +415,7 @@ namespace nikkyai.Kinetic_Controls
             }
             else
             {
+                Log($"VR Drop with target at {_syncedValueNormalized}");
                 _syncedIsBeingManipulated = false;
                 RequestSerialization();
             }
@@ -433,6 +436,7 @@ namespace nikkyai.Kinetic_Controls
 
                 if (!_inLeftTrigger && fingerTracker.leftGrabbed)
                 {
+                    Log($"VR Pickup with target at {_syncedValueNormalized}");
                     Log("starting FollowCollider");
                     this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
                 }
@@ -452,6 +456,7 @@ namespace nikkyai.Kinetic_Controls
 
                 if (!_inRightTrigger && fingerTracker.rightGrabbed)
                 {
+                    Log($"VR Pickup with target at {_syncedValueNormalized}");
                     Log("starting FollowCollider");
                     this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
                 }
