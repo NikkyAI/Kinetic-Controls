@@ -791,6 +791,8 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 6245326093468712891}
   touchFader: {fileID: 769544397795035225}
+  leftHandCollider: {fileID: 0}
+  rightHandCollider: {fileID: 0}
   enforceACL: 1
   accessControl: {fileID: 0}
   debugLog: {fileID: 1576189593384011048}
@@ -979,10 +981,10 @@ PrefabInstance:
 
 
 
-        [  134.809] [TouchFader Touch Fader]
+        [   63.156] [TouchFader Touch Fader]
         found 1 drivers for value
 
-        [  134.809] [TouchFader Touch Fader] found
+        [   63.156] [TouchFader Touch Fader] found
         0 drivers for target'
       objectReference: {fileID: 0}
     - target: {fileID: 7438426916000396222, guid: 1ac75656e384b784585721b4a65133ad, type: 3}

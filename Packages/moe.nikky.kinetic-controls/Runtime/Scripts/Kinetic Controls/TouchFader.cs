@@ -18,7 +18,9 @@ namespace nikkyai.Kinetic_Controls
     public class TouchFader : BaseSmoothedBehaviour
     {
         [Header("Touch Fader")] // header
-        [SerializeField] private Axis axis = Axis.Y;
+        [SerializeField]
+        private Axis axis = Axis.Y;
+
         [SerializeField] private Vector2 range = new Vector2(0, 1);
         [SerializeField] private float defaultValue = 0.25f;
         private float _normalizedDefault;
@@ -123,8 +125,8 @@ namespace nikkyai.Kinetic_Controls
         private bool _isHeldLocally;
         private bool _isDesktop = false;
 
-        private GameObject _leftHandCollider;
-        private GameObject _rightHandCollider;
+        private Collider _leftHandCollider;
+        private Collider _rightHandCollider;
         private int _leftHandColliderId;
         private int _rightHandColliderId;
         private bool _inLeftTrigger;
@@ -193,16 +195,6 @@ namespace nikkyai.Kinetic_Controls
             {
                 _leftHandCollider = fingerTracker.leftHandCollider;
                 _rightHandCollider = fingerTracker.rightHandCollider;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetupFaderHandle()
-        {
-            if (faderHandle)
-            {
-                faderHandle.touchFader = this;
-
                 if (_leftHandCollider)
                 {
                     _leftHandColliderId = _leftHandCollider.GetInstanceID();
@@ -212,6 +204,18 @@ namespace nikkyai.Kinetic_Controls
                 {
                     _rightHandColliderId = _rightHandCollider.GetInstanceID();
                 }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetupFaderHandle()
+        {
+            if (faderHandle)
+            {
+                faderHandle.touchFader = this;
+                faderHandle.leftHandCollider = _leftHandCollider;
+                faderHandle.rightHandCollider = _rightHandCollider;
+
                 // _interactCallback = faderHandle.GetComponent<InteractCallback>();
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
                 faderHandle.EditorACL = accessControl;
@@ -288,7 +292,6 @@ namespace nikkyai.Kinetic_Controls
 
         protected override void AccessChanged()
         {
-            
         }
 
 
@@ -363,6 +366,8 @@ namespace nikkyai.Kinetic_Controls
             // }
         }
 
+        private bool _isColliding = false;
+
         public void _OnFollowCollider()
         {
             if (!isAuthorized) return;
@@ -386,6 +391,7 @@ namespace nikkyai.Kinetic_Controls
 
             // if ((fingerContactTracker.rightGrabbed && _inRightTrigger) || (fingerContactTracker.leftGrabbed && _inLeftTrigger))
             if (_inRightTrigger || _inLeftTrigger)
+            //if(_isColliding)
             {
                 _syncedIsBeingManipulated = true;
                 Transform handData = _inRightTrigger ? _rightHandCollider.transform : _leftHandCollider.transform;
@@ -413,7 +419,7 @@ namespace nikkyai.Kinetic_Controls
                 OnDeserialization();
                 // }
             }
-            else
+            else if(_syncedIsBeingManipulated)
             {
                 Log($"VR Drop with target at {_syncedValueNormalized}");
                 _syncedIsBeingManipulated = false;
@@ -421,7 +427,23 @@ namespace nikkyai.Kinetic_Controls
             }
         }
 
-        // [NonSerialized] private Collider other;
+        public void _OnCollisionStart()
+        {
+            TakeOwnership();
+            _isColliding = true;
+            if (!_isColliding)
+            {
+                Log($"VR Pickup with target at {_syncedValueNormalized}");
+                Log("starting FollowCollider");
+                this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
+            }
+        }
+
+        public void _OnCollisionEnd()
+        {
+            _isColliding = false;
+        }
+        
         public void _OnTriggerEnter(int other)
         {
             if (!isAuthorized) return;
@@ -433,36 +455,36 @@ namespace nikkyai.Kinetic_Controls
                 {
                     Log($"Left Trigger Enter");
                 }
-
+        
                 if (!_inLeftTrigger && fingerTracker.leftGrabbed)
                 {
                     Log($"VR Pickup with target at {_syncedValueNormalized}");
                     Log("starting FollowCollider");
                     this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
                 }
-
+        
                 TakeOwnership();
-
+        
                 _inLeftTrigger = true;
                 _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
             }
-
+        
             if (other == _rightHandColliderId)
             {
                 if (!_inRightTrigger)
                 {
                     Log($"Right Trigger Enter");
                 }
-
+        
                 if (!_inRightTrigger && fingerTracker.rightGrabbed)
                 {
                     Log($"VR Pickup with target at {_syncedValueNormalized}");
                     Log("starting FollowCollider");
                     this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
                 }
-
+        
                 TakeOwnership();
-
+        
                 _inRightTrigger = true;
                 _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
             }
@@ -474,25 +496,25 @@ namespace nikkyai.Kinetic_Controls
             {
                 return;
             }
-
+        
             if (other == _leftHandColliderId)
             {
                 if (_inLeftTrigger)
                 {
                     Log($"Left Trigger Exit");
                 }
-
+        
                 _inLeftTrigger = false;
                 _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
             }
-
+        
             if (other == _rightHandColliderId)
             {
                 if (_inRightTrigger)
                 {
                     Log($"Right Trigger Exit");
                 }
-
+        
                 _inRightTrigger = false;
                 _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
             }

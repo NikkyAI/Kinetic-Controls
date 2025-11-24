@@ -12,7 +12,7 @@ namespace nikkyai.Kinetic_Controls.driver
     {
         [Header("External Behaviours")] // header
         [SerializeField]
-        private BaseSmoothedBehaviour[] smoothedBehaviours;
+        private BaseSmoothedBehaviour[] smoothedBehaviours = {};
 
         protected override string LogPrefix => nameof(IntSmoothingFramesDriver);
 
@@ -31,11 +31,14 @@ namespace nikkyai.Kinetic_Controls.driver
 
             foreach (var behaviour in smoothedBehaviours)
             {
-                behaviour.SmoothingFrames = value;
+                if (behaviour)
+                {
+                    behaviour.SmoothingFrames = value;
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-                behaviour.MarkDirty();
+                    behaviour.MarkDirty();
 #endif
+                }
             }
         }
 

@@ -12,8 +12,8 @@ namespace nikkyai.Kinetic_Controls
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class FingerContactTracker : LoggerBase
     {
-        [SerializeField] public GameObject leftHandCollider;
-        [SerializeField] public GameObject rightHandCollider;
+        [SerializeField] public Collider leftHandCollider;
+        [SerializeField] public Collider rightHandCollider;
 
         #region Debug
 

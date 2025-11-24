@@ -12,6 +12,8 @@ namespace nikkyai.Kinetic_Controls
     {
         [SerializeField] internal TouchFader touchFader;
 
+        public Collider leftHandCollider;
+        public Collider rightHandCollider;
         #region ACL
         [Header("Access Control")] // header
         public bool enforceACL;
@@ -44,14 +46,13 @@ namespace nikkyai.Kinetic_Controls
             get => debugLog;
             set => debugLog = value;
         }
-        protected override string LogPrefix => nameof(InteractCallback);
+        protected override string LogPrefix => nameof(TouchFaderHandle);
 
         #endregion
 
-        // public const int EVENT_INTERACT = 0;
-        // public const int EVENT_RELEASE = 1;
-        // const int EVENT_COUNT = 2;
-        // protected override int EventCount => EVENT_COUNT;
+        private VRCPlayerApi _localPlayer;
+        private bool _inLeftTrigger;
+        private bool _inRightTrigger;
 
         void Start()
         {
@@ -61,7 +62,8 @@ namespace nikkyai.Kinetic_Controls
         private bool _isInVR;
         protected override void _Init()
         {
-            _isInVR = Networking.LocalPlayer.IsUserInVR();
+            _localPlayer = Networking.LocalPlayer;
+            _isInVR = _localPlayer.IsUserInVR();
             DisableInteractive = _isInVR;
         }
 
@@ -92,13 +94,49 @@ namespace nikkyai.Kinetic_Controls
         {
             if (!isAuthorized) return;
             touchFader._OnTriggerEnter(other.GetInstanceID());
+            // if (other == leftHandCollider && !_inLeftTrigger &&!_inRightTrigger)
+            // {
+            //     Log($"Left Trigger Enter");
+            //     _inLeftTrigger = true;
+            //     _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
+            //                                           
+            //     touchFader._OnCollisionStart();
+            //
+            //     // TakeOwnership();
+            // }
+            //
+            // if (other == rightHandCollider && !_inRightTrigger&&!_inRightTrigger)
+            // {
+            //     Log($"Right Trigger Enter");
+            //     _inRightTrigger = true;
+            //     _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
+            //                                            
+            //     touchFader._OnCollisionStart();
+            //         
+            //     // TakeOwnership();
+            // }
         }
 
         public void OnTriggerExit(Collider other)
         {
             if (!isAuthorized) return;
-            // touchFader.SetProgramVariable("other", other);
             touchFader._OnTriggerExit(other.GetInstanceID());
+            
+            // if (other == leftHandCollider && _inLeftTrigger)
+            // {
+            //     Log($"Left Trigger Exit");
+            //     _inLeftTrigger = false;
+            //     _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
+            //     touchFader._OnCollisionEnd();
+            // }
+            //
+            // if (other == rightHandCollider && _inRightTrigger)
+            // {
+            //     Log($"Right Trigger Exit");
+            //     _inRightTrigger = false;
+            //     _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
+            //     touchFader._OnCollisionEnd();
+            // }
         }
     }
 }

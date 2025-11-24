@@ -297,6 +297,7 @@ namespace nikkyai.Kinetic_Controls
             if (_pickup == null)
             {
                 _pickup = gameObject.GetComponent<VRC_Pickup>();
+                _pickup.pickupable = false;
             }
         }
 
