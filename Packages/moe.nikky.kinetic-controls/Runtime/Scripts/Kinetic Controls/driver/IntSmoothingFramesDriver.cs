@@ -1,27 +1,29 @@
 ﻿using nikkyai.driver;
+using nikkyai.Kinetic_Controls;
+using UdonSharp;
 using UnityEngine;
-using UnityEngine.Serialization;
 using VRC;
+using VRC.SDKBase;
+using VRC.Udon;
 
 namespace nikkyai.Kinetic_Controls.driver
 {
-    public class FloatSmoothingRateDriver : FloatDriver
+    public class IntSmoothingFramesDriver : IntDriver
     {
         [Header("External Behaviours")] // header
-        [FormerlySerializedAs("faders")]
         [SerializeField]
         private BaseSmoothedBehaviour[] smoothedBehaviours;
 
-        protected override string LogPrefix => nameof(FloatSmoothingRateDriver);
+        protected override string LogPrefix => nameof(IntSmoothingFramesDriver);
 
         void Start()
         {
             _EnsureInit();
         }
 
-        public override void UpdateFloat(float value)
+        public override void UpdateInt(int value)
         {
-            if (value <= 0f)
+            if (value <= 0)
             {
                 LogError("value must be greater than 0");
                 return;
@@ -29,7 +31,7 @@ namespace nikkyai.Kinetic_Controls.driver
 
             foreach (var behaviour in smoothedBehaviours)
             {
-                behaviour.SmoothingRate = value;
+                behaviour.SmoothingFrames = value;
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
                 behaviour.MarkDirty();
@@ -38,9 +40,9 @@ namespace nikkyai.Kinetic_Controls.driver
         }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        public override void ApplyFloatValue(float value)
+        public override void ApplyIntValue(int value)
         {
-            UpdateFloat(value);
+            UpdateInt(value);
         }
 #endif
     }

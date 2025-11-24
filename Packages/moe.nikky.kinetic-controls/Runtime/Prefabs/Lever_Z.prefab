@@ -145,6 +145,9 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 8855385372993896744}
+  enableValueSmoothing: 1
+  smoothingUpdateInterval: 3
+  smoothingRate: 0.25
   axis: 2
   leverBase: {fileID: 4373999525551495842}
   range: {x: 0, y: 1}
@@ -157,9 +160,6 @@ MonoBehaviour:
   maxLimit: {fileID: 5107710530157984576}
   valueIndicator: {fileID: 8171598854047766341}
   targetIndicator: {fileID: 8380242596494632304}
-  enableValueSmoothing: 1
-  smoothingUpdateInterval: 3
-  smoothingRate: 0.25
   enforceACL: 1
   accessControl: {fileID: 0}
   debugLog: {fileID: 0}
@@ -687,6 +687,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4565033908892709849}
+  - {fileID: 1844089746383592010}
   - {fileID: 5559173164261784601}
   m_Father: {fileID: 4373999525551495842}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
@@ -748,13 +749,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7363400706414455313}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0.000000029802315, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0.000000029802322, w: 1}
+  m_LocalPosition: {x: 0.19679995, y: 0, z: 0}
+  m_LocalScale: {x: 0.05, y: 0.05, z: 0.05}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5510319089377705644}
-  m_Father: {fileID: 4565033908892709849}
+  m_Father: {fileID: 8380242596494632304}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &9050955033000263462
 MeshFilter:
@@ -866,8 +867,7 @@ Transform:
   m_LocalPosition: {x: 0.1968, y: -0, z: 0}
   m_LocalScale: {x: 0.05, y: 0.05, z: 0.05}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1844089746383592010}
+  m_Children: []
   m_Father: {fileID: 8380242596494632304}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8820493717159027218

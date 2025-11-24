@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using nikkyai.driver;
-using nikkyai.toggle.common;
+using nikkyai.ArrayExtensions;
 using Texel;
 using TMPro;
 using UdonSharp;
@@ -17,9 +17,12 @@ using VRC.Udon.Serialization.OdinSerializer;
 namespace nikkyai.Kinetic_Controls
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class PickupLever : ACLBase
+    public class PickupLever : BaseSmoothedBehaviour
     {
-        [SerializeField] private Axis axis = Axis.Z;
+        [Header("Pickup Lever")] // header
+        [SerializeField]
+        private Axis axis = Axis.Z;
+
         private Vector3 _forwardVector = Vector3.forward;
         [SerializeField] private Transform leverBase;
 
@@ -34,10 +37,15 @@ namespace nikkyai.Kinetic_Controls
         [Range(-180, 180), SerializeField, PreviouslySerializedAs("_maxRot")]
         private float maxRot = 45;
 
+        protected override float MinPosOrRot => minRot;
+        protected override float MaxPosOrRot => maxRot;
+
         private float _normalizedDefault;
         [SerializeField] private PickupTrigger pickupTrigger;
 
-        [SerializeField] private Transform pickupReset;
+        [Tooltip("should be the same as targetIndicator or a child")] //
+        [SerializeField]
+        private Transform pickupReset;
 
         private Vector3 _axisVector = Vector3.zero;
 
@@ -61,49 +69,11 @@ namespace nikkyai.Kinetic_Controls
          SerializeField]
         private Transform targetIndicator;
 
-        private FloatDriver[] _floatDrivers = { };
-        private FloatDriver[] _targetFloatDrivers = { };
-        private FloatDriver[] _valueFloatDrivers = { };
-        //TODO: find at buildtime and update
-
-        // [SerializeField] private bool syncPickup = true;
         private Rigidbody _rigidbody;
         private bool _pickupHasObjectSync = false;
 
-
-        [Header("Smoothing")] // header
-        [Tooltip("smoothes out value updates over time, may impact CPU frametimes"),
-         SerializeField]
-        private bool enableValueSmoothing = true;
-
-        public bool ValueSmoothing
-        {
-            get => enableValueSmoothing;
-            set
-            {
-                enableValueSmoothing = value;
-                UpdateSmoothing();
-            }
-        }
-
-        [Tooltip("amount of frames to skip when approaching target value," +
-                 "higher number == less load, but more choppy smoothing"),
-         SerializeField]
-        private int smoothingUpdateInterval = 3;
-
-
-        [Tooltip("fraction of the distance covered within roughly 1s"),
-         SerializeField]
-        private float smoothingRate = 0.5f;
-
-        public float SmoothingRate
-        {
-            get => smoothingRate;
-            set { smoothingRate = value; }
-        }
-
         #region ACL
-        
+
         [Header("Access Control")] // header
         [SerializeField]
         private bool enforceACL = true;
@@ -126,7 +96,7 @@ namespace nikkyai.Kinetic_Controls
         #endregion
 
         #region Debug
-        
+
         [Header("Debug")] // header
         [SerializeField]
         private DebugLog debugLog;
@@ -146,38 +116,34 @@ namespace nikkyai.Kinetic_Controls
         // IMPORTANT, DO NOT DELETE
         private float _syncedValueNormalized;
 
-        [UdonSynced] private bool _syncedIsMoving = false;
-        
+        [UdonSynced] // IMPORTANT, DO NOT DELETE
+        private bool _syncedIsBeingManipulated = false;
+
+        protected override bool TargetIsBeingManipulated
+        {
+            get => _syncedIsBeingManipulated;
+            set => _syncedIsBeingManipulated = value;
+        }
+
         private float _lastSyncedValueNormalized = 0;
 
         // internal values
 
         private float _minValue, _maxValue;
-        private VRC_Pickup pickup;
-        private Rigidbody pickupRigidBody;
+        protected override float MinValue => _minValue;
+        protected override float MaxValue => _maxValue;
+
+        private VRC_Pickup _pickup;
+        private Rigidbody _pickupRigidBody;
         private VRCPlayerApi _localPlayer;
         private float _lastValue;
-        private bool isHeldLocally;
-
-
-        // value smoothing
-
-        #region value smoothing
-
-        private float smoothingTargetNormalized;
-        private float smoothedCurrentNormalized;
-        private const float epsilon = 0.005f;
-        private bool valueInitialized = false;
-        private bool isSmoothing = false;
-        private float lastFrameTime = 0;
-
-        #endregion
+        private bool _isHeldLocally;
 
         private void Start()
         {
             _EnsureInit();
         }
-        
+
         protected override void _Init()
         {
             Log("Init");
@@ -221,7 +187,7 @@ namespace nikkyai.Kinetic_Controls
                 _forwardVector = Vector3.right;
             }
             else if (axis == Axis.Z)
-            { 
+            {
                 _forwardVector = Vector3.right;
             }
             else
@@ -257,28 +223,31 @@ namespace nikkyai.Kinetic_Controls
             minLimit.transform.MarkDirty();
             maxLimit.transform.MarkDirty();
 #endif
-            
+
             smoothedCurrentNormalized = _normalizedDefault;
             smoothingTargetNormalized = _normalizedDefault;
-            enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
-            
+            // enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
+
             //TODO: move into running in editor ?
             Log("Searching for float drivers");
-            _floatDrivers = gameObject.GetComponents<FloatDriver>();
-            _valueFloatDrivers = valueIndicator.GetComponents<FloatDriver>();
-            _targetFloatDrivers = targetIndicator.GetComponents<FloatDriver>();
-            if (_floatDrivers != null)
-            {
-                Log($"found {_floatDrivers.Length} drivers in fader");
-            }
+            _valueFloatDrivers = valueIndicator.GetComponents<FloatDriver>()
+                .AddRange(
+                    valueIndicator.GetComponentsInChildren<FloatDriver>()
+                );
+            _targetFloatDrivers = targetIndicator.GetComponents<FloatDriver>()
+                .AddRange(
+                    targetIndicator.GetComponentsInChildren<FloatDriver>()
+                );
             if (_valueFloatDrivers != null)
             {
                 Log($"found {_valueFloatDrivers.Length} drivers for value");
             }
+
             if (_targetFloatDrivers != null)
             {
                 Log($"found {_targetFloatDrivers.Length} drivers for target");
             }
+
             Log("Searching for leverBase");
             if (leverBase == null)
             {
@@ -295,6 +264,7 @@ namespace nikkyai.Kinetic_Controls
                 pickupTrigger = gameObject.GetComponent<PickupTrigger>();
             }
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupPickupTrigger()
         {
@@ -318,28 +288,28 @@ namespace nikkyai.Kinetic_Controls
             if (pickupTrigger)
             {
                 Log("SetupPickup");
-                if (pickup == null)
+                if (_pickup == null)
                 {
-                    pickup = pickupTrigger.GetComponent<VRC_Pickup>();
+                    _pickup = pickupTrigger.GetComponent<VRC_Pickup>();
                 }
             }
 
-            if (pickup == null)
+            if (_pickup == null)
             {
-                pickup = gameObject.GetComponent<VRC_Pickup>();
+                _pickup = gameObject.GetComponent<VRC_Pickup>();
             }
-
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupPickupRigidBody()
         {
-            if (pickup)
+            if (_pickup)
             {
-                pickupRigidBody = pickup.GetComponent<Rigidbody>();
-                pickupRigidBody.useGravity = false;
-                pickupRigidBody.isKinematic = false;
-                _pickupHasObjectSync = pickup.GetComponent<VRCObjectSync>() != null;
+                _pickupRigidBody = _pickup.GetComponent<Rigidbody>();
+                _pickupRigidBody.useGravity = false;
+                _pickupRigidBody.isKinematic = false;
+                _pickupHasObjectSync = _pickup.GetComponent<VRCObjectSync>() != null ||
+                                       _pickup.GetComponent("MMMaellon.SmartObjectSync") != null;
             }
             else
             {
@@ -362,12 +332,12 @@ namespace nikkyai.Kinetic_Controls
 
         protected override void AccessChanged()
         {
-            pickup.pickupable = isAuthorized;
+            _pickup.pickupable = isAuthorized;
         }
 
         public void _OnPickup()
         {
-            if (isHeldLocally)
+            if (_isHeldLocally)
             {
                 Log("already being adjusted");
                 return;
@@ -375,8 +345,8 @@ namespace nikkyai.Kinetic_Controls
 
             TakeOwnership();
 
-            isHeldLocally = true;
-            _syncedIsMoving = true;
+            _isHeldLocally = true;
+            _syncedIsBeingManipulated = true;
             // this.SendCustomEventDelayedFrames(nameof(FollowPickup), 1);
             _OnFollowPickup();
         }
@@ -385,8 +355,8 @@ namespace nikkyai.Kinetic_Controls
         {
             TakeOwnership();
 
-            isHeldLocally = false;
-            _syncedIsMoving = false;
+            _isHeldLocally = false;
+            _syncedIsBeingManipulated = false;
 
             RequestSerialization();
             OnDeserialization();
@@ -398,14 +368,14 @@ namespace nikkyai.Kinetic_Controls
 
         public void _OnFollowPickup()
         {
-            if (!isHeldLocally) return;
+            if (!_isHeldLocally) return;
 
             // var clampedPos = Mathf.Clamp(
             //     pickup.transform.localRotation[(int)axis],
             //     _minPos,
             //     _maxPos
             // );
-            var relativePos = leverBase.transform.InverseTransformPoint(pickup.transform.position);
+            var relativePos = leverBase.transform.InverseTransformPoint(_pickup.transform.position);
             // var relativePos = pickup.transform.localPosition;
             relativePos[(int)axis] = 0;
 
@@ -425,130 +395,17 @@ namespace nikkyai.Kinetic_Controls
             Log($"InverseLerp: {minRot} .. {maxRot}");
             Log($"normalized: {_syncedValueNormalized}");
 
-            if (isHeldLocally)
+            if (_isHeldLocally)
             {
                 this.SendCustomEventDelayedFrames(nameof(_OnFollowPickup), 0);
             }
 
-            if (_syncedValueNormalized != _lastSyncedValueNormalized)
-            {
-                RequestSerialization();
-                OnDeserialization();
-                //_lastSyncedValueNormalized = _syncedValueNormalized;
-            }
-        }
-        
-        private void _UpdateTargetValue(float normalizedTargetValue)
-        {
-            Log($"update target value {normalizedTargetValue}");
-            var clampedRotEuler = Mathf.Lerp(minRot, maxRot, normalizedTargetValue);
-            UpdateTargetIndicator(clampedRotEuler);
-            for (var i = 0; i < _targetFloatDrivers.Length; i++)
-            {
-                _targetFloatDrivers[i].UpdateFloat(normalizedTargetValue);
-            }
-
-            // immediate update
-            if (!enableValueSmoothing)
-            {
-                var floatValue = Mathf.Lerp(_minValue, _maxValue, normalizedTargetValue);
-                for (var i = 0; i < _floatDrivers.Length; i++)
-                {
-                    _floatDrivers[i].UpdateFloat(floatValue);
-                }
-                for (var i = 0; i < _valueFloatDrivers.Length; i++)
-                {
-                    _valueFloatDrivers[i].UpdateFloat(normalizedTargetValue);
-                }
-
-                // _UpdateFloat(
-                //     Mathf.Lerp(_minValue, _maxValue, normalizedTargetValue)
-                // );
-                UpdateValueIndicator(clampedRotEuler);
-                if (!_pickupHasObjectSync && !isHeldLocally)
-                {
-                    UpdatePickupPosition();
-                }
-
-                return;
-            }
-
-            // value smoothing
-            if (!valueInitialized)
-            {
-                // smoothingTargetNormalized = _normalizedDefault;
-                // smoothedCurrentNormalized = _normalizedDefault;
-                smoothingTargetNormalized = normalizedTargetValue;
-                smoothedCurrentNormalized = normalizedTargetValue;
-                lastFrameTime = Time.time;
-                valueInitialized = true;
-            }
-            else
-            {
-                smoothingTargetNormalized = normalizedTargetValue;
-            }
-
-
-            if (!isSmoothing)
-            {
-                isSmoothing = true;
-                _OnValueSmoothedUpdate();
-            }
-        }
-
-        public void _OnValueSmoothedUpdate()
-        {
-            // Log($"UpdateLoop {smoothedCurrentNormalized} => {smoothingTargetNormalized}");
-
-            var currentFrameTime = Time.time;
-            var deltaTime = currentFrameTime - lastFrameTime;
-            lastFrameTime = currentFrameTime;
-
-            smoothedCurrentNormalized = Mathf.Lerp(
-                smoothingTargetNormalized,
-                smoothedCurrentNormalized,
-                Mathf.Exp(-smoothingRate * deltaTime)
-            );
-
-            if (!_syncedIsMoving && Mathf.Abs(smoothingTargetNormalized - smoothedCurrentNormalized) <= epsilon)
-            {
-                smoothedCurrentNormalized = smoothingTargetNormalized;
-                Log($"value reached target {smoothingTargetNormalized}");
-                isSmoothing = false;
-            }
-            else
-            {
-                this.SendCustomEventDelayedFrames(
-                    nameof(_OnValueSmoothedUpdate),
-                    smoothingUpdateInterval
-                );
-            }
-
-            var floatValue = Mathf.Lerp(_minValue, _maxValue, smoothedCurrentNormalized);
-            for (var i = 0; i < _floatDrivers.Length; i++)
-            {
-                _floatDrivers[i].UpdateFloat(floatValue);
-            }
-            for (var i = 0; i < _valueFloatDrivers.Length; i++)
-            {
-                _valueFloatDrivers[i].UpdateFloat(floatValue);
-            }
-
-            // _UpdateFloat(
-            //     floatValue
-            //     // Mathf.Lerp(_minValue, _maxValue, smoothedCurrentNormalized)
-            // );
-            UpdateValueIndicator(
-                Mathf.Lerp(minRot, maxRot, smoothedCurrentNormalized)
-            );
-            if (!_pickupHasObjectSync && !isHeldLocally)
-            {
-                UpdatePickupPosition();
-            }
+            RequestSerialization();
+            OnDeserialization();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdateTargetIndicator(float clampedRotEuler)
+        protected override void UpdateTargetIndicator(float clampedRotEuler)
         {
             // if (!enableValueSmoothing) return;
             if (targetIndicator == null) return;
@@ -558,13 +415,17 @@ namespace nikkyai.Kinetic_Controls
             // targetIndicator.localRotation = Quaternion.Euler(newRot);
             targetIndicator.localRotation = Quaternion.AngleAxis(clampedRotEuler, _axisVector);
 
+            if (!_pickupHasObjectSync && !_isHeldLocally)
+            {
+                UpdatePickupPosition();
+            }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             targetIndicator.transform.MarkDirty();
 #endif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdateValueIndicator(float clampedRotEuler)
+        protected override void UpdateValueIndicator(float clampedRotEuler)
         {
             if (valueIndicator == null) return;
 
@@ -572,7 +433,11 @@ namespace nikkyai.Kinetic_Controls
             // newRot[(int)axis] = clampedRotEuler;
             // valueIndicator.localRotation = Quaternion.Euler(newRot);
             valueIndicator.localRotation = Quaternion.AngleAxis(clampedRotEuler, _axisVector);
-            
+
+            // if (!_pickupHasObjectSync && !_isHeldLocally)
+            // {
+            //     UpdatePickupPosition();
+            // }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             valueIndicator.transform.MarkDirty();
 #endif
@@ -581,16 +446,16 @@ namespace nikkyai.Kinetic_Controls
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdatePickupPosition()
         {
-            pickupRigidBody.angularVelocity = Vector3.zero;
-            pickupRigidBody.velocity = Vector3.zero;
-            pickup.transform.SetPositionAndRotation(
+            _pickupRigidBody.angularVelocity = Vector3.zero;
+            _pickupRigidBody.velocity = Vector3.zero;
+            _pickup.transform.SetPositionAndRotation(
                 pickupReset.position,
                 pickupReset.rotation
             );
-            
+
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-            pickupRigidBody.MarkDirty();
-            pickup.transform.MarkDirty();
+            _pickupRigidBody.MarkDirty();
+            _pickup.transform.MarkDirty();
 #endif
         }
 
@@ -600,16 +465,6 @@ namespace nikkyai.Kinetic_Controls
             if (_syncedValueNormalized != _lastSyncedValueNormalized)
             {
                 _UpdateTargetValue(_syncedValueNormalized);
-                // _UpdateFloat(
-                //     Mathf.Lerp(_minValue, _maxValue, syncedValueNormalized)
-                // );
-                // UpdateIndicatorPosition(
-                //     Mathf.Lerp(_minPos, _maxPos, smoothedCurrentNormalized)
-                // );
-                // if (!_pickupHasObjectSync && !isHeldLocally)
-                // {
-                //     UpdatePickupPosition();
-                // }
 
                 _lastSyncedValueNormalized = _syncedValueNormalized;
             }
@@ -617,9 +472,12 @@ namespace nikkyai.Kinetic_Controls
 
         // ReSharper disable InconsistentNaming
         [NonSerialized] private float
-            prevMinRot, prevMaxRot,
-            prevMinValue, prevMaxValue, 
+            prevMinRot,
+            prevMaxRot,
+            prevMinValue,
+            prevMaxValue,
             prevDefault;
+
         [NonSerialized] private Vector3 prevResetPos;
         [NonSerialized] private Quaternion prevResetRot;
 
@@ -636,7 +494,7 @@ namespace nikkyai.Kinetic_Controls
                 prevMinValue != range.x ||
                 prevMaxValue != range.y ||
                 !prevResetPos.Compare(pickupReset.position, 1) ||
-                !prevResetRot.Compare(pickupReset.rotation, 1) || 
+                !prevResetRot.Compare(pickupReset.rotation, 1) ||
                 prevDefault != defaultValue
             )
             {
@@ -655,7 +513,6 @@ namespace nikkyai.Kinetic_Controls
         [ContextMenu("Apply Values")]
         public void ApplyValues()
         {
-            
             SetupValuesAndComponents();
             UpdateSmoothing();
             FindPickupTrigger();
@@ -670,15 +527,12 @@ namespace nikkyai.Kinetic_Controls
                 Mathf.Lerp(minRot, maxRot, smoothingTargetNormalized)
             );
             UpdatePickupPosition();
-            
-            foreach (var floatDriver in _floatDrivers)
-            {
-                floatDriver.ApplyFloatValue(defaultValue);
-            }
+
             foreach (var valueFloatDriver in _valueFloatDrivers)
             {
                 valueFloatDriver.ApplyFloatValue(defaultValue);
             }
+
             foreach (var targetFloatDriver in _targetFloatDrivers)
             {
                 targetFloatDriver.ApplyFloatValue(defaultValue);

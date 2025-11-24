@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using nikkyai.driver;
-using nikkyai.toggle.common;
+using nikkyai.ArrayExtensions;
 using Texel;
 using UdonSharp;
 using UnityEngine;
@@ -15,14 +15,16 @@ using VRC.Udon.Common;
 namespace nikkyai.Kinetic_Controls
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class TouchFader : ACLBase
+    public class TouchFader : BaseSmoothedBehaviour
     {
+        [Header("Touch Fader")] // header
         [SerializeField] private Axis axis = Axis.Y;
         [SerializeField] private Vector2 range = new Vector2(0, 1);
         [SerializeField] private float defaultValue = 0.25f;
         private float _normalizedDefault;
 
         [SerializeField] private TouchFaderHandle faderHandle;
+
         private Collider _handleCollider;
         // private InteractCallback _interactCallback;
         // [SerializeField] private PickupTrigger pickupTrigger;
@@ -31,7 +33,7 @@ namespace nikkyai.Kinetic_Controls
 
         private Vector3 _axisVector = Vector3.zero;
 
-        [FormerlySerializedAs("fingerContactTracker")] [SerializeField] private FingerContactTracker fingerTracker;
+        [SerializeField] private FingerContactTracker fingerTracker;
 
         [InspectorName("minPosition"),
          SerializeField]
@@ -47,49 +49,10 @@ namespace nikkyai.Kinetic_Controls
         [FormerlySerializedAs("targetPosition"), InspectorName("targetPosition"), SerializeField]
         private Transform targetIndicator;
 
-        private FloatDriver[] _floatDrivers = { };
-        private FloatDriver[] _targetFloatDrivers = { };
-        private FloatDriver[] _valueFloatDrivers = { };
-        //TODO: find at buildtime and update ?
-
         private Rigidbody _rigidbody;
-        // private bool _pickupHasObjectSync = false;
-
-
-        [Header("Smoothing")] // header
-        [Tooltip("smoothes out value updates over time, may impact CPU frametimes"),
-         SerializeField]
-        private bool enableValueSmoothing = true;
-
-        public bool ValueSmoothing
-        {
-            get => enableValueSmoothing;
-            set
-            {
-                enableValueSmoothing = value;
-                // UpdateSmoothing();
-            }
-        }
-
-
-        [Tooltip("amount of frames to skip when approaching target value," +
-                 "higher number == less load, but more choppy smoothing"),
-         SerializeField]
-        private int smoothingUpdateInterval = 3;
-
-
-        [Tooltip("fraction of the distance covered within roughly 1s"),
-         SerializeField]
-        private float smoothingRate = 0.5f;
-
-        public float SmoothingRate
-        {
-            get => smoothingRate;
-            set { smoothingRate = value; }
-        }
 
         #region ACL
-        
+
         [Header("Access Control")] // header
         [SerializeField]
         private bool enforceACL = true;
@@ -110,38 +73,48 @@ namespace nikkyai.Kinetic_Controls
         }
 
         #endregion
-        
+
         #region Debug
 
         [Header("Debug")] // header
-                [SerializeField]
-                private DebugLog debugLog;
-        
-                protected override string LogPrefix => $"{nameof(TouchFader)} {name}";
-        
-                protected override DebugLog DebugLog
-                {
-                    get => debugLog;
-                    set => debugLog = value;
-                }
+        [SerializeField]
+        private DebugLog debugLog;
+
+        protected override string LogPrefix => $"{nameof(TouchFader)} {name}";
+
+        protected override DebugLog DebugLog
+        {
+            get => debugLog;
+            set => debugLog = value;
+        }
 
         #endregion
-        
 
         [Header("State")] // header
         [UdonSynced]
         // IMPORTANT, DO NOT DELETE
         private float _syncedValueNormalized;
 
-        [UdonSynced] private bool _syncedIsMoving = false;
+        [UdonSynced] // IMPORTANT, DO NOT DELETE
+        private bool _syncedIsBeingManipulated = false;
+
+        protected override bool TargetIsBeingManipulated
+        {
+            get => _syncedIsBeingManipulated;
+            set => _syncedIsBeingManipulated = value;
+        }
 
         private float _lastSyncedValueNormalized = 0;
 
         // internal values
 
         private float _minPos, _maxPos;
+        protected override float MinPosOrRot => _minPos;
+        protected override float MaxPosOrRot => _maxPos;
 
         private float _minValue, _maxValue;
+        protected override float MinValue => _minValue;
+        protected override float MaxValue => _maxValue;
 
         // private VRC_Pickup pickup;
         private Rigidbody _rigidBody;
@@ -152,27 +125,13 @@ namespace nikkyai.Kinetic_Controls
 
         private GameObject _leftHandCollider;
         private GameObject _rightHandCollider;
-        // private bool _rightGrabbed;
-        // private bool _leftGrabbed;
+        private int _leftHandColliderId;
+        private int _rightHandColliderId;
         private bool _inLeftTrigger;
         private bool _inRightTrigger;
 
-        // private VRCParentConstraint parentConstraint;
-
-        // value smoothing
-
-        #region value smoothing
-
-        private float smoothingTargetNormalized;
-        private float smoothedCurrentNormalized;
-        private const float epsilon = 0.005f;
-        private bool valueInitialized = false;
-        private bool isSmoothing = false;
-        private float lastFrameTime = 0;
-
-        #endregion
-
         private bool isUdon = true;
+
         private void Start()
         {
             _EnsureInit();
@@ -191,7 +150,7 @@ namespace nikkyai.Kinetic_Controls
             _maxPos = maxLimit.localPosition[(int)axis];
             _normalizedDefault = Mathf.InverseLerp(_minValue, _maxValue, defaultValue);
             _syncedValueNormalized = _normalizedDefault;
-            
+
             _localPlayer = Networking.LocalPlayer;
             if (_localPlayer != null)
             {
@@ -205,20 +164,22 @@ namespace nikkyai.Kinetic_Controls
 
             smoothedCurrentNormalized = _normalizedDefault;
             smoothingTargetNormalized = _normalizedDefault;
-            enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
+            // enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
 
             //TODO: move into running in editor
-            _floatDrivers = gameObject.GetComponents<FloatDriver>();
-            _valueFloatDrivers = valueIndicator.GetComponents<FloatDriver>();
-            _targetFloatDrivers = targetIndicator.GetComponents<FloatDriver>();
-            if (_floatDrivers != null)
-            {
-                Log($"found {_floatDrivers.Length} drivers in fader");
-            }
+            _valueFloatDrivers = valueIndicator.GetComponents<FloatDriver>()
+                .AddRange(
+                    valueIndicator.GetComponentsInChildren<FloatDriver>()
+                );
+            _targetFloatDrivers = targetIndicator.GetComponents<FloatDriver>()
+                .AddRange(
+                    targetIndicator.GetComponentsInChildren<FloatDriver>()
+                );
             if (_valueFloatDrivers != null)
             {
                 Log($"found {_valueFloatDrivers.Length} drivers for value");
             }
+
             if (_targetFloatDrivers != null)
             {
                 Log($"found {_targetFloatDrivers.Length} drivers for target");
@@ -235,21 +196,22 @@ namespace nikkyai.Kinetic_Controls
             }
         }
 
-        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        // private void FindInteractTrigger()
-        // {
-        //     if (_interactCallback == null)
-        //     {
-        //         _interactCallback = gameObject.GetComponent<InteractTrigger>();
-        //     }
-        // }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupFaderHandle()
         {
             if (faderHandle)
             {
                 faderHandle.touchFader = this;
+
+                if (_leftHandCollider)
+                {
+                    _leftHandColliderId = _leftHandCollider.GetInstanceID();
+                }
+
+                if (_rightHandCollider)
+                {
+                    _rightHandColliderId = _rightHandCollider.GetInstanceID();
+                }
                 // _interactCallback = faderHandle.GetComponent<InteractCallback>();
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
                 faderHandle.EditorACL = accessControl;
@@ -262,50 +224,7 @@ namespace nikkyai.Kinetic_Controls
             {
                 LogError("missing fader handle");
             }
-
-//             if (_interactCallback)
-//             {
-//                 if (isUdon)
-//                 {
-//                     _interactCallback._Register(InteractCallback.EVENT_INTERACT, this, nameof(_HandleInteract));
-//                     _interactCallback._Register(InteractCallback.EVENT_RELEASE, this, nameof(_HandleRelease));
-//                 }
-//
-//                 //TODO: add label field ?
-//                 _interactCallback.InteractionText = "click to move";
-//                 _interactCallback.DisableInteractive = !_isDesktop;
-//
-// #if UNITY_EDITOR && !COMPILER_UDONSHARP
-//                 _interactCallback.EditorACL = accessControl;
-//                 _interactCallback.enforceACL = enforceACL;
-//                 _interactCallback.EditorDebugLog = debugLog;
-//
-//                 _interactCallback.MarkDirty();
-// #endif
-//             }
-//             else
-//             {
-//                 LogError("missing interact callback");
-//             }
         }
-
-        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        // private void SetupPickup()
-        // {
-        //     if (pickupTrigger)
-        //     {
-        //         if (pickup == null)
-        //         {
-        //             pickup = pickupTrigger.GetComponent<VRC_Pickup>();
-        //         }
-        //     }
-        //
-        //     if (pickup == null)
-        //     {
-        //         pickup = gameObject.GetComponent<VRC_Pickup>();
-        //     }
-        //
-        // }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupRigidBody()
@@ -355,7 +274,6 @@ namespace nikkyai.Kinetic_Controls
             UpdateTargetIndicator(
                 Mathf.Lerp(_minPos, _maxPos, smoothingTargetNormalized)
             );
-            UpdateHandlePosition();
 
             // pickup.transform.SetPositionAndRotation(pickupReset.position, pickupReset.rotation);
         }
@@ -370,8 +288,7 @@ namespace nikkyai.Kinetic_Controls
 
         protected override void AccessChanged()
         {
-            // _interactCallback.DisableInteractive = !_isDesktop && isAuthorized;
-            // _interactCallback.DisableInteractive = !_isDesktop && isAuthorized;
+            
         }
 
 
@@ -397,7 +314,7 @@ namespace nikkyai.Kinetic_Controls
         private void DesktopPickup()
         {
             _isHeldLocally = true;
-            _syncedIsMoving = true;
+            _syncedIsBeingManipulated = true;
             RequestSerialization();
         }
 
@@ -405,73 +322,9 @@ namespace nikkyai.Kinetic_Controls
         private void DesktopDrop()
         {
             _isHeldLocally = false;
-            _syncedIsMoving = false;
+            _syncedIsBeingManipulated = false;
             RequestSerialization();
         }
-
-
-        // public override void InputGrab(bool value, UdonInputEventArgs args)
-        // {
-        //     if (!isAuthorized) return;
-        //
-        //     Log($"InputGrab({value}, {args.handType})");
-        //
-        //     // if (_isDesktop)
-        //     // {
-        //     //     if (!value)
-        //     //     {
-        //     //         DesktopDrop();
-        //     //     }
-        //     // }
-        //
-        //     if (!_isDesktop)
-        //     {
-        //         if (value)
-        //         {
-        //             // if (!_leftGrabbed && !_rightGrabbed)
-        //             // {
-        //             //     Log("starting FollowCollider");
-        //             //     this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
-        //             // }
-        //
-        //             if (args.handType == HandType.LEFT)
-        //             {
-        //                 if (!_leftGrabbed)
-        //                 {
-        //                     Log($"LeftGrabbed()");
-        //                 }
-        //
-        //                 _leftGrabbed = true;
-        //             }
-        //
-        //             if (args.handType == HandType.RIGHT)
-        //             {
-        //                 if (!_rightGrabbed)
-        //                 {
-        //                     Log($"RightGrabbed()");
-        //                 }
-        //
-        //                 _rightGrabbed = true;
-        //             }
-        //         }
-        //         else
-        //         {
-        //             if (args.handType == HandType.LEFT)
-        //             {
-        //                 if (_leftGrabbed) Log($"LeftReleased()");
-        //
-        //                 _leftGrabbed = false;
-        //             }
-        //
-        //             if (args.handType == HandType.RIGHT)
-        //             {
-        //                 if (_rightGrabbed) Log($"RightReleased()");
-        //
-        //                 _rightGrabbed = false;
-        //             }
-        //         }
-        //     }
-        // }
 
         private const float DesktopDampening = 20;
 
@@ -488,25 +341,24 @@ namespace nikkyai.Kinetic_Controls
                 Networking.SetOwner(_localPlayer, gameObject);
             }
 
-            if (!valueInitialized)
-            {
-                _syncedValueNormalized = _normalizedDefault;
-                smoothedCurrentNormalized = _normalizedDefault;
-                smoothingTargetNormalized = _normalizedDefault;
-                valueInitialized = true;
-            }
+            //TODO: figure out if this is necessary
+            // if (!valueInitialized)
+            // {
+            //     _syncedValueNormalized = _normalizedDefault;
+            //     smoothedCurrentNormalized = _normalizedDefault;
+            //     smoothingTargetNormalized = _normalizedDefault;
+            //     valueInitialized = true;
+            // }
 
-            // var offset = (maxValue - minValue) * value / _desktopDampening;
             var offset = value / DesktopDampening;
             // syncedValueNormalized = Mathf.Clamp(syncedValueNormalized + offset, minValue, maxValue);
             _syncedValueNormalized = Mathf.Clamp(_syncedValueNormalized + offset, 0f, 1f);
 
-            if (_syncedValueNormalized != _lastSyncedValueNormalized)
-            {
-                RequestSerialization();
-                OnDeserialization();
-                // _lastSyncedValueNormalized = _syncedValueNormalized;
-            }
+            // if (_syncedValueNormalized != _lastSyncedValueNormalized)
+            // {
+            RequestSerialization();
+            OnDeserialization();
+            // }
         }
 
         public void _OnFollowCollider()
@@ -521,18 +373,19 @@ namespace nikkyai.Kinetic_Controls
             }
             else
             {
-                if (_syncedIsMoving)
+                if (_syncedIsBeingManipulated)
                 {
-                    _syncedIsMoving = false;
+                    _syncedIsBeingManipulated = false;
                     RequestSerialization();
                 }
+
                 return;
             }
 
             // if ((fingerContactTracker.rightGrabbed && _inRightTrigger) || (fingerContactTracker.leftGrabbed && _inLeftTrigger))
             if (_inRightTrigger || _inLeftTrigger)
             {
-                _syncedIsMoving = true;
+                _syncedIsBeingManipulated = true;
                 Transform handData = _inRightTrigger ? _rightHandCollider.transform : _leftHandCollider.transform;
 
                 var localFingerPos = transform.InverseTransformPoint(handData.position);
@@ -552,69 +405,72 @@ namespace nikkyai.Kinetic_Controls
                 );
 
 
-                if (_syncedValueNormalized != _lastSyncedValueNormalized)
-                {
-                    RequestSerialization();
-                    OnDeserialization();
-                    // _lastSyncedValueNormalized = _syncedValueNormalized;
-                }
+                // if (_syncedValueNormalized != _lastSyncedValueNormalized)
+                // {
+                RequestSerialization();
+                OnDeserialization();
+                // }
             }
             else
             {
-                _syncedIsMoving = false;
+                _syncedIsBeingManipulated = false;
                 RequestSerialization();
             }
         }
 
         // [NonSerialized] private Collider other;
-        public void _OnTriggerEnter(string other)
+        public void _OnTriggerEnter(int other)
         {
             if (!isAuthorized) return;
             Log($"collision with {other}");
             // Log($"OnTriggerEnter() Other: {other.name} ({other.GetInstanceID()}), Script on: {gameObject.name} ({gameObject.GetInstanceID()})");
-            if (other == _leftHandCollider.name)
+            if (other == _leftHandColliderId)
             {
                 if (!_inLeftTrigger)
                 {
                     Log($"Left Trigger Enter");
                 }
+
                 if (!_inLeftTrigger && fingerTracker.leftGrabbed)
                 {
                     Log("starting FollowCollider");
                     this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
                 }
+
                 TakeOwnership();
 
                 _inLeftTrigger = true;
                 _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
             }
 
-            if (other == _rightHandCollider.name)
+            if (other == _rightHandColliderId)
             {
                 if (!_inRightTrigger)
                 {
                     Log($"Right Trigger Enter");
                 }
-                if (!_inRightTrigger &&  fingerTracker.rightGrabbed)
+
+                if (!_inRightTrigger && fingerTracker.rightGrabbed)
                 {
                     Log("starting FollowCollider");
                     this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
-                } 
+                }
+
                 TakeOwnership();
-                
+
                 _inRightTrigger = true;
                 _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
             }
         }
 
-        public void _OnTriggerExit(string other)
+        public void _OnTriggerExit(int other)
         {
             if (!isAuthorized)
             {
                 return;
             }
 
-            if (other == _leftHandCollider.name)
+            if (other == _leftHandColliderId)
             {
                 if (_inLeftTrigger)
                 {
@@ -625,7 +481,7 @@ namespace nikkyai.Kinetic_Controls
                 _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
             }
 
-            if (other == _rightHandCollider.name)
+            if (other == _rightHandColliderId)
             {
                 if (_inRightTrigger)
                 {
@@ -637,115 +493,7 @@ namespace nikkyai.Kinetic_Controls
             }
         }
 
-        private void _UpdateTargetValue(float normalizedTargetValue)
-        {
-            Log($"update target value {normalizedTargetValue}");
-            var clampedPos = Mathf.Lerp(_minPos, _maxPos, normalizedTargetValue);
-            UpdateTargetIndicator(clampedPos);
-            UpdateHandlePosition();
-            for (var i = 0; i < _targetFloatDrivers.Length; i++)
-            {
-                _targetFloatDrivers[i].UpdateFloat(normalizedTargetValue);
-            }
-
-            // immediate update
-            if (!enableValueSmoothing)
-            {
-                var floatValue = Mathf.Lerp(_minValue, _maxValue, normalizedTargetValue);
-                for (var i = 0; i < _floatDrivers.Length; i++)
-                {
-                    _floatDrivers[i].UpdateFloat(floatValue);
-                }
-                for (var i = 0; i < _valueFloatDrivers.Length; i++)
-                {
-                    _valueFloatDrivers[i].UpdateFloat(normalizedTargetValue);
-                }
-
-                // _UpdateFloat(
-                //     Mathf.Lerp(_minValue, _maxValue, normalizedTargetValue)
-                // );
-                UpdateValueIndicator(
-                    clampedPos
-                );
-                
-
-                return;
-            }
-
-            // value smoothing
-            if (!valueInitialized)
-            {
-                // Log("initializing values for smoothing");
-                // smoothingTargetNormalized = _normalizedDefault;
-                // smoothedCurrentNormalized = _normalizedDefault;
-                smoothingTargetNormalized = normalizedTargetValue;
-                smoothedCurrentNormalized = normalizedTargetValue;
-                lastFrameTime = Time.time;
-                valueInitialized = true;
-            }
-            else
-            {
-                smoothingTargetNormalized = normalizedTargetValue;
-            }
-
-            if (!isSmoothing)
-            {
-                isSmoothing = true;
-                _OnValueSmoothedUpdate();
-            }
-        }
-
-        public void _OnValueSmoothedUpdate()
-        {
-            // Log($"UpdateLoop {smoothedCurrentNormalized} => {smoothingTargetNormalized}");
-
-            var currentFrameTime = Time.time;
-            var deltaTime = currentFrameTime - lastFrameTime;
-            lastFrameTime = currentFrameTime;
-
-            smoothedCurrentNormalized = Mathf.Lerp(
-                smoothingTargetNormalized,
-                smoothedCurrentNormalized,
-                Mathf.Exp(-smoothingRate * deltaTime)
-            );
-            if (!_syncedIsMoving && Mathf.Abs(smoothingTargetNormalized - smoothedCurrentNormalized) <= epsilon)
-            {
-                smoothedCurrentNormalized = smoothingTargetNormalized;
-                Log($"value reached target {smoothingTargetNormalized}");
-                isSmoothing = false;
-            }
-            else
-            {
-                this.SendCustomEventDelayedFrames(
-                    nameof(_OnValueSmoothedUpdate),
-                    smoothingUpdateInterval
-                );
-            }
-
-            var floatValue = Mathf.Lerp(_minValue, _maxValue, smoothedCurrentNormalized);
-            for (var i = 0; i < _floatDrivers.Length; i++)
-            {
-                _floatDrivers[i].UpdateFloat(floatValue);
-            }
-            for (var i = 0; i < _valueFloatDrivers.Length; i++)
-            {
-                _valueFloatDrivers[i].UpdateFloat(floatValue);
-            }
-
-            // _UpdateFloat(
-            //     floatValue
-            //     // Mathf.Lerp(_minValue, _maxValue, smoothedCurrentNormalized)
-            // );
-            UpdateValueIndicator(
-                Mathf.Lerp(_minPos, _maxPos, smoothedCurrentNormalized)
-            );
-            // if (!_isHeldLocally && !(_leftGrabbed && _inLeftTrigger) && !(_rightGrabbed && _inRightTrigger))
-            // {
-            // UpdateHandlePosition();
-            // }
-        }
-
-        private void UpdateTargetIndicator(float clampedPos)
+        protected override void UpdateTargetIndicator(float clampedPos)
         {
             // if (!enableValueSmoothing) return;
             if (targetIndicator == null) return;
@@ -753,12 +501,14 @@ namespace nikkyai.Kinetic_Controls
             newPos[(int)axis] = clampedPos;
             targetIndicator.transform.localPosition = newPos;
 
+            UpdateHandlePosition();
+
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             targetIndicator.transform.MarkDirty();
 #endif
         }
 
-        private void UpdateValueIndicator(float clampedPos)
+        protected override void UpdateValueIndicator(float clampedPos)
         {
             if (valueIndicator == null) return;
             Vector3 newPos = valueIndicator.transform.localPosition;
@@ -777,6 +527,7 @@ namespace nikkyai.Kinetic_Controls
                 _rigidBody.angularVelocity = Vector3.zero;
                 _rigidBody.velocity = Vector3.zero;
             }
+
             // parentConstraint.GlobalWeight = 1;
             faderHandle.transform.SetPositionAndRotation(
                 targetIndicator.position,
@@ -784,7 +535,7 @@ namespace nikkyai.Kinetic_Controls
             );
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-            if(_rigidBody) _rigidBody.MarkDirty();
+            if (_rigidBody) _rigidBody.MarkDirty();
             faderHandle.transform.MarkDirty();
 #endif
         }
@@ -794,12 +545,6 @@ namespace nikkyai.Kinetic_Controls
             if (_syncedValueNormalized != _lastSyncedValueNormalized)
             {
                 _UpdateTargetValue(_syncedValueNormalized);
-                // _UpdateFloat(
-                //     Mathf.Lerp(_minValue, _maxValue, syncedValueNormalized)
-                // );
-                // UpdateIndicatorPosition(
-                //     Mathf.Lerp(_minPos, _maxPos, smoothedCurrentNormalized)
-                // );
 
                 _lastSyncedValueNormalized = _syncedValueNormalized;
             }
@@ -867,21 +612,16 @@ namespace nikkyai.Kinetic_Controls
             UpdateTargetIndicator(
                 Mathf.Lerp(_minPos, _maxPos, smoothingTargetNormalized)
             );
-            UpdateHandlePosition();
 
-            foreach (var floatDriver in _floatDrivers)
-            {
-                floatDriver.ApplyFloatValue(defaultValue);
-            }
             foreach (var valueFloatDriver in _valueFloatDrivers)
             {
                 valueFloatDriver.ApplyFloatValue(defaultValue);
             }
+
             foreach (var targetFloatDriver in _targetFloatDrivers)
             {
                 targetFloatDriver.ApplyFloatValue(defaultValue);
             }
-
         }
 
         [ContextMenu("Apply ACLs and Log")]

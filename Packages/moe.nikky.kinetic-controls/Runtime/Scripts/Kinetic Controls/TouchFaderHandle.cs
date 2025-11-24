@@ -1,4 +1,4 @@
-﻿using nikkyai.toggle.common;
+﻿using nikkyai.common;
 using Texel;
 using UdonSharp;
 using UnityEngine;
@@ -91,14 +91,14 @@ namespace nikkyai.Kinetic_Controls
         public void OnTriggerEnter(Collider other)
         {
             if (!isAuthorized) return;
-            touchFader._OnTriggerEnter(other.name);
+            touchFader._OnTriggerEnter(other.GetInstanceID());
         }
 
         public void OnTriggerExit(Collider other)
         {
             if (!isAuthorized) return;
             // touchFader.SetProgramVariable("other", other);
-            touchFader._OnTriggerExit(other.name);
+            touchFader._OnTriggerExit(other.GetInstanceID());
         }
     }
 }

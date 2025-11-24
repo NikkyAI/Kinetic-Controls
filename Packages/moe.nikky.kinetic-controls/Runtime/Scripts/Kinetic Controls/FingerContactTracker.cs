@@ -1,5 +1,5 @@
 ﻿using System;
-using nikkyai.toggle.common;
+using nikkyai.common;
 using Texel;
 using UdonSharp;
 using UnityEngine;
