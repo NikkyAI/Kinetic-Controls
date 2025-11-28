@@ -38,11 +38,12 @@ namespace nikkyai.Kinetic_Controls
          SerializeField]
         private Transform maxLimit;
 
-        [FormerlySerializedAs("valuePosition"), InspectorName("valuePosition"), SerializeField]
-        private Transform valueIndicator;
+        [Header("Drivers")] // header
+        [SerializeField] private Transform valueIndicator;
 
-        [FormerlySerializedAs("targetPosition"), InspectorName("targetPosition"), SerializeField]
-        private Transform targetIndicator;
+        [SerializeField] private Transform targetIndicator;
+
+        [SerializeField] private Transform isAuthorizedIndicator;
 
         private Rigidbody _rigidbody;
         private bool _pickupHasObjectSync = false;
@@ -85,8 +86,28 @@ namespace nikkyai.Kinetic_Controls
         }
 
         #endregion
+        
+        private BoolDriver[] _isAuthorizedBoolDrivers = { };
 
         [Header("State")] // header
+        
+        [SerializeField, UdonSynced]
+        private bool synced = true;
+        
+        public override bool Synced
+        {
+            get => synced;
+            set
+            {
+                if (!isAuthorized) return;
+                
+                TakeOwnership();
+                synced = value;
+                
+                RequestSerialization();
+            }
+        }
+
         [UdonSynced]
         // IMPORTANT, DO NOT DELETE
         private float _syncedValueNormalized;
@@ -152,6 +173,14 @@ namespace nikkyai.Kinetic_Controls
                 .AddRange(
                     targetIndicator.GetComponentsInChildren<FloatDriver>()
                 );
+            
+            if (isAuthorizedIndicator)
+            {
+                _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponents<BoolDriver>()
+                    .AddRange(
+                        isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>()
+                    );
+            }
             // if (_floatDrivers != null)
             // {
             //     Log($"found {_floatDrivers.Length} drivers in fader");
@@ -251,17 +280,14 @@ namespace nikkyai.Kinetic_Controls
             // pickup.transform.SetPositionAndRotation(pickupReset.position, pickupReset.rotation);
         }
 
-        public void TakeOwnership()
-        {
-            if (!Networking.IsOwner(gameObject))
-            {
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            }
-        }
-
         protected override void AccessChanged()
         {
             _pickup.pickupable = isAuthorized;
+            
+            for (var i = 0; i < _isAuthorizedBoolDrivers.Length; i++)
+            {
+                _isAuthorizedBoolDrivers[i].UpdateBool(isAuthorized);
+            }
         }
 
         public void _OnPickup()
@@ -287,7 +313,11 @@ namespace nikkyai.Kinetic_Controls
             _isHeldLocally = false;
             _syncedIsBeingManipulated = false;
 
-            RequestSerialization();
+            
+            if (synced)
+            {
+                RequestSerialization();
+            }
             OnDeserialization();
 
             UpdatePickupPosition();
@@ -318,7 +348,11 @@ namespace nikkyai.Kinetic_Controls
                 this.SendCustomEventDelayedFrames(nameof(_OnFollowPickup), 0);
             }
 
-            RequestSerialization();
+            
+            if (synced)
+            {
+                RequestSerialization();
+            }
             OnDeserialization();
         }
 

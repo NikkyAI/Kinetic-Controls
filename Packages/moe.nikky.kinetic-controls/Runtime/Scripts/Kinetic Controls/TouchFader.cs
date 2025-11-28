@@ -45,11 +45,14 @@ namespace nikkyai.Kinetic_Controls
          SerializeField]
         private Transform maxLimit;
 
-        [FormerlySerializedAs("valuePosition"), InspectorName("valuePosition"), SerializeField]
+        [Header("Drivers")] // header
+        [SerializeField]
         private Transform valueIndicator;
 
-        [FormerlySerializedAs("targetPosition"), InspectorName("targetPosition"), SerializeField]
+        [SerializeField]
         private Transform targetIndicator;
+
+        [SerializeField] private Transform isAuthorizedIndicator;
 
         private Rigidbody _rigidbody;
 
@@ -92,7 +95,27 @@ namespace nikkyai.Kinetic_Controls
 
         #endregion
 
+        private BoolDriver[] _isAuthorizedBoolDrivers = { };
+
         [Header("State")] // header
+        
+        [SerializeField, UdonSynced]
+        private bool synced = true;
+        
+        public override bool Synced
+        {
+            get => synced;
+            set
+            {
+                if (!isAuthorized) return;
+                
+                TakeOwnership();
+                synced = value;
+                
+                RequestSerialization();
+            }
+        }
+
         [UdonSynced]
         // IMPORTANT, DO NOT DELETE
         private float _syncedValueNormalized;
@@ -177,6 +200,14 @@ namespace nikkyai.Kinetic_Controls
                 .AddRange(
                     targetIndicator.GetComponentsInChildren<FloatDriver>()
                 );
+            
+            if (isAuthorizedIndicator)
+            {
+                _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponents<BoolDriver>()
+                    .AddRange(
+                        isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>()
+                    );
+            }
             if (_valueFloatDrivers != null)
             {
                 Log($"found {_valueFloatDrivers.Length} drivers for value");
@@ -282,16 +313,12 @@ namespace nikkyai.Kinetic_Controls
             // pickup.transform.SetPositionAndRotation(pickupReset.position, pickupReset.rotation);
         }
 
-        private void TakeOwnership()
-        {
-            if (!Networking.IsOwner(gameObject))
-            {
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            }
-        }
-
         protected override void AccessChanged()
         {
+            for (var i = 0; i < _isAuthorizedBoolDrivers.Length; i++)
+            {
+                _isAuthorizedBoolDrivers[i].UpdateBool(isAuthorized);
+            }
         }
 
 
@@ -319,7 +346,11 @@ namespace nikkyai.Kinetic_Controls
             _isHeldLocally = true;
             _syncedIsBeingManipulated = true;
             Log($"Desktop Pickup with target at {_syncedValueNormalized}");
-            RequestSerialization();
+            
+            if (synced)
+            {
+                RequestSerialization();
+            }
         }
 
 
@@ -328,7 +359,11 @@ namespace nikkyai.Kinetic_Controls
             _isHeldLocally = false;
             _syncedIsBeingManipulated = false;
             Log($"Desktop Drop with target at {_syncedValueNormalized}");
-            RequestSerialization();
+            
+            if (synced)
+            {
+                RequestSerialization();
+            }
         }
 
         private const float DesktopDampening = 20;
@@ -361,7 +396,11 @@ namespace nikkyai.Kinetic_Controls
 
             // if (_syncedValueNormalized != _lastSyncedValueNormalized)
             // {
-            RequestSerialization();
+           
+            if (synced)
+            {
+                RequestSerialization();
+            }
             OnDeserialization();
             // }
         }
@@ -383,7 +422,11 @@ namespace nikkyai.Kinetic_Controls
                 if (_syncedIsBeingManipulated)
                 {
                     _syncedIsBeingManipulated = false;
-                    RequestSerialization();
+                    
+                    if (synced)
+                    {
+                        RequestSerialization();
+                    }
                 }
 
                 return;
@@ -415,7 +458,11 @@ namespace nikkyai.Kinetic_Controls
 
                 // if (_syncedValueNormalized != _lastSyncedValueNormalized)
                 // {
-                RequestSerialization();
+                
+                if (synced)
+                {
+                    RequestSerialization();
+                }
                 OnDeserialization();
                 // }
             }
@@ -423,7 +470,11 @@ namespace nikkyai.Kinetic_Controls
             {
                 Log($"VR Drop with target at {_syncedValueNormalized}");
                 _syncedIsBeingManipulated = false;
-                RequestSerialization();
+                
+                if (synced)
+                {
+                    RequestSerialization();
+                }
             }
         }
 

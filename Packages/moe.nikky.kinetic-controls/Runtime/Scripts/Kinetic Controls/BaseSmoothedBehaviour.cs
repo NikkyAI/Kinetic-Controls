@@ -5,11 +5,11 @@ using UnityEngine;
 
 namespace nikkyai.Kinetic_Controls
 {
-    public abstract class BaseSmoothedBehaviour: ACLBase
+    public abstract class BaseSmoothedBehaviour: BaseSyncedBehaviour
     {
         protected FloatDriver[] _targetFloatDrivers = { };
         protected FloatDriver[] _valueFloatDrivers = { };
-        
+
         protected abstract float MinPosOrRot { 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get;

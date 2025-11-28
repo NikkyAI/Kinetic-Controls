@@ -15,6 +15,11 @@ namespace nikkyai.Kinetic_Controls
         [SerializeField] public Collider leftHandCollider;
         [SerializeField] public Collider rightHandCollider;
 
+        private Vector3 _leftResetPos = Vector3.zero;
+        private Vector3 _rightResetPos = Vector3.zero;
+        private Transform _leftReset = null;
+        private Transform _rightReset = null;
+        
         #region Debug
 
         [Header("Debug")] // header
@@ -31,11 +36,13 @@ namespace nikkyai.Kinetic_Controls
 
         #endregion
 
-        private VRCPlayerApi _currentPlayer;
+        private VRCPlayerApi _localPlayer;
         private Vector3 _leftHandPos = Vector3.zero;
         private Vector3 _rightHandPos = Vector3.zero;
-        private Quaternion _leftHandRot = Quaternion.identity;
-        private Quaternion _rightHandRot = Quaternion.identity;
+        // private Quaternion _leftHandRot = Quaternion.identity;
+        // private Quaternion _rightHandRot = Quaternion.identity;
+        // private Transform _leftHand = null;
+        // private Transform _rightHand = null;
         [NonSerialized] public bool rightGrabbed;
         [NonSerialized] public bool leftGrabbed;
 
@@ -49,8 +56,10 @@ namespace nikkyai.Kinetic_Controls
         protected override void _Init()
         {
             base._Init();
-            _currentPlayer = Networking.LocalPlayer;
-            _isInVR = _currentPlayer.IsUserInVR();
+            _leftResetPos = leftHandCollider.transform.position;
+            _rightResetPos = rightHandCollider.transform.position;
+            _localPlayer = Networking.LocalPlayer;
+            _isInVR = _localPlayer.IsUserInVR();
 
             // if (!_isInVR)
             // {
@@ -111,45 +120,74 @@ namespace nikkyai.Kinetic_Controls
 
         public void Update()
         {
-            if (_currentPlayer.isSuspended) return;
+            if (_localPlayer.isSuspended) return;
             if (!_isInVR) return;
+            
+             //TODO: scale with avatar ?
+             // use Networking.LocalPlayer.GetBoneTransform
 
-            _rightHandPos = Vector3.zero;
-            _rightHandRot = Quaternion.identity;
+             // _rightHand = _rightReset;
+             // if (rightGrabbed)
+             // {
+             //     _rightHand = _localPlayer.GetBoneTransform(HumanBodyBones.RightIndexDistal);
+             //     if (!_rightHand)
+             //     {
+             //         _rightHand = _localPlayer.GetBoneTransform(HumanBodyBones.RightIndexIntermediate);
+             //     }
+             // }
+             //
+             // _leftHand = _leftReset;
+             // if (leftGrabbed)
+             // {
+             //     _leftHand = _localPlayer.GetBoneTransform(HumanBodyBones.LeftIndexDistal);
+             //     if (!_leftHand)
+             //     {
+             //         _leftHand = _localPlayer.GetBoneTransform(HumanBodyBones.LeftIndexIntermediate);
+             //     }
+             // }
+
+             _rightHandPos = _rightResetPos;
+            // _rightHandRot = Quaternion.identity;
             if (rightGrabbed)
             {
-                _rightHandPos = _currentPlayer.GetBonePosition(HumanBodyBones.RightIndexDistal);
+                _rightHandPos = _localPlayer.GetBonePosition(HumanBodyBones.RightIndexDistal);
                 if (_rightHandPos == Vector3.zero)
                 {
-                    _rightHandPos = _currentPlayer.GetBonePosition(HumanBodyBones.RightIndexIntermediate);
+                    _rightHandPos = _localPlayer.GetBonePosition(HumanBodyBones.RightIndexIntermediate);
                 }
-
-                _rightHandRot = _currentPlayer.GetBoneRotation(HumanBodyBones.RightIndexDistal);
-                if (_rightHandRot == Quaternion.identity)
-                {
-                    _leftHandRot = _currentPlayer.GetBoneRotation(HumanBodyBones.RightIndexIntermediate);
-                }
+            
+                // _rightHandRot = _localPlayer.GetBoneRotation(HumanBodyBones.RightIndexDistal);
+                // if (_rightHandRot == Quaternion.identity)
+                // {
+                //     _leftHandRot = _localPlayer.GetBoneRotation(HumanBodyBones.RightIndexIntermediate);
+                // }
             }
-
-            _leftHandPos = Vector3.zero;
-            _leftHandRot = Quaternion.identity;
+            
+            _leftHandPos = _leftResetPos;
+            // _leftHandRot = Quaternion.identity;
             if (leftGrabbed)
             {
-                _leftHandPos = _currentPlayer.GetBonePosition(HumanBodyBones.LeftIndexDistal);
+                _leftHandPos = _localPlayer.GetBonePosition(HumanBodyBones.LeftIndexDistal);
                 if (_leftHandPos == Vector3.zero)
                 {
-                    _leftHandPos = _currentPlayer.GetBonePosition(HumanBodyBones.LeftIndexIntermediate);
+                    _leftHandPos = _localPlayer.GetBonePosition(HumanBodyBones.LeftIndexIntermediate);
                 }
-
-                _leftHandRot = _currentPlayer.GetBoneRotation(HumanBodyBones.LeftIndexDistal);
-                if (_rightHandRot == Quaternion.identity)
-                {
-                    _leftHandRot = _currentPlayer.GetBoneRotation(HumanBodyBones.LeftIndexIntermediate);
-                }
+            
+                // _leftHandRot = _localPlayer.GetBoneRotation(HumanBodyBones.LeftIndexDistal);
+                // if (_rightHandRot == Quaternion.identity)
+                // {
+                //     _leftHandRot = _localPlayer.GetBoneRotation(HumanBodyBones.LeftIndexIntermediate);
+                // }
             }
 
-            rightHandCollider.transform.SetPositionAndRotation(_rightHandPos, _rightHandRot);
-            leftHandCollider.transform.SetPositionAndRotation(_leftHandPos, _leftHandRot);
+            // rightHandCollider.transform.SetPositionAndRotation(_rightHandPos, _rightHandRot);
+            // leftHandCollider.transform.SetPositionAndRotation(_leftHandPos, _leftHandRot);
+
+            rightHandCollider.transform.position = _rightHandPos;
+            leftHandCollider.transform.position = _leftHandPos;
+
+            // rightHandCollider.transform.SetPositionAndRotation(_rightHand.position, _rightHand.rotation);
+            // leftHandCollider.transform.SetPositionAndRotation(_leftHand.position, _leftHand.rotation);
         }
     }
 }

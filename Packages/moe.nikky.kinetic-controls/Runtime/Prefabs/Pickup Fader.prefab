@@ -538,6 +538,7 @@ MonoBehaviour:
   enforceACL: 1
   accessControl: {fileID: 0}
   debugLog: {fileID: 0}
+  synced: 1
 --- !u!114 &4829456014675497587
 MonoBehaviour:
   m_ObjectHideFlags: 0

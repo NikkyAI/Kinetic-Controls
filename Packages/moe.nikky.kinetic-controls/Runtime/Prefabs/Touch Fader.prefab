@@ -707,6 +707,7 @@ MonoBehaviour:
   enforceACL: 1
   accessControl: {fileID: 0}
   debugLog: {fileID: 1576189593384011048}
+  synced: 1
 --- !u!114 &7820683701588094753
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -981,10 +982,10 @@ PrefabInstance:
 
 
 
-        [   63.156] [TouchFader Touch Fader]
+        [   41.139] [TouchFader Touch Fader]
         found 1 drivers for value
 
-        [   63.156] [TouchFader Touch Fader] found
+        [   41.139] [TouchFader Touch Fader] found
         0 drivers for target'
       objectReference: {fileID: 0}
     - target: {fileID: 7438426916000396222, guid: 1ac75656e384b784585721b4a65133ad, type: 3}
