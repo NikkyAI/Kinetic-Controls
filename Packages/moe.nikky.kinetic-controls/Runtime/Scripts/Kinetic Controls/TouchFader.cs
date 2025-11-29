@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using nikkyai.driver;
 using nikkyai.ArrayExtensions;
 using Texel;
@@ -108,9 +109,13 @@ namespace nikkyai.Kinetic_Controls
             set
             {
                 if (!isAuthorized) return;
-                
+
+                var prevValue = _syncedValueNormalized;
                 TakeOwnership();
+                Log($"set synced to {value}");
                 synced = value;
+                Log($"set state to {_syncedValueNormalized} => {prevValue}");
+                _syncedValueNormalized = prevValue;
                 
                 RequestSerialization();
             }
@@ -478,22 +483,22 @@ namespace nikkyai.Kinetic_Controls
             }
         }
 
-        public void _OnCollisionStart()
-        {
-            TakeOwnership();
-            _isColliding = true;
-            if (!_isColliding)
-            {
-                Log($"VR Pickup with target at {_syncedValueNormalized}");
-                Log("starting FollowCollider");
-                this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
-            }
-        }
-
-        public void _OnCollisionEnd()
-        {
-            _isColliding = false;
-        }
+        // public void _OnCollisionStart()
+        // {
+        //     TakeOwnership();
+        //     _isColliding = true;
+        //     if (!_isColliding)
+        //     {
+        //         Log($"VR Pickup with target at {_syncedValueNormalized}");
+        //         Log("starting FollowCollider");
+        //         this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
+        //     }
+        // }
+        //
+        // public void _OnCollisionEnd()
+        // {
+        //     _isColliding = false;
+        // }
         
         public void _OnTriggerEnter(int other)
         {

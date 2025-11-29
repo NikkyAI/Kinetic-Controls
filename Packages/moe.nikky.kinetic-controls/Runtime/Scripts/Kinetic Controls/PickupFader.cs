@@ -100,9 +100,13 @@ namespace nikkyai.Kinetic_Controls
             set
             {
                 if (!isAuthorized) return;
-                
+
+                var prevValue = _syncedValueNormalized;
                 TakeOwnership();
+                Log($"set synced to {value}");
                 synced = value;
+                Log($"set normalized to {_syncedValueNormalized} => {prevValue}");
+                _syncedValueNormalized = prevValue;
                 
                 RequestSerialization();
             }

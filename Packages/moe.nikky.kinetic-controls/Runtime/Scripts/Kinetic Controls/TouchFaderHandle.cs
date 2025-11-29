@@ -7,7 +7,7 @@ using VRC.Udon.Common.Interfaces;
 
 namespace nikkyai.Kinetic_Controls
 {
-    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
+    [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class TouchFaderHandle : ACLBase
     {
         [SerializeField] internal TouchFader touchFader;

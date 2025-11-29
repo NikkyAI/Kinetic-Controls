@@ -535,6 +535,7 @@ MonoBehaviour:
   maxLimit: {fileID: 6007133307290796205}
   valueIndicator: {fileID: 7236245141613450133}
   targetIndicator: {fileID: 1824909694882653898}
+  isAuthorizedIndicator: {fileID: 0}
   enforceACL: 1
   accessControl: {fileID: 0}
   debugLog: {fileID: 0}
