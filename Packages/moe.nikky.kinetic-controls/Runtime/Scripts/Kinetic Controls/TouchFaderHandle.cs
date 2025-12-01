@@ -1,8 +1,12 @@
-﻿using nikkyai.common;
+﻿using System;
+using nikkyai.ArrayExtensions;
+using nikkyai.common;
 using Texel;
 using UdonSharp;
 using UnityEngine;
+using VRC.Dynamics;
 using VRC.SDKBase;
+using VRC.Udon.Common;
 using VRC.Udon.Common.Interfaces;
 
 namespace nikkyai.Kinetic_Controls
@@ -11,10 +15,12 @@ namespace nikkyai.Kinetic_Controls
     public class TouchFaderHandle : ACLBase
     {
         [SerializeField] internal TouchFader touchFader;
-
+        
         public Collider leftHandCollider;
         public Collider rightHandCollider;
+
         #region ACL
+
         [Header("Access Control")] // header
         public bool enforceACL;
 
@@ -36,7 +42,7 @@ namespace nikkyai.Kinetic_Controls
         #endregion
 
         #region Debug
-        
+
         [Header("Debug")] // header
         [SerializeField]
         private DebugLog debugLog;
@@ -46,13 +52,14 @@ namespace nikkyai.Kinetic_Controls
             get => debugLog;
             set => debugLog = value;
         }
+
         protected override string LogPrefix => nameof(TouchFaderHandle);
 
         #endregion
 
         private VRCPlayerApi _localPlayer;
-        private bool _inLeftTrigger;
-        private bool _inRightTrigger;
+        //private bool _inLeftTrigger;
+        //private bool _inRightTrigger;
 
         void Start()
         {
@@ -60,6 +67,7 @@ namespace nikkyai.Kinetic_Controls
         }
 
         private bool _isInVR;
+
         protected override void _Init()
         {
             _localPlayer = Networking.LocalPlayer;
@@ -73,6 +81,7 @@ namespace nikkyai.Kinetic_Controls
         }
 
         private bool _isInteracting = false;
+
         public override void Interact()
         {
             if (!isAuthorized) return;
@@ -89,54 +98,121 @@ namespace nikkyai.Kinetic_Controls
                 touchFader._HandleRelease();
             }
         }
-        
+
+        [NonSerialized] public bool rightGrabbed;
+        [NonSerialized] public bool leftGrabbed;
+
+        public override void InputGrab(bool value, UdonInputEventArgs args)
+        {
+            if (!_isInVR) return;
+            Log($"InputGrab({value}, {args.handType})");
+            if (value)
+            {
+                // if (!_leftGrabbed && !_rightGrabbed)
+                // {
+                //     Log("starting FollowCollider");
+                //     this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
+                // }
+
+                if (args.handType == HandType.LEFT)
+                {
+                    if (!leftGrabbed)
+                    {
+                        Log($"LeftGrabbed()");
+                    }
+
+                    leftGrabbed = true;
+                }
+
+                if (args.handType == HandType.RIGHT)
+                {
+                    if (!rightGrabbed)
+                    {
+                        Log($"RightGrabbed()");
+                    }
+
+                    rightGrabbed = true;
+                }
+            }
+            else
+            {
+                if (args.handType == HandType.LEFT)
+                {
+                    if (leftGrabbed) Log($"LeftReleased()");
+
+                    leftGrabbed = false;
+                }
+
+                if (args.handType == HandType.RIGHT)
+                {
+                    if (rightGrabbed) Log($"RightReleased()");
+
+                    rightGrabbed = false;
+                }
+            }
+        }
+
         public void OnTriggerEnter(Collider other)
         {
             if (!isAuthorized) return;
-            touchFader._OnTriggerEnter(other.GetInstanceID());
-            // if (other == leftHandCollider && !_inLeftTrigger &&!_inRightTrigger)
-            // {
-            //     Log($"Left Trigger Enter");
-            //     _inLeftTrigger = true;
-            //     _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
-            //                                           
-            //     touchFader._OnCollisionStart();
-            //
-            //     // TakeOwnership();
-            // }
-            //
-            // if (other == rightHandCollider && !_inRightTrigger&&!_inRightTrigger)
-            // {
-            //     Log($"Right Trigger Enter");
-            //     _inRightTrigger = true;
-            //     _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
-            //                                            
-            //     touchFader._OnCollisionStart();
-            //         
-            //     // TakeOwnership();
-            // }
+            // touchFader._OnTriggerEnter(other.GetInstanceID());
         }
 
         public void OnTriggerExit(Collider other)
         {
             if (!isAuthorized) return;
-            touchFader._OnTriggerExit(other.GetInstanceID());
-            
-            // if (other == leftHandCollider && _inLeftTrigger)
-            // {
-            //     Log($"Left Trigger Exit");
-            //     _inLeftTrigger = false;
-            //     _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
-            //     touchFader._OnCollisionEnd();
-            // }
-            //
-            // if (other == rightHandCollider && _inRightTrigger)
-            // {
-            //     Log($"Right Trigger Exit");
-            //     _inRightTrigger = false;
-            //     _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
-            //     touchFader._OnCollisionEnd();
-            // }
+            // touchFader._OnTriggerExit(other.GetInstanceID());
+        }
+
+        // [NonSerialized] public ContactSenderProxy _leftSender, _rightSender;
+        public override void OnContactEnter(ContactEnterInfo contactInfo)
+        {
+            if (!_isInVR) return;
+            if (!contactInfo.contactSender.player.isLocal) return;
+            if (!isAuthorized) return;
+
+            Log($"Contact Enter {contactInfo.contactPoint} {contactInfo.matchingTags.Length}");
+            for (var i = 0; i < contactInfo.matchingTags.Length; i++)
+            {
+                var matchingTag = contactInfo.matchingTags[i];
+                Log(matchingTag);
+            }
+
+            if (contactInfo.matchingTags.Contains("FingerIndexL"))
+            {
+                touchFader.leftSender = contactInfo.contactSender;
+                touchFader.OnLeftContactEnter();
+                return;
+            }
+
+            if (contactInfo.matchingTags.Contains("FingerIndexR"))
+            {
+                touchFader.rightSender = contactInfo.contactSender;
+                touchFader.OnRightContactEnter();
+                return;
+            }
+        }
+
+        public override void OnContactExit(ContactExitInfo contactInfo)
+        {
+            if (!_isInVR) return;
+            if (!contactInfo.contactSender.player.isLocal) return;
+            if (!isAuthorized) return;
+            Log($"Contact Exit");
+
+            if (contactInfo.contactSender == touchFader.leftSender)
+            {
+                Log($"Contact Exit Left");
+                touchFader.leftSender = null;
+                touchFader.OnLeftContactExit();
+            }
+
+            if (contactInfo.contactSender == touchFader.rightSender)
+            {
+                Log($"Contact Exit Right");
+                touchFader.rightSender = null;
+                touchFader.OnRightContactExit();
+            }
         }
     }
 }

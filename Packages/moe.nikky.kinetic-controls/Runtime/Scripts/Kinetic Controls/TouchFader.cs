@@ -8,6 +8,7 @@ using UdonSharp;
 using UnityEngine;
 using UnityEngine.Serialization;
 using VRC;
+using VRC.Dynamics;
 using VRC.SDKBase;
 using VRC.Udon.Common;
 
@@ -36,8 +37,6 @@ namespace nikkyai.Kinetic_Controls
 
         private Vector3 _axisVector = Vector3.zero;
 
-        [SerializeField] private FingerContactTracker fingerTracker;
-
         [InspectorName("minPosition"),
          SerializeField]
         private Transform minLimit;
@@ -50,8 +49,7 @@ namespace nikkyai.Kinetic_Controls
         [SerializeField]
         private Transform valueIndicator;
 
-        [SerializeField]
-        private Transform targetIndicator;
+        [SerializeField] private Transform targetIndicator;
 
         [SerializeField] private Transform isAuthorizedIndicator;
 
@@ -99,10 +97,9 @@ namespace nikkyai.Kinetic_Controls
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
 
         [Header("State")] // header
-        
         [SerializeField, UdonSynced]
         private bool synced = true;
-        
+
         public override bool Synced
         {
             get => synced;
@@ -116,7 +113,7 @@ namespace nikkyai.Kinetic_Controls
                 synced = value;
                 Log($"set state to {_syncedValueNormalized} => {prevValue}");
                 _syncedValueNormalized = prevValue;
-                
+
                 RequestSerialization();
             }
         }
@@ -205,14 +202,15 @@ namespace nikkyai.Kinetic_Controls
                 .AddRange(
                     targetIndicator.GetComponentsInChildren<FloatDriver>()
                 );
-            
-            if (isAuthorizedIndicator)
+
+            if (isAuthorizedIndicator != null)
             {
                 _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponents<BoolDriver>()
                     .AddRange(
                         isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>()
                     );
             }
+
             if (_valueFloatDrivers != null)
             {
                 Log($"found {_valueFloatDrivers.Length} drivers for value");
@@ -224,24 +222,24 @@ namespace nikkyai.Kinetic_Controls
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetupFingerTracker()
-        {
-            if (fingerTracker)
-            {
-                _leftHandCollider = fingerTracker.leftHandCollider;
-                _rightHandCollider = fingerTracker.rightHandCollider;
-                if (_leftHandCollider)
-                {
-                    _leftHandColliderId = _leftHandCollider.GetInstanceID();
-                }
-
-                if (_rightHandCollider)
-                {
-                    _rightHandColliderId = _rightHandCollider.GetInstanceID();
-                }
-            }
-        }
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        // private void SetupFingerTracker()
+        // {
+        //     if (fingerTracker)
+        //     {
+        //         _leftHandCollider = fingerTracker.leftHandCollider;
+        //         _rightHandCollider = fingerTracker.rightHandCollider;
+        //         if (_leftHandCollider)
+        //         {
+        //             _leftHandColliderId = _leftHandCollider.GetInstanceID();
+        //         }
+        //
+        //         if (_rightHandCollider)
+        //         {
+        //             _rightHandColliderId = _rightHandCollider.GetInstanceID();
+        //         }
+        //     }
+        // }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupFaderHandle()
@@ -303,7 +301,7 @@ namespace nikkyai.Kinetic_Controls
         protected override void _Init()
         {
             SetupValuesAndComponents();
-            SetupFingerTracker();
+            // SetupFingerTracker();
             SetupFaderHandle();
             SetupRigidBody();
 
@@ -351,7 +349,7 @@ namespace nikkyai.Kinetic_Controls
             _isHeldLocally = true;
             _syncedIsBeingManipulated = true;
             Log($"Desktop Pickup with target at {_syncedValueNormalized}");
-            
+
             if (synced)
             {
                 RequestSerialization();
@@ -364,7 +362,7 @@ namespace nikkyai.Kinetic_Controls
             _isHeldLocally = false;
             _syncedIsBeingManipulated = false;
             Log($"Desktop Drop with target at {_syncedValueNormalized}");
-            
+
             if (synced)
             {
                 RequestSerialization();
@@ -401,53 +399,96 @@ namespace nikkyai.Kinetic_Controls
 
             // if (_syncedValueNormalized != _lastSyncedValueNormalized)
             // {
-           
+
             if (synced)
             {
                 RequestSerialization();
             }
+
             OnDeserialization();
             // }
         }
 
-        private bool _isColliding = false;
-
+        private bool _isTrackingLeft = false;
+        private bool _isTrackingRight = false;
+        private bool _isRunningLoop = false;
+        
         public void _OnFollowCollider()
         {
             if (!isAuthorized) return;
             // if (_isDesktop) return; // should not be required
 
-            // if (_leftGrabbed || _rightGrabbed)
-            if (fingerTracker.leftGrabbed || fingerTracker.rightGrabbed)
+            var followLeft = faderHandle.leftGrabbed && _inLeftTrigger;
+            var followRight = faderHandle.rightGrabbed && _inRightTrigger;
+
+            if (_inLeftTrigger || _inRightTrigger)
             {
                 this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
+                _isRunningLoop = true;
             }
             else
             {
-                if (_syncedIsBeingManipulated)
-                {
-                    _syncedIsBeingManipulated = false;
-                    
-                    if (synced)
-                    {
-                        RequestSerialization();
-                    }
-                }
+                Log("stopping follow collider loop");
+                _isRunningLoop = false;
+            }
+            
+            if (_isTrackingLeft && !followLeft)
+            {
+                Log($"VR Drop with target at {_syncedValueNormalized}");
+                _isTrackingLeft = false;
+                // if (synced)
+                // {
+                //     RequestSerialization();
+                // }
 
+                _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
+                return;
+            }
+            if (_isTrackingRight && !followRight)
+            {
+                Log($"VR Drop with target at {_syncedValueNormalized}");
+                _isTrackingRight = false;
+                // if (synced)
+                // {
+                //     RequestSerialization();
+                // }
+
+                _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
                 return;
             }
 
+            if (followLeft)
+            {
+
+                if (!_isTrackingLeft)
+                {
+                    _isTrackingLeft = true;
+                    _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
+                }
+            }
+            else if (followRight)
+            {
+
+                if (!_isTrackingRight)
+                {
+                    _isTrackingRight = true;
+                    _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
+                }
+            }
+
             // if ((fingerContactTracker.rightGrabbed && _inRightTrigger) || (fingerContactTracker.leftGrabbed && _inLeftTrigger))
-            if (_inRightTrigger || _inLeftTrigger)
-            //if(_isColliding)
+            if (followLeft || followRight)
+                //if(_isColliding)
             {
                 _syncedIsBeingManipulated = true;
-                Transform handData = _inRightTrigger ? _rightHandCollider.transform : _leftHandCollider.transform;
+                // Transform handData = _inRightTrigger ? _rightHandCollider.transform : _leftHandCollider.transform;
+                // var localFingerPos = transform.InverseTransformPoint(handData.position);
+                Vector3 globalFingerPos = _inRightTrigger ? _getRightFingerPos() : _getLeftFingerPos();
+                var localFingerPos = transform.InverseTransformPoint(globalFingerPos);
+                float positionComponent = localFingerPos[(int)axis];
 
-                var localFingerPos = transform.InverseTransformPoint(handData.position);
-                float fingerPos = localFingerPos[(int)axis];
                 var clampedPos = Mathf.Clamp(
-                    fingerPos,
+                    positionComponent,
                     _minPos,
                     _maxPos
                 );
@@ -463,43 +504,145 @@ namespace nikkyai.Kinetic_Controls
 
                 // if (_syncedValueNormalized != _lastSyncedValueNormalized)
                 // {
-                
+
                 if (synced)
                 {
                     RequestSerialization();
                 }
+
                 OnDeserialization();
                 // }
             }
-            else if(_syncedIsBeingManipulated)
-            {
-                Log($"VR Drop with target at {_syncedValueNormalized}");
-                _syncedIsBeingManipulated = false;
-                
-                if (synced)
-                {
-                    RequestSerialization();
-                }
-            }
+            // else if(_syncedIsBeingManipulated)
+            // {
+            //     Log($"VR Drop with target at {_syncedValueNormalized}");
+            //     _syncedIsBeingManipulated = false;
+            //     
+            //     if (synced)
+            //     {
+            //         RequestSerialization();
+            //     }  
+            //     if (_inLeftTrigger)
+            //     {
+            //         _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
+            //     }
+            //
+            //     if (_inRightTrigger)
+            //     {
+            //         _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
+            //     }
+            // }
         }
 
-        // public void _OnCollisionStart()
-        // {
-        //     TakeOwnership();
-        //     _isColliding = true;
-        //     if (!_isColliding)
-        //     {
-        //         Log($"VR Pickup with target at {_syncedValueNormalized}");
-        //         Log("starting FollowCollider");
-        //         this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
-        //     }
-        // }
-        //
-        // public void _OnCollisionEnd()
-        // {
-        //     _isColliding = false;
-        // }
-        
+        [NonSerialized] public ContactSenderProxy leftSender, rightSender;
+
+        private Vector3 _getLeftFingerPos()
+        {
+            //var _leftSender = faderHandle._leftSender;
+            if (leftSender != null)
+            {
+                return leftSender.position;
+            }
+
+            Vector3 _leftHandPos = _localPlayer.GetBonePosition(HumanBodyBones.LeftIndexDistal);
+            if (_leftHandPos == Vector3.zero)
+            {
+                _leftHandPos = _localPlayer.GetBonePosition(HumanBodyBones.LeftIndexIntermediate);
+            }
+
+            return _leftHandPos;
+        }
+
+        private Vector3 _getRightFingerPos()
+        {
+            //var _rightSender = faderHandle._rightSender;
+            if (rightSender != null)
+            {
+                return rightSender.position;
+            }
+
+            Vector3 _rightHandPos = _localPlayer.GetBonePosition(HumanBodyBones.RightIndexDistal);
+            if (_rightHandPos == Vector3.zero)
+            {
+                _rightHandPos = _localPlayer.GetBonePosition(HumanBodyBones.RightIndexIntermediate);
+            }
+
+            return _rightHandPos;
+        }
+
+        public void OnLeftContactEnter()
+        {
+            if (!isAuthorized) return;
+            Log($"received {leftSender.usage}");
+            Log($"Left Contact Enter");
+            
+
+            if (!_inLeftTrigger)
+            {
+                Log($"VR Pickup with target at {_syncedValueNormalized}");
+                if (!_isRunningLoop)
+                {
+                    Log("starting FollowCollider");
+                    this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
+                    _isRunningLoop = true;
+                }
+                else
+                {
+                    LogWarning("loop already running");
+                }
+            }
+
+            TakeOwnership();
+
+            _inLeftTrigger = true;
+            //_localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
+        }
+
+        public void OnRightContactEnter()
+        {
+            if (!isAuthorized) return;
+            Log($"received {rightSender.usage}");
+            Log($"Right Contact Enter");
+            
+
+            if (!_inRightTrigger)
+            {
+                Log($"VR Pickup with target at {_syncedValueNormalized}");
+                if (!_isRunningLoop)
+                {
+                    Log("starting FollowCollider");
+                    this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
+                    _isRunningLoop = true;
+                }
+                else
+                {
+                    LogWarning("loop already running");
+                }
+            }
+
+            TakeOwnership();
+
+            _inRightTrigger = true;
+            //_localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
+        }
+
+        public void OnLeftContactExit()
+        {
+            if (!isAuthorized) return;
+            Log($"Left Contact Exit");
+            _inLeftTrigger = false;
+            // _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
+        }
+
+        public void OnRightContactExit()
+        {
+            if (!isAuthorized) return;
+            Log($"Right Contact Exit");
+            _inRightTrigger = false;
+            // _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
+        }
+
+        /*
         public void _OnTriggerEnter(int other)
         {
             if (!isAuthorized) return;
@@ -512,7 +655,7 @@ namespace nikkyai.Kinetic_Controls
                     Log($"Left Trigger Enter");
                 }
         
-                if (!_inLeftTrigger && fingerTracker.leftGrabbed)
+                if (!_inLeftTrigger && faderHandle.leftGrabbed)
                 {
                     Log($"VR Pickup with target at {_syncedValueNormalized}");
                     Log("starting FollowCollider");
@@ -532,7 +675,7 @@ namespace nikkyai.Kinetic_Controls
                     Log($"Right Trigger Enter");
                 }
         
-                if (!_inRightTrigger && fingerTracker.rightGrabbed)
+                if (!_inRightTrigger && faderHandle.rightGrabbed)
                 {
                     Log($"VR Pickup with target at {_syncedValueNormalized}");
                     Log("starting FollowCollider");
@@ -545,7 +688,7 @@ namespace nikkyai.Kinetic_Controls
                 _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
             }
         }
-
+        
         public void _OnTriggerExit(int other)
         {
             if (!isAuthorized)
@@ -575,6 +718,7 @@ namespace nikkyai.Kinetic_Controls
                 _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
             }
         }
+        */
 
         protected override void UpdateTargetIndicator(float clampedPos)
         {
@@ -685,7 +829,7 @@ namespace nikkyai.Kinetic_Controls
         public void ApplyValues()
         {
             SetupValuesAndComponents();
-            SetupFingerTracker();
+            // SetupFingerTracker();
             SetupFaderHandle();
             SetupRigidBody();
             OnDeserialization();

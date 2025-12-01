@@ -451,7 +451,7 @@ Transform:
   m_GameObject: {fileID: 3430520365242208613}
   serializedVersion: 2
   m_LocalRotation: {x: 0.69351995, y: -0.13794969, z: 0.13794969, w: 0.69351995}
-  m_LocalPosition: {x: 0.18181944, y: 0, z: 0.07531214}
+  m_LocalPosition: {x: 0.1818195, y: 0, z: 0.07531211}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -1233,21 +1233,21 @@ PrefabInstance:
 
 
 
-        [    8.643] [PickupLever Lever_Y] SetupValuesAndComponents
+        [  116.821] [PickupLever Lever_Y] SetupValuesAndComponents
 
-        [   
-        8.643] [PickupLever Lever_Y] Searching for float drivers
+        [ 
+        116.821] [PickupLever Lever_Y] Searching for float drivers
 
-        [    8.643]
+        [  116.821]
         [PickupLever Lever_Y] found 1 drivers for value
 
-        [    8.643] [PickupLever
+        [  116.821] [PickupLever
         Lever_Y] found 0 drivers for target
 
-        [    8.643] [PickupLever Lever_Y]
+        [  116.821] [PickupLever Lever_Y]
         Searching for leverBase
 
-        [    8.643] [PickupLever Lever_Y] SetupPickup'
+        [  116.821] [PickupLever Lever_Y] SetupPickup'
       objectReference: {fileID: 0}
     - target: {fileID: 7438426916000396222, guid: 1ac75656e384b784585721b4a65133ad, type: 3}
       propertyPath: m_Material
@@ -1259,7 +1259,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7438426917054625217, guid: 1ac75656e384b784585721b4a65133ad, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.317
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 7438426917054625217, guid: 1ac75656e384b784585721b4a65133ad, type: 3}
       propertyPath: m_LocalRotation.w
