@@ -540,6 +540,7 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 3061302978185815512}
+  debugLog: {fileID: 0}
   textMeshPro: {fileID: 1140526223304662270}
   valueDisplayFormat: P2
 --- !u!114 &3061302978185815512
@@ -692,6 +693,9 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 7820683701588094753}
+  debugLog: {fileID: 1576189593384011048}
+  enforceACL: 1
+  accessControl: {fileID: 0}
   enableValueSmoothing: 1
   smoothingUpdateInterval: 3
   smoothingRate: 0.25
@@ -704,9 +708,6 @@ MonoBehaviour:
   valueIndicator: {fileID: 4495473456165569534}
   targetIndicator: {fileID: 5103251580507052969}
   isAuthorizedIndicator: {fileID: 0}
-  enforceACL: 1
-  accessControl: {fileID: 0}
-  debugLog: {fileID: 1576189593384011048}
   synced: 1
 --- !u!114 &7820683701588094753
 MonoBehaviour:
@@ -790,12 +791,10 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 6245326093468712891}
-  touchFader: {fileID: 769544397795035225}
-  leftHandCollider: {fileID: 0}
-  rightHandCollider: {fileID: 0}
+  debugLog: {fileID: 1576189593384011048}
   enforceACL: 1
   accessControl: {fileID: 0}
-  debugLog: {fileID: 1576189593384011048}
+  touchFaderWithHandle: {fileID: 769544397795035225}
 --- !u!33 &8003379553483669399
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -959,11 +958,11 @@ PrefabInstance:
 
 
 
-        [  116.821] [TouchFader Touch Fader]
-        found 1 drivers for value
+        [   52.716] [TouchFaderWithHandle
+        Touch Fader] found 1 drivers for value
 
-        [  116.821] [TouchFader Touch Fader] found
-        0 drivers for target'
+        [   52.716] [TouchFaderWithHandle
+        Touch Fader] found 0 drivers for target'
       objectReference: {fileID: 0}
     - target: {fileID: 7438426916000396222, guid: 1ac75656e384b784585721b4a65133ad, type: 3}
       propertyPath: m_Material

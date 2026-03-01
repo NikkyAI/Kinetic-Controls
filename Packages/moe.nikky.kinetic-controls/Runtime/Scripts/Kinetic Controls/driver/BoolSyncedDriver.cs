@@ -15,6 +15,7 @@ namespace nikkyai.Kinetic_Controls.driver
 
         public override void UpdateBool(bool value)
         {
+            if (!enabled) return;
 
             foreach (var behaviour in syncedBehaviours)
             {

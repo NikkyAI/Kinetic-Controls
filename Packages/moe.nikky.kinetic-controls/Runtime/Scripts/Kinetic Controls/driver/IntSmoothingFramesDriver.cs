@@ -23,6 +23,7 @@ namespace nikkyai.Kinetic_Controls.driver
 
         public override void UpdateInt(int value)
         {
+            if (!enabled) return;
             if (value <= 0)
             {
                 LogError("value must be greater than 0");

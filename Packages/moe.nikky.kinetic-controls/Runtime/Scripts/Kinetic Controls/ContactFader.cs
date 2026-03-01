@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
-using nikkyai.driver;
 using nikkyai.ArrayExtensions;
+using nikkyai.driver;
 using Texel;
 using UdonSharp;
 using UnityEngine;
-using UnityEngine.Serialization;
 using VRC;
 using VRC.Dynamics;
 using VRC.SDKBase;
 using VRC.Udon.Common;
-
-// ReSharper disable ForCanBeConvertedToForeach
+using VRC.Udon.Serialization.OdinSerializer.Utilities;
 
 namespace nikkyai.Kinetic_Controls
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class TouchFader : BaseSmoothedBehaviour
+    public class ContactFader : BaseSmoothedBehaviour
     {
         [Header("Touch Fader")] // header
         [SerializeField]
@@ -27,13 +24,7 @@ namespace nikkyai.Kinetic_Controls
         [SerializeField] private float defaultValue = 0.25f;
         private float _normalizedDefault;
 
-        [SerializeField] private TouchFaderHandle faderHandle;
-
-        private Collider _handleCollider;
-        // private InteractCallback _interactCallback;
-        // [SerializeField] private PickupTrigger pickupTrigger;
-
-        // [SerializeField] private Transform pickupReset;
+        // [SerializeField] private TouchFaderHandle faderHandle;
 
         private Vector3 _axisVector = Vector3.zero;
 
@@ -54,45 +45,8 @@ namespace nikkyai.Kinetic_Controls
         [SerializeField] private Transform isAuthorizedIndicator;
 
         private Rigidbody _rigidbody;
-
-        #region ACL
-
-        [Header("Access Control")] // header
-        [SerializeField]
-        private bool enforceACL = true;
-
-        protected override bool EnforceACL
-        {
-            get => enforceACL;
-            set => enforceACL = value;
-        }
-
-        [Tooltip("ACL used to check who can use the toggle")] [SerializeField]
-        private AccessControl accessControl;
-
-        protected override AccessControl AccessControl
-        {
-            get => accessControl;
-            set => accessControl = value;
-        }
-
-        #endregion
-
-        #region Debug
-
-        [Header("Debug")] // header
-        [SerializeField]
-        private DebugLog debugLog;
-
-        protected override string LogPrefix => $"{nameof(TouchFader)} {name}";
-
-        protected override DebugLog DebugLog
-        {
-            get => debugLog;
-            set => debugLog = value;
-        }
-
-        #endregion
+        
+        protected override string LogPrefix => $"{nameof(ContactFader)} {name}";
 
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
 
@@ -143,12 +97,15 @@ namespace nikkyai.Kinetic_Controls
         protected override float MinValue => _minValue;
         protected override float MaxValue => _maxValue;
 
+        private GameObject faderHandle = null;
+        
         // private VRC_Pickup pickup;
-        private Rigidbody _rigidBody;
+        // private Rigidbody _rigidBody;
         private VRCPlayerApi _localPlayer;
         private float _lastValue;
         private bool _isHeldLocally;
         private bool _isDesktop = false;
+        private bool _isInVR;
 
         private Collider _leftHandCollider;
         private Collider _rightHandCollider;
@@ -158,7 +115,7 @@ namespace nikkyai.Kinetic_Controls
         private bool _inRightTrigger;
 
         private bool isUdon = true;
-
+        
         private void Start()
         {
             _EnsureInit();
@@ -182,6 +139,7 @@ namespace nikkyai.Kinetic_Controls
             if (_localPlayer != null)
             {
                 _isDesktop = !_localPlayer.IsUserInVR();
+                _isInVR = _localPlayer.IsUserInVR();
             }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
@@ -194,21 +152,12 @@ namespace nikkyai.Kinetic_Controls
             // enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
 
             //TODO: move into running in editor
-            _valueFloatDrivers = valueIndicator.GetComponents<FloatDriver>()
-                .AddRange(
-                    valueIndicator.GetComponentsInChildren<FloatDriver>()
-                );
-            _targetFloatDrivers = targetIndicator.GetComponents<FloatDriver>()
-                .AddRange(
-                    targetIndicator.GetComponentsInChildren<FloatDriver>()
-                );
+            _valueFloatDrivers = valueIndicator.GetComponentsInChildren<FloatDriver>();
+            _targetFloatDrivers = targetIndicator.GetComponentsInChildren<FloatDriver>();
 
             if (isAuthorizedIndicator != null)
             {
-                _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponents<BoolDriver>()
-                    .AddRange(
-                        isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>()
-                    );
+                _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>();
             }
 
             if (_valueFloatDrivers != null)
@@ -222,88 +171,34 @@ namespace nikkyai.Kinetic_Controls
             }
         }
 
-        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        // private void SetupFingerTracker()
-        // {
-        //     if (fingerTracker)
-        //     {
-        //         _leftHandCollider = fingerTracker.leftHandCollider;
-        //         _rightHandCollider = fingerTracker.rightHandCollider;
-        //         if (_leftHandCollider)
-        //         {
-        //             _leftHandColliderId = _leftHandCollider.GetInstanceID();
-        //         }
-        //
-        //         if (_rightHandCollider)
-        //         {
-        //             _rightHandColliderId = _rightHandCollider.GetInstanceID();
-        //         }
-        //     }
-        // }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupFaderHandle()
         {
-            if (faderHandle)
-            {
-                faderHandle.touchFader = this;
-                faderHandle.leftHandCollider = _leftHandCollider;
-                faderHandle.rightHandCollider = _rightHandCollider;
-
-                // _interactCallback = faderHandle.GetComponent<InteractCallback>();
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
-                faderHandle.EditorACL = accessControl;
-                faderHandle.enforceACL = enforceACL;
-                faderHandle.EditorDebugLog = debugLog;
-                faderHandle.MarkDirty();
-#endif
-            }
-            else
-            {
-                LogError("missing fader handle");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetupRigidBody()
-        {
-            if (faderHandle)
-            {
-                //TODO: get rigidbody from handle contact
-                _rigidBody = faderHandle.GetComponent<Rigidbody>();
-                if (_rigidBody)
-                {
-                    _rigidBody.useGravity = false;
-                    _rigidBody.isKinematic = true;
-                    // if (axis == Axis.X)
-                    // {
-                    //     _rigidBody.constraints = RigidbodyConstraints.FreezeAll
-                    //                              & ~RigidbodyConstraints.FreezePositionX;
-                    // }
-                    // else if (axis == Axis.Y)
-                    // {
-                    //     _rigidBody.constraints = RigidbodyConstraints.FreezeAll
-                    //                              & ~RigidbodyConstraints.FreezePositionY;
-                    // }
-                    // else
-                    // {
-                    //     _rigidBody.constraints = RigidbodyConstraints.FreezeAll
-                    //                              & ~RigidbodyConstraints.FreezePositionZ;
-                    // }
-                }
-            }
-            else
-            {
-                LogError("missing handle collider");
-            }
+            faderHandle = this.gameObject;
+//             if (faderHandle)
+//             {
+//                 // faderHandle.touchFaderWithHandle = this;
+//                 faderHandle.leftHandCollider = _leftHandCollider;
+//                 faderHandle.rightHandCollider = _rightHandCollider;
+//
+//                 // _interactCallback = faderHandle.GetComponent<InteractCallback>();
+// #if UNITY_EDITOR && !COMPILER_UDONSHARP
+//                 faderHandle.EditorACL = accessControl;
+//                 faderHandle.enforceACL = enforceACL;
+//                 faderHandle.EditorDebugLog = debugLog;
+//                 faderHandle.MarkDirty();
+// #endif
+//             }
+//             else
+//             {
+//                 LogError("missing fader handle");
+//             }
         }
 
         protected override void _Init()
         {
             SetupValuesAndComponents();
-            // SetupFingerTracker();
             SetupFaderHandle();
-            SetupRigidBody();
 
             OnDeserialization();
             UpdateValueIndicator(
@@ -313,6 +208,7 @@ namespace nikkyai.Kinetic_Controls
                 Mathf.Lerp(_minPos, _maxPos, smoothingTargetNormalized)
             );
 
+            DisableInteractive = _isInVR;
             // pickup.transform.SetPositionAndRotation(pickupReset.position, pickupReset.rotation);
         }
 
@@ -322,13 +218,115 @@ namespace nikkyai.Kinetic_Controls
             {
                 _isAuthorizedBoolDrivers[i].UpdateBool(isAuthorized);
             }
+            DisableInteractive = !isAuthorized || _isInVR;
         }
 
+        [NonSerialized] public bool rightGrabbed;
+        [NonSerialized] public bool leftGrabbed;
 
+        public override void InputGrab(bool value, UdonInputEventArgs args)
+        {
+            if (!_isInVR) return;
+            //Log($"InputGrab({value}, {args.handType})");
+            if (value)
+            {
+                // if (!_leftGrabbed && !_rightGrabbed)
+                // {
+                //     Log("starting FollowCollider");
+                //     this.SendCustomEventDelayedFrames(nameof(_OnFollowCollider), 1);
+                // }
+
+                if (args.handType == HandType.LEFT)
+                {
+                    if (!leftGrabbed)
+                    {
+                       // Log($"LeftGrabbed()");
+                    }
+
+                    leftGrabbed = true;
+                }
+
+                if (args.handType == HandType.RIGHT)
+                {
+                    if (!rightGrabbed)
+                    {
+                        //Log($"RightGrabbed()");
+                    }
+
+                    rightGrabbed = true;
+                }
+            }
+            else
+            {
+                if (args.handType == HandType.LEFT)
+                {
+                    if (leftGrabbed)
+                    {
+                        // Log($"LeftReleased()");
+                    }
+
+                    leftGrabbed = false;
+                }
+
+                if (args.handType == HandType.RIGHT)
+                {
+                    if (rightGrabbed)
+                    {
+                        //Log($"RightReleased()");
+                    }
+
+                    rightGrabbed = false;
+                }
+            }
+        }
+        
+        public override void Reset()
+        {
+            if (!isAuthorized) return;
+            _syncedValueNormalized = _normalizedDefault;
+            if (synced)
+            {
+                RequestSerialization();
+            }
+
+            OnDeserialization();
+        }
+
+        public override void SetValue(float normalizedValue)
+        {
+            if (!isAuthorized) return;
+            _syncedValueNormalized = normalizedValue;
+            if (synced)
+            {
+                RequestSerialization();
+            }
+
+            OnDeserialization();
+        }
+        
+        private bool _isInteracting = false;
+        public override void Interact()
+        {
+            if (!isAuthorized) return;
+            _isInteracting = true;
+            _HandleInteract();
+        }
+
+        public override void InputUse(bool value, UdonInputEventArgs args)
+        {
+            if (!_isInteracting) return;
+            if (!isAuthorized) return;
+            if (!value)
+            {
+                _isInteracting = false;
+                _HandleRelease();
+            }
+        }
+        
         public void _HandleInteract()
         {
             if (!isAuthorized) return;
-            if (!_isDesktop) return;
+            if (_isInVR) return;
 
             TakeOwnership();
 
@@ -339,7 +337,7 @@ namespace nikkyai.Kinetic_Controls
         public void _HandleRelease()
         {
             if (!isAuthorized) return;
-            if (!_isDesktop) return;
+            if (_isInVR) return;
 
             DesktopDrop();
         }
@@ -374,7 +372,7 @@ namespace nikkyai.Kinetic_Controls
         public override void InputLookVertical(float value, UdonInputEventArgs args)
         {
             if (!isAuthorized) return;
-            if (!_isDesktop) return;
+            if (_isInVR) return;
             if (!_isHeldLocally) return;
             // if (axis != Axis.Y) return; 
             // Log($"InputLookVertical {value} {args.handType}");
@@ -418,8 +416,8 @@ namespace nikkyai.Kinetic_Controls
             if (!isAuthorized) return;
             // if (_isDesktop) return; // should not be required
 
-            var followLeft = faderHandle.leftGrabbed && _inLeftTrigger;
-            var followRight = faderHandle.rightGrabbed && _inRightTrigger;
+            var followLeft = leftGrabbed && _inLeftTrigger;
+            var followRight = rightGrabbed && _inRightTrigger;
 
             if (_inLeftTrigger || _inRightTrigger)
             {
@@ -484,7 +482,7 @@ namespace nikkyai.Kinetic_Controls
                 // Transform handData = _inRightTrigger ? _rightHandCollider.transform : _leftHandCollider.transform;
                 // var localFingerPos = transform.InverseTransformPoint(handData.position);
                 Vector3 globalFingerPos = _inRightTrigger ? _getRightFingerPos() : _getLeftFingerPos();
-                var localFingerPos = transform.InverseTransformPoint(globalFingerPos);
+                var localFingerPos = transform.parent.InverseTransformPoint(globalFingerPos);
                 float positionComponent = localFingerPos[(int)axis];
 
                 var clampedPos = Mathf.Clamp(
@@ -575,7 +573,6 @@ namespace nikkyai.Kinetic_Controls
             if (!isAuthorized) return;
             Log($"received {leftSender.usage}");
             Log($"Left Contact Enter");
-            
 
             if (!_inLeftTrigger)
             {
@@ -603,7 +600,6 @@ namespace nikkyai.Kinetic_Controls
             if (!isAuthorized) return;
             Log($"received {rightSender.usage}");
             Log($"Right Contact Enter");
-            
 
             if (!_inRightTrigger)
             {
@@ -640,6 +636,57 @@ namespace nikkyai.Kinetic_Controls
             Log($"Right Contact Exit");
             _inRightTrigger = false;
             // _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
+        }
+        
+        // [NonSerialized] public ContactSenderProxy _leftSender, _rightSender;
+        public override void OnContactEnter(ContactEnterInfo contactInfo)
+        {
+            if (!_isInVR) return;
+            if (!contactInfo.contactSender.player.isLocal) return;
+            if (!isAuthorized) return;
+
+            Log($"Contact Enter {contactInfo.contactPoint} {contactInfo.matchingTags.Length}");
+            for (var i = 0; i < contactInfo.matchingTags.Length; i++)
+            {
+                var matchingTag = contactInfo.matchingTags[i];
+                Log(matchingTag);
+            }
+
+            if (contactInfo.matchingTags.Contains("FingerIndexL"))
+            {
+                leftSender = contactInfo.contactSender;
+                OnLeftContactEnter();
+                return;
+            }
+
+            if (contactInfo.matchingTags.Contains("FingerIndexR"))
+            {
+                rightSender = contactInfo.contactSender;
+                OnRightContactEnter();
+                return;
+            }
+        }
+
+        public override void OnContactExit(ContactExitInfo contactInfo)
+        {
+            if (!_isInVR) return;
+            if (!contactInfo.contactSender.player.isLocal) return;
+            if (!isAuthorized) return;
+            Log($"Contact Exit");
+
+            if (contactInfo.contactSender == leftSender)
+            {
+                Log($"Contact Exit Left");
+                leftSender = null;
+                OnLeftContactExit();
+            }
+
+            if (contactInfo.contactSender == rightSender)
+            {
+                Log($"Contact Exit Right");
+                rightSender = null;
+                OnRightContactExit();
+            }
         }
 
         /*
@@ -724,9 +771,16 @@ namespace nikkyai.Kinetic_Controls
         {
             // if (!enableValueSmoothing) return;
             if (targetIndicator == null) return;
-            Vector3 newPos = targetIndicator.transform.localPosition;
+            Log($"update target indicator {clampedPos}");
+            // target worldPos --> min local space
+            Vector3 newPos = minLimit.transform.parent.InverseTransformPoint(
+                faderHandle.transform.position
+            );
+            // update axis clamped pos
             newPos[(int)axis] = clampedPos;
-            targetIndicator.transform.localPosition = newPos;
+            // min local space -> world pos
+            // set position
+            targetIndicator.transform.position = minLimit.transform.parent.TransformPoint(newPos);
 
             UpdateHandlePosition();
 
@@ -738,9 +792,21 @@ namespace nikkyai.Kinetic_Controls
         protected override void UpdateValueIndicator(float clampedPos)
         {
             if (valueIndicator == null) return;
-            Vector3 newPos = valueIndicator.transform.localPosition;
+            Log($"update value indicator {clampedPos}");
+            // Vector3 newPos = valueIndicator.transform.localPosition;
+            // // Vector3 newPos = minLimit.transform.position;
+            // newPos[(int)axis] = clampedPos;
+            // valueIndicator.transform.position = newPos;
+            
+            // reference worldPos --> min localPos
+            Vector3 newPos = minLimit.transform.parent.InverseTransformPoint(
+                faderHandle.transform.position
+            );
+            // update axis clamped pos
             newPos[(int)axis] = clampedPos;
-            valueIndicator.transform.localPosition = newPos;
+            // min local space -> world pos
+            // set position
+            valueIndicator.transform.position = minLimit.transform.parent.TransformPoint(newPos);
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             valueIndicator.transform.MarkDirty();
@@ -749,12 +815,6 @@ namespace nikkyai.Kinetic_Controls
 
         private void UpdateHandlePosition()
         {
-            if (_rigidBody)
-            {
-                _rigidBody.angularVelocity = Vector3.zero;
-                _rigidBody.velocity = Vector3.zero;
-            }
-
             // parentConstraint.GlobalWeight = 1;
             faderHandle.transform.SetPositionAndRotation(
                 targetIndicator.position,
@@ -762,7 +822,6 @@ namespace nikkyai.Kinetic_Controls
             );
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-            if (_rigidBody) _rigidBody.MarkDirty();
             faderHandle.transform.MarkDirty();
 #endif
         }
@@ -786,9 +845,9 @@ namespace nikkyai.Kinetic_Controls
             prevDefault = float.NaN;
 
 
-        [NonSerialized] private AccessControl prevAccessControl;
-        [NonSerialized] private bool prevEnforceACL;
-        [NonSerialized] private DebugLog prevDebugLog;
+        // [NonSerialized] private AccessControl prevAccessControl;
+        // [NonSerialized] private bool prevEnforceACL;
+        // [NonSerialized] private DebugLog prevDebugLog;
         [NonSerialized] private bool childrenInitialized = false;
         // ReSharper restore InconsistentNaming
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
@@ -814,15 +873,15 @@ namespace nikkyai.Kinetic_Controls
                 prevDefault = defaultValue;
             }
 
-            if (prevAccessControl != accessControl
-                || prevEnforceACL != enforceACL
-                || prevDebugLog != debugLog
-               )
-            {
-                ApplyACLsAndLog();
-                prevAccessControl = accessControl;
-                prevDebugLog = debugLog;
-            }
+            // if (prevAccessControl != accessControl
+            //     || prevEnforceACL != enforceACL
+            //     || prevDebugLog != debugLog
+            //    )
+            // {
+            //     ApplyACLsAndLog();
+            //     prevAccessControl = accessControl;
+            //     prevDebugLog = debugLog;
+            // }
         }
 
         [ContextMenu("Apply Values")]
@@ -831,7 +890,6 @@ namespace nikkyai.Kinetic_Controls
             SetupValuesAndComponents();
             // SetupFingerTracker();
             SetupFaderHandle();
-            SetupRigidBody();
             OnDeserialization();
             UpdateValueIndicator(
                 Mathf.Lerp(_minPos, _maxPos, smoothedCurrentNormalized)
@@ -840,30 +898,35 @@ namespace nikkyai.Kinetic_Controls
                 Mathf.Lerp(_minPos, _maxPos, smoothingTargetNormalized)
             );
 
+            Debug.Log("Applying target and value floats");
             foreach (var valueFloatDriver in _valueFloatDrivers)
             {
-                valueFloatDriver.ApplyFloatValue(defaultValue);
+                valueFloatDriver.ApplyFloatValue(
+                    Math.Clamp(defaultValue,_minValue,_maxValue)
+                );
             }
 
             foreach (var targetFloatDriver in _targetFloatDrivers)
             {
-                targetFloatDriver.ApplyFloatValue(defaultValue);
+                targetFloatDriver.ApplyFloatValue(
+                    Math.Clamp(defaultValue,_minValue,_maxValue)
+                );
             }
         }
 
-        [ContextMenu("Apply ACLs and Log")]
-        private void ApplyACLsAndLog()
-        {
-            // _interactCallback.EditorACL = accessControl;
-            // _interactCallback.EditorDebugLog = debugLog;
-            // _interactCallback.EditorEnforceACL = enforceACL;
-            // _interactCallback.MarkDirty();
-
-            faderHandle.EditorACL = accessControl;
-            faderHandle.EditorDebugLog = debugLog;
-            faderHandle.EditorEnforceACL = enforceACL;
-            faderHandle.MarkDirty();
-        }
+        // [ContextMenu("Apply ACLs and Log")]
+        // private void ApplyACLsAndLog()
+        // {
+        //     // _interactCallback.EditorACL = accessControl;
+        //     // _interactCallback.EditorDebugLog = debugLog;
+        //     // _interactCallback.EditorEnforceACL = enforceACL;
+        //     // _interactCallback.MarkDirty();
+        //
+        //     faderHandle.EditorACL = accessControl;
+        //     faderHandle.EditorDebugLog = debugLog;
+        //     faderHandle.EditorEnforceACL = enforceACL;
+        //     faderHandle.MarkDirty();
+        // }
 #endif
     }
 }

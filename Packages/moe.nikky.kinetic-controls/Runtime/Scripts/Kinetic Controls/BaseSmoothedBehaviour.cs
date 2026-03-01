@@ -64,22 +64,22 @@ namespace nikkyai.Kinetic_Controls
         public int SmoothingFrames
         {
             get => smoothingUpdateInterval;
-            set { smoothingUpdateInterval = value; }
+            set => smoothingUpdateInterval = value;
         }
         
         [Tooltip("fraction of the distance covered within roughly 1s"),
-         SerializeField]
+         SerializeField, Min(0.05f),]
         private float smoothingRate = 0.5f;
 
         public float SmoothingRate
         {
             get => smoothingRate;
-            set { smoothingRate = value; }
+            set => smoothingRate = value;
         }
         protected float smoothingTargetNormalized;
         protected float smoothedCurrentNormalized;
         
-        private const float epsilon = 0.005f;
+        private const float epsilon = 0.01f;//0.005f
         private bool valueInitialized = false;
         private bool isSmoothing = false;
         private float lastFrameTime = 0;
@@ -103,17 +103,17 @@ namespace nikkyai.Kinetic_Controls
         protected void _UpdateTargetValue(float normalizedTargetValue)
         {
             // Log($"update target value {normalizedTargetValue}");
-            var clampedRotEuler = Mathf.Lerp(MinPosOrRot, MaxPosOrRot, normalizedTargetValue);
-            UpdateTargetIndicator(clampedRotEuler);
+            var clampedPosRotEuler = Mathf.Lerp(MinPosOrRot, MaxPosOrRot, normalizedTargetValue);
+            UpdateTargetIndicator(clampedPosRotEuler);
+            var floatValue = Mathf.Lerp(MinValue, MaxValue, normalizedTargetValue);
             for (var i = 0; i < _targetFloatDrivers.Length; i++)
             {
-                _targetFloatDrivers[i].UpdateFloat(normalizedTargetValue);
+                _targetFloatDrivers[i].UpdateFloat(floatValue);
             }
 
             // immediate update
             if (!enableValueSmoothing)
             {
-                var floatValue = Mathf.Lerp(MinValue, MaxValue, normalizedTargetValue);
                 // for (var i = 0; i < _floatDrivers.Length; i++)
                 // {
                 //     _floatDrivers[i].UpdateFloat(floatValue);
@@ -123,7 +123,7 @@ namespace nikkyai.Kinetic_Controls
                     _valueFloatDrivers[i].UpdateFloat(floatValue);
                 }
 
-                UpdateValueIndicator(clampedRotEuler);
+                UpdateValueIndicator(clampedPosRotEuler);
 
                 return;
             }
@@ -140,7 +140,6 @@ namespace nikkyai.Kinetic_Controls
             {
                 smoothingTargetNormalized = normalizedTargetValue;
             }
-
 
             if (!isSmoothing)
             {
@@ -193,6 +192,16 @@ namespace nikkyai.Kinetic_Controls
             UpdateValueIndicator(
                 Mathf.Lerp(MinPosOrRot, MaxPosOrRot, smoothedCurrentNormalized)
             );
+        }
+        
+        
+        public virtual void Reset()
+        {
+            
+        }
+        public virtual void SetValue(float normalizedValue)
+        {
+            
         }
     }
 }

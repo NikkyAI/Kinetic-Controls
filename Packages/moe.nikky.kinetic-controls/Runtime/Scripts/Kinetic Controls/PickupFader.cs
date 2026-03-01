@@ -48,44 +48,7 @@ namespace nikkyai.Kinetic_Controls
         private Rigidbody _rigidbody;
         private bool _pickupHasObjectSync = false;
 
-        #region ACL
-        
-        [Header("Access Control")] // header
-        [SerializeField]
-        private bool enforceACL = true;
-
-        protected override bool EnforceACL
-        {
-            get => enforceACL;
-            set => enforceACL = value;
-        }
-
-        [Tooltip("ACL used to check who can use the toggle")] [SerializeField]
-        private AccessControl accessControl;
-
-        protected override AccessControl AccessControl
-        {
-            get => accessControl;
-            set => accessControl = value;
-        }
-
-        #endregion
-
-        #region Debug
-        
-        [Header("Debug")] // header
-        [SerializeField]
-        private DebugLog debugLog;
-
         protected override string LogPrefix => $"{nameof(PickupFader)} {name}";
-
-        protected override DebugLog DebugLog
-        {
-            get => debugLog;
-            set => debugLog = value;
-        }
-
-        #endregion
         
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
 
@@ -156,6 +119,7 @@ namespace nikkyai.Kinetic_Controls
             _minPos = minLimit.localPosition[(int)axis];
             _maxPos = maxLimit.localPosition[(int)axis];
             _normalizedDefault = Mathf.InverseLerp(_minValue, _maxValue, defaultValue);
+
             _syncedValueNormalized = _normalizedDefault;
             
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
@@ -169,21 +133,12 @@ namespace nikkyai.Kinetic_Controls
 
             //TODO: move into running in editor
             // _floatDrivers = gameObject.GetComponents<FloatDriver>();
-            _valueFloatDrivers = valueIndicator.GetComponents<FloatDriver>()
-                .AddRange(
-                    valueIndicator.GetComponentsInChildren<FloatDriver>()
-                );
-            _targetFloatDrivers = targetIndicator.GetComponents<FloatDriver>()
-                .AddRange(
-                    targetIndicator.GetComponentsInChildren<FloatDriver>()
-                );
+            _valueFloatDrivers = valueIndicator.GetComponentsInChildren<FloatDriver>();
+            _targetFloatDrivers = targetIndicator.GetComponentsInChildren<FloatDriver>();
             
             if (isAuthorizedIndicator)
             {
-                _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponents<BoolDriver>()
-                    .AddRange(
-                        isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>()
-                    );
+                _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>();
             }
             // if (_floatDrivers != null)
             // {
@@ -212,7 +167,7 @@ namespace nikkyai.Kinetic_Controls
         {
             if (pickupTrigger)
             {
-                pickupTrigger.accessControl = accessControl;
+                pickupTrigger.accessControl = AccessControl;
                 pickupTrigger.enforceACL = EnforceACL;
                 pickupTrigger._Register(PickupTrigger.EVENT_PICKUP, this, nameof(_OnPickup));
                 pickupTrigger._Register(PickupTrigger.EVENT_DROP, this, nameof(_OnDrop));
@@ -481,11 +436,15 @@ namespace nikkyai.Kinetic_Controls
 
             foreach (var valueFloatDriver in _valueFloatDrivers)
             {
-                valueFloatDriver.ApplyFloatValue(defaultValue);
+                valueFloatDriver.ApplyFloatValue(
+                    Math.Clamp(defaultValue,_minValue,_maxValue)
+                );
             }
             foreach (var targetFloatDriver in _targetFloatDrivers)
             {
-                targetFloatDriver.ApplyFloatValue(defaultValue);
+                targetFloatDriver.ApplyFloatValue(
+                    Math.Clamp(defaultValue,_minValue,_maxValue)
+                );
             }
         }
 #endif

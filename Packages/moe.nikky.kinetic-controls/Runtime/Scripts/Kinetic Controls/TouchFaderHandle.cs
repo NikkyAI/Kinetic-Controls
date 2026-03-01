@@ -4,7 +4,9 @@ using nikkyai.common;
 using Texel;
 using UdonSharp;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VRC.Dynamics;
+using VRC.SDK3.Dynamics.Contact.Components;
 using VRC.SDKBase;
 using VRC.Udon.Common;
 using VRC.Udon.Common.Interfaces;
@@ -14,49 +16,12 @@ namespace nikkyai.Kinetic_Controls
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class TouchFaderHandle : ACLBase
     {
-        [SerializeField] internal TouchFader touchFader;
-        
-        public Collider leftHandCollider;
-        public Collider rightHandCollider;
-
-        #region ACL
-
-        [Header("Access Control")] // header
-        public bool enforceACL;
-
-        protected override bool EnforceACL
-        {
-            get => enforceACL;
-            set => enforceACL = value;
-        }
-
-        [Tooltip("ACL used to check who can use the toggle")] [SerializeField]
-        public AccessControl accessControl;
-
-        protected override AccessControl AccessControl
-        {
-            get => accessControl;
-            set => accessControl = value;
-        }
-
-        #endregion
-
-        #region Debug
-
-        [Header("Debug")] // header
-        [SerializeField]
-        private DebugLog debugLog;
-
-        protected override DebugLog DebugLog
-        {
-            get => debugLog;
-            set => debugLog = value;
-        }
+        [FormerlySerializedAs("touchFader")]
+        [SerializeField] internal TouchFaderWithHandle touchFaderWithHandle;
 
         protected override string LogPrefix => nameof(TouchFaderHandle);
 
-        #endregion
-
+        private VRCContactReceiver _receiver;
         private VRCPlayerApi _localPlayer;
         //private bool _inLeftTrigger;
         //private bool _inRightTrigger;
@@ -72,6 +37,7 @@ namespace nikkyai.Kinetic_Controls
         {
             _localPlayer = Networking.LocalPlayer;
             _isInVR = _localPlayer.IsUserInVR();
+            _receiver = GetComponent<VRCContactReceiver>();
             DisableInteractive = _isInVR;
         }
 
@@ -86,7 +52,7 @@ namespace nikkyai.Kinetic_Controls
         {
             if (!isAuthorized) return;
             _isInteracting = true;
-            touchFader._HandleInteract();
+            touchFaderWithHandle._HandleInteract();
         }
 
         public override void InputUse(bool value, VRC.Udon.Common.UdonInputEventArgs args)
@@ -95,7 +61,7 @@ namespace nikkyai.Kinetic_Controls
             if (!isAuthorized) return;
             if (!value)
             {
-                touchFader._HandleRelease();
+                touchFaderWithHandle._HandleRelease();
             }
         }
 
@@ -105,7 +71,7 @@ namespace nikkyai.Kinetic_Controls
         public override void InputGrab(bool value, UdonInputEventArgs args)
         {
             if (!_isInVR) return;
-            Log($"InputGrab({value}, {args.handType})");
+            // Log($"InputGrab({value}, {args.handType})");
             if (value)
             {
                 // if (!_leftGrabbed && !_rightGrabbed)
@@ -118,7 +84,7 @@ namespace nikkyai.Kinetic_Controls
                 {
                     if (!leftGrabbed)
                     {
-                        Log($"LeftGrabbed()");
+                        // Log($"LeftGrabbed()");
                     }
 
                     leftGrabbed = true;
@@ -128,7 +94,7 @@ namespace nikkyai.Kinetic_Controls
                 {
                     if (!rightGrabbed)
                     {
-                        Log($"RightGrabbed()");
+                        // Log($"RightGrabbed()");
                     }
 
                     rightGrabbed = true;
@@ -138,14 +104,21 @@ namespace nikkyai.Kinetic_Controls
             {
                 if (args.handType == HandType.LEFT)
                 {
-                    if (leftGrabbed) Log($"LeftReleased()");
+                    if (leftGrabbed)
+                    {
+                        // Log($"LeftReleased()");
+                    }
+
 
                     leftGrabbed = false;
                 }
 
                 if (args.handType == HandType.RIGHT)
                 {
-                    if (rightGrabbed) Log($"RightReleased()");
+                    if (rightGrabbed)
+                    {
+                        // Log($"RightReleased()");
+                    }
 
                     rightGrabbed = false;
                 }
@@ -164,6 +137,7 @@ namespace nikkyai.Kinetic_Controls
             // touchFader._OnTriggerExit(other.GetInstanceID());
         }
 
+        
         // [NonSerialized] public ContactSenderProxy _leftSender, _rightSender;
         public override void OnContactEnter(ContactEnterInfo contactInfo)
         {
@@ -180,15 +154,15 @@ namespace nikkyai.Kinetic_Controls
 
             if (contactInfo.matchingTags.Contains("FingerIndexL"))
             {
-                touchFader.leftSender = contactInfo.contactSender;
-                touchFader.OnLeftContactEnter();
+                touchFaderWithHandle.leftSender = contactInfo.contactSender;
+                touchFaderWithHandle.OnLeftContactEnter();
                 return;
             }
 
             if (contactInfo.matchingTags.Contains("FingerIndexR"))
             {
-                touchFader.rightSender = contactInfo.contactSender;
-                touchFader.OnRightContactEnter();
+                touchFaderWithHandle.rightSender = contactInfo.contactSender;
+                touchFaderWithHandle.OnRightContactEnter();
                 return;
             }
         }
@@ -200,18 +174,18 @@ namespace nikkyai.Kinetic_Controls
             if (!isAuthorized) return;
             Log($"Contact Exit");
 
-            if (contactInfo.contactSender == touchFader.leftSender)
+            if (contactInfo.contactSender == touchFaderWithHandle.leftSender)
             {
                 Log($"Contact Exit Left");
-                touchFader.leftSender = null;
-                touchFader.OnLeftContactExit();
+                touchFaderWithHandle.leftSender = null;
+                touchFaderWithHandle.OnLeftContactExit();
             }
 
-            if (contactInfo.contactSender == touchFader.rightSender)
+            if (contactInfo.contactSender == touchFaderWithHandle.rightSender)
             {
                 Log($"Contact Exit Right");
-                touchFader.rightSender = null;
-                touchFader.OnRightContactExit();
+                touchFaderWithHandle.rightSender = null;
+                touchFaderWithHandle.OnRightContactExit();
             }
         }
     }
