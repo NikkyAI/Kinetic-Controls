@@ -14,7 +14,7 @@ using VRC.Udon.Serialization.OdinSerializer.Utilities;
 namespace nikkyai.Kinetic_Controls
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class ContactFader : BaseSmoothedBehaviour
+    public class ContactFaderDeprecated : BaseSmoothedBehaviour
     {
         [Header("Touch Fader")] // header
         [SerializeField]
@@ -46,7 +46,7 @@ namespace nikkyai.Kinetic_Controls
 
         private Rigidbody _rigidbody;
         
-        protected override string LogPrefix => $"{nameof(ContactFader)} {name}";
+        protected override string LogPrefix => $"{nameof(ContactFaderDeprecated)} {name}";
 
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
 

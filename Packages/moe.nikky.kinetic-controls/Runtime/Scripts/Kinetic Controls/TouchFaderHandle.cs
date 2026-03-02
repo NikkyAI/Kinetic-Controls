@@ -16,8 +16,7 @@ namespace nikkyai.Kinetic_Controls
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class TouchFaderHandle : ACLBase
     {
-        [FormerlySerializedAs("touchFader")]
-        [SerializeField] internal TouchFaderWithHandle touchFaderWithHandle;
+        [FormerlySerializedAs("touchFaderWithHandle")] [SerializeField] internal TouchFader touchFader;
 
         protected override string LogPrefix => nameof(TouchFaderHandle);
 
@@ -52,7 +51,7 @@ namespace nikkyai.Kinetic_Controls
         {
             if (!isAuthorized) return;
             _isInteracting = true;
-            touchFaderWithHandle._HandleInteract();
+            touchFader._HandleInteract();
         }
 
         public override void InputUse(bool value, VRC.Udon.Common.UdonInputEventArgs args)
@@ -61,7 +60,7 @@ namespace nikkyai.Kinetic_Controls
             if (!isAuthorized) return;
             if (!value)
             {
-                touchFaderWithHandle._HandleRelease();
+                touchFader._HandleRelease();
             }
         }
 
@@ -154,15 +153,15 @@ namespace nikkyai.Kinetic_Controls
 
             if (contactInfo.matchingTags.Contains("FingerIndexL"))
             {
-                touchFaderWithHandle.leftSender = contactInfo.contactSender;
-                touchFaderWithHandle.OnLeftContactEnter();
+                touchFader.leftSender = contactInfo.contactSender;
+                touchFader.OnLeftContactEnter();
                 return;
             }
 
             if (contactInfo.matchingTags.Contains("FingerIndexR"))
             {
-                touchFaderWithHandle.rightSender = contactInfo.contactSender;
-                touchFaderWithHandle.OnRightContactEnter();
+                touchFader.rightSender = contactInfo.contactSender;
+                touchFader.OnRightContactEnter();
                 return;
             }
         }
@@ -174,18 +173,18 @@ namespace nikkyai.Kinetic_Controls
             if (!isAuthorized) return;
             Log($"Contact Exit");
 
-            if (contactInfo.contactSender == touchFaderWithHandle.leftSender)
+            if (contactInfo.contactSender == touchFader.leftSender)
             {
                 Log($"Contact Exit Left");
-                touchFaderWithHandle.leftSender = null;
-                touchFaderWithHandle.OnLeftContactExit();
+                touchFader.leftSender = null;
+                touchFader.OnLeftContactExit();
             }
 
-            if (contactInfo.contactSender == touchFaderWithHandle.rightSender)
+            if (contactInfo.contactSender == touchFader.rightSender)
             {
                 Log($"Contact Exit Right");
-                touchFaderWithHandle.rightSender = null;
-                touchFaderWithHandle.OnRightContactExit();
+                touchFader.rightSender = null;
+                touchFader.OnRightContactExit();
             }
         }
     }

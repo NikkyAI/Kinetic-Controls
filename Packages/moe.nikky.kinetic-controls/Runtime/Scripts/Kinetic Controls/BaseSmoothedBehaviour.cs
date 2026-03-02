@@ -199,6 +199,7 @@ namespace nikkyai.Kinetic_Controls
         {
             
         }
+
         public virtual void SetValue(float normalizedValue)
         {
             

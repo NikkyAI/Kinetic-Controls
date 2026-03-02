@@ -17,7 +17,7 @@ using VRC.Udon.Common;
 namespace nikkyai.Kinetic_Controls
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class TouchFaderWithHandle : BaseSmoothedBehaviour
+    public class TouchFader : BaseSmoothedBehaviour
     {
         [Header("Touch Fader")] // header
         [SerializeField]
@@ -49,7 +49,7 @@ namespace nikkyai.Kinetic_Controls
 
         private Rigidbody _rigidbody;
 
-        protected override string LogPrefix => $"{nameof(TouchFaderWithHandle)} {name}";
+        protected override string LogPrefix => $"{nameof(TouchFader)} {name}";
 
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
 
@@ -172,7 +172,7 @@ namespace nikkyai.Kinetic_Controls
         {
             if (faderHandle)
             {
-                faderHandle.touchFaderWithHandle = this;
+                faderHandle.touchFader = this;
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
                 faderHandle.EditorACL = AccessControl;
@@ -242,7 +242,7 @@ namespace nikkyai.Kinetic_Controls
 
             TakeOwnership();
 
-            Log("Interact");
+            // Log("Handle Interact");
             DesktopPickup();
         }
 
@@ -251,6 +251,7 @@ namespace nikkyai.Kinetic_Controls
             if (!isAuthorized) return;
             if (!_isDesktop) return;
 
+            // Log("Handle Release");
             DesktopDrop();
         }
 

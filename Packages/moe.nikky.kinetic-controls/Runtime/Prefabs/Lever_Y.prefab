@@ -1209,48 +1209,6 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7438426916000396222, guid: 1ac75656e384b784585721b4a65133ad, type: 3}
-      propertyPath: m_Text
-      value: '
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        [   52.716] [PickupLever Lever_Y] SetupValuesAndComponents
-
-        [  
-        52.716] [PickupLever Lever_Y] Searching for float drivers
-
-        [   52.716]
-        [PickupLever Lever_Y] found 1 drivers for value
-
-        [   52.716] [PickupLever
-        Lever_Y] found 0 drivers for target
-
-        [   52.716] [PickupLever Lever_Y]
-        Searching for leverBase
-
-        [   52.716] [PickupLever Lever_Y] SetupPickup'
-      objectReference: {fileID: 0}
-    - target: {fileID: 7438426916000396222, guid: 1ac75656e384b784585721b4a65133ad, type: 3}
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 2100000, guid: 35630e38b4e5ffb40b44ec5348b4333f, type: 2}

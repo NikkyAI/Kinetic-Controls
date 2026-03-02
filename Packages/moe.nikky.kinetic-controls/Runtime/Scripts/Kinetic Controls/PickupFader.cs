@@ -23,7 +23,8 @@ namespace nikkyai.Kinetic_Controls
         [SerializeField] private Vector2 range = new Vector2(0, 1);
         [SerializeField] private float defaultValue = 0.25f;
         private float _normalizedDefault;
-        [SerializeField] private PickupTrigger pickupTrigger;
+        
+        [SerializeField] private PickupFaderHandle faderHandle;
 
         [Tooltip("should be the same as targetIndicator or a child")] //
         [SerializeField] private Transform pickupReset;
@@ -104,6 +105,7 @@ namespace nikkyai.Kinetic_Controls
         private VRCPlayerApi _localPlayer;
         private float _lastValue;
         private bool _isHeldLocally;
+        private bool _isDesktop = false;
 
         private void Start()
         {
@@ -122,6 +124,12 @@ namespace nikkyai.Kinetic_Controls
 
             _syncedValueNormalized = _normalizedDefault;
             
+            _localPlayer = Networking.LocalPlayer;
+            if (_localPlayer != null)
+            {
+                _isDesktop = !_localPlayer.IsUserInVR();
+            }
+
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             minLimit.transform.MarkDirty();
             maxLimit.transform.MarkDirty();
@@ -153,48 +161,43 @@ namespace nikkyai.Kinetic_Controls
                 Log($"found {_targetFloatDrivers.Length} drivers for target");
             }
         }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void FindPickupTrigger()
+        private void SetupFaderHandle()
         {
-            if (pickupTrigger == null)
+            if (faderHandle)
             {
-                pickupTrigger = gameObject.GetComponent<PickupTrigger>();
-            }
-        }
+                faderHandle.pickupFader = this;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetupPickupTrigger()
-        {
-            if (pickupTrigger)
-            {
-                pickupTrigger.accessControl = AccessControl;
-                pickupTrigger.enforceACL = EnforceACL;
-                pickupTrigger._Register(PickupTrigger.EVENT_PICKUP, this, nameof(_OnPickup));
-                pickupTrigger._Register(PickupTrigger.EVENT_DROP, this, nameof(_OnDrop));
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+                faderHandle.EditorACL = AccessControl;
+                faderHandle.EditorEnforceACL = EnforceACL;
+                faderHandle.EditorDebugLog = DebugLog;
+                faderHandle.MarkDirty();
+#endif
             }
             else
             {
-                LogError("missing pickup trigger");
+                LogError("missing fader handle");
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupPickup()
         {
-            if (pickupTrigger)
+            if (faderHandle)
             {
                 if (_pickup == null)
                 {
-                    _pickup = pickupTrigger.GetComponent<VRC_Pickup>();
+                    _pickup = faderHandle.GetComponent<VRC_Pickup>();
                 }
             }
 
             if (_pickup == null)
             {
                 _pickup = gameObject.GetComponent<VRC_Pickup>();
-                _pickup.pickupable = false;
+                _pickup.pickupable = !_isDesktop;
             }
-
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -217,8 +220,7 @@ namespace nikkyai.Kinetic_Controls
         protected override void _Init()
         {
             SetupValuesAndComponents();
-            FindPickupTrigger();
-            SetupPickupTrigger();
+            SetupFaderHandle();
             SetupPickup();
             SetupPickupRigidBody();
 
@@ -249,6 +251,75 @@ namespace nikkyai.Kinetic_Controls
             }
         }
 
+        public override void Reset()
+        {
+            if (!isAuthorized) return;
+            _syncedValueNormalized = _normalizedDefault;
+            if (synced)
+            {
+                RequestSerialization();
+            }
+
+            OnDeserialization();
+        }
+
+        public override void SetValue(float normalizedValue)
+        {
+            if (!isAuthorized) return;
+            _syncedValueNormalized = normalizedValue;
+            if (synced)
+            {
+                RequestSerialization();
+            }
+
+            OnDeserialization();
+        }
+
+        public void _HandleInteract()
+        {
+            if (!isAuthorized) return;
+            if (!_isDesktop) return;
+
+            TakeOwnership();
+
+            // Log("Handle Interact");
+            DesktopPickup();
+        }
+
+        public void _HandleRelease()
+        {
+            if (!isAuthorized) return;
+            if (!_isDesktop) return;
+
+            // Log("Handle Release");
+            DesktopDrop();
+        }
+
+        private void DesktopPickup()
+        {
+            _isHeldLocally = true;
+            _syncedIsBeingManipulated = true;
+            Log($"Desktop Pickup with target at {_syncedValueNormalized}");
+
+            if (synced)
+            {
+                RequestSerialization();
+            }
+        }
+
+
+        private void DesktopDrop()
+        {
+            _isHeldLocally = false;
+            _syncedIsBeingManipulated = false;
+            Log($"Desktop Drop with target at {_syncedValueNormalized}");
+
+            if (synced)
+            {
+                RequestSerialization();
+            }
+        }
+        
         public void _OnPickup()
         {
             if (_isHeldLocally)
@@ -271,7 +342,6 @@ namespace nikkyai.Kinetic_Controls
 
             _isHeldLocally = false;
             _syncedIsBeingManipulated = false;
-
             
             if (synced)
             {
@@ -421,7 +491,7 @@ namespace nikkyai.Kinetic_Controls
         {
             
             SetupValuesAndComponents();
-            FindPickupTrigger();
+            SetupFaderHandle();
             // SetupPickupTrigger();
             SetupPickup();
             SetupPickupRigidBody();

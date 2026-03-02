@@ -317,6 +317,31 @@ namespace nikkyai.Kinetic_Controls
                 _isAuthorizedBoolDrivers[i].UpdateBool(isAuthorized);
             }
         }
+        
+        
+        public override void Reset()
+        {
+            if (!isAuthorized) return;
+            _syncedValueNormalized = _normalizedDefault;
+            if (synced)
+            {
+                RequestSerialization();
+            }
+
+            OnDeserialization();
+        }
+
+        public override void SetValue(float normalizedValue)
+        {
+            if (!isAuthorized) return;
+            _syncedValueNormalized = normalizedValue;
+            if (synced)
+            {
+                RequestSerialization();
+            }
+
+            OnDeserialization();
+        }
 
         public void _OnPickup()
         {
