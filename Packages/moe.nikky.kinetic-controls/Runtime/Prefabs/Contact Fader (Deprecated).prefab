@@ -645,7 +645,7 @@ GameObject:
   - component: {fileID: 3873072466664727182}
   - component: {fileID: -3556649596132667869}
   m_Layer: 13
-  m_Name: Contact Fader
+  m_Name: Contact Fader (Deprecated)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

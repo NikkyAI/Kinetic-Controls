@@ -270,9 +270,12 @@ namespace nikkyai.Kinetic_Controls
 
         private void DesktopDrop()
         {
+            if(_isHeldLocally)
+            {
+                Log($"Desktop Drop with target at {_syncedValueNormalized}");
+            }
             _isHeldLocally = false;
             _syncedIsBeingManipulated = false;
-            Log($"Desktop Drop with target at {_syncedValueNormalized}");
 
             if (synced)
             {
