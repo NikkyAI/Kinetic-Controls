@@ -1,20 +1,20 @@
 {
   "name": "moe.nikky.kinetic-controls",
   "displayName": "NikkyAI - Kinetic Controls",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Faders, Levers and other controls that can be moved with your hands",
   "changelogUrl": "https://github.com/NikkyAI/Kinetic-Controls/releases",
   "gitDependencies": {},
   "vpmDependencies": {
-    "moe.nikky.core": "^0.0.11",
-    "com.llealloo.audiolink": "^2.1.0",
+    "moe.nikky.core": "^0.0.13",
+    "com.llealloo.audiolink": "^3.1.2",
     "com.texelsaur.access": "^1.2.4",
     "com.texelsaur.misc": "^1.0.5"
   },
   "author": {
     "name": "NikkyAI",
     "email": "",
-    "url": ""
+    "url": "https://github.com/NikkyAI"
   },
   "legacyFolders": {},
   "legacyFiles": {}
