@@ -6,7 +6,7 @@
   "changelogUrl": "https://github.com/NikkyAI/Kinetic-Controls/releases",
   "gitDependencies": {},
   "vpmDependencies": {
-    "moe.nikky.core": "^0.0.13",
+    "moe.nikky.core": "^0.0.12",
     "com.llealloo.audiolink": "^3.1.2",
     "com.texelsaur.access": "^1.2.4",
     "com.texelsaur.misc": "^1.0.5"
