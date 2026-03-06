@@ -976,7 +976,7 @@ MonoBehaviour:
       Data: 52|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.driver.FloatDriver[], moe.nikky.core
+      Data: nikkyai.driver.FloatDriver[], moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 
@@ -2256,7 +2256,7 @@ MonoBehaviour:
       Data: 127|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.driver.BoolDriver[], moe.nikky.core
+      Data: nikkyai.driver.BoolDriver[], moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 
