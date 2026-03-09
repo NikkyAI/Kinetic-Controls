@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using nikkyai.common;
+using UnityEngine;
 using VRC;
 using VRC.SDKBase;
 

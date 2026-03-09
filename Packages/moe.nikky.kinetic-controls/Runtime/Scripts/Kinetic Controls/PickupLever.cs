@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using nikkyai.driver;
 using nikkyai.ArrayExtensions;
+using nikkyai.common;
 using Texel;
 using TMPro;
 using UdonSharp;

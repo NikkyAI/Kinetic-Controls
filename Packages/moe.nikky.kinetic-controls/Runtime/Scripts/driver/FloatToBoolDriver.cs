@@ -1,4 +1,5 @@
 ﻿using System;
+using nikkyai.common;
 using UnityEngine;
 
 namespace nikkyai.driver

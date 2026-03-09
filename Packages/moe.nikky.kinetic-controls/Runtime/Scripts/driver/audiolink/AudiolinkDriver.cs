@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using nikkyai.common;
+using UnityEngine;
 using static VRC.SDKBase.VRCShader;
 
 namespace nikkyai.driver.audiolink

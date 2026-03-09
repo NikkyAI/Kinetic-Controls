@@ -1,10 +1,12 @@
 ﻿using nikkyai.common;
 using nikkyai.driver;
+using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 
 namespace nikkyai
 {
+    [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class CyclingFloat : LoggerBase
     {
         public float offset = 0f;

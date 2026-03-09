@@ -1399,7 +1399,7 @@ MonoBehaviour:
       Data: 79|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.driver.IntDriver[], moe.nikky.kinetic-controls
+      Data: nikkyai.common.IntDriver[], moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 
@@ -1453,7 +1453,7 @@ MonoBehaviour:
       Data: 82|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.driver.BoolDriver[][], moe.nikky.kinetic-controls
+      Data: nikkyai.common.BoolDriver[][], moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 
@@ -1507,7 +1507,7 @@ MonoBehaviour:
       Data: 85|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.driver.BoolDriver[], moe.nikky.kinetic-controls
+      Data: nikkyai.common.BoolDriver[], moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 

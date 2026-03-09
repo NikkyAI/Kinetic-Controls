@@ -1,9 +1,8 @@
 ﻿using System;
 using JetBrains.Annotations;
-using nikkyai.common;
 using UdonSharp;
 
-namespace nikkyai.driver
+namespace nikkyai.common
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public abstract class IntDriver: LoggerBase

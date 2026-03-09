@@ -1,4 +1,5 @@
-﻿using nikkyai.Kinetic_Controls;
+﻿using nikkyai.common;
+using nikkyai.Kinetic_Controls;
 using UnityEngine;
 using UnityEngine.Serialization;
 using VRC;

@@ -1,7 +1,6 @@
-﻿using nikkyai.common;
-using UdonSharp;
+﻿using UdonSharp;
 
-namespace nikkyai.driver
+namespace nikkyai.common
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public abstract class FloatDriver: LoggerBase

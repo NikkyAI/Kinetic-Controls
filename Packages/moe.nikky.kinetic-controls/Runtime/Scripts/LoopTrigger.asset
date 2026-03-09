@@ -979,7 +979,7 @@ MonoBehaviour:
       Data: 53|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.driver.TriggerDriver[], moe.nikky.kinetic-controls
+      Data: nikkyai.common.TriggerDriver[], moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 
