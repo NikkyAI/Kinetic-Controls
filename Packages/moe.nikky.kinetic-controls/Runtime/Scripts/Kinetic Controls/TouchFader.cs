@@ -118,7 +118,7 @@ namespace nikkyai.Kinetic_Controls
             _EnsureInit();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupValuesAndComponents()
         {
 #if COMPILER_UDONSHARP
@@ -149,26 +149,26 @@ namespace nikkyai.Kinetic_Controls
             // enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
 
             //TODO: move into running in editor
-            _valueFloatDrivers = valueIndicator.GetComponentsInChildren<FloatDriver>();
-            _targetFloatDrivers = targetIndicator.GetComponentsInChildren<FloatDriver>();
+            ValueFloatDrivers = valueIndicator.GetComponentsInChildren<FloatDriver>();
+            TargetFloatDrivers = targetIndicator.GetComponentsInChildren<FloatDriver>();
 
             if (isAuthorizedIndicator != null)
             {
                 _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>();
             }
 
-            if (_valueFloatDrivers != null)
+            if (ValueFloatDrivers != null)
             {
-                Log($"found {_valueFloatDrivers.Length} drivers for value");
+                Log($"found {ValueFloatDrivers.Length} drivers for value");
             }
 
-            if (_targetFloatDrivers != null)
+            if (TargetFloatDrivers != null)
             {
-                Log($"found {_targetFloatDrivers.Length} drivers for target");
+                Log($"found {TargetFloatDrivers.Length} drivers for target");
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupFaderHandle()
         {
             if (faderHandle)
@@ -753,14 +753,14 @@ namespace nikkyai.Kinetic_Controls
                 Mathf.Lerp(_minPos, _maxPos, smoothingTargetNormalized)
             );
 
-            foreach (var valueFloatDriver in _valueFloatDrivers)
+            foreach (var valueFloatDriver in ValueFloatDrivers)
             {
                 valueFloatDriver.ApplyFloatValue(
                     Math.Clamp(defaultValue,_minValue,_maxValue)
                 );
             }
 
-            foreach (var targetFloatDriver in _targetFloatDrivers)
+            foreach (var targetFloatDriver in TargetFloatDrivers)
             {
                 targetFloatDriver.ApplyFloatValue(
                     Math.Clamp(defaultValue,_minValue,_maxValue)

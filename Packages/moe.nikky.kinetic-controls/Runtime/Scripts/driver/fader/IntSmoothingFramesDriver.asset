@@ -856,7 +856,7 @@ MonoBehaviour:
       Data: 45|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.Kinetic_Controls.BaseSmoothedBehaviour[], moe.nikky.kinetic-controls
+      Data: nikkyai.common.BaseSmoothedBehaviour[], moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 

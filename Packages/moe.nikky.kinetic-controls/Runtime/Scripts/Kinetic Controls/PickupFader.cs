@@ -11,6 +11,7 @@ using UnityEngine.Serialization;
 using VRC;
 using VRC.SDK3.Components;
 using VRC.SDKBase;
+using VRC.Udon.Common;
 
 // ReSharper disable ForCanBeConvertedToForeach
 
@@ -20,15 +21,19 @@ namespace nikkyai.Kinetic_Controls
     public class PickupFader : BaseSmoothedBehaviour
     {
         [Header("Pickup Fader")] // header
-        [SerializeField] private Axis axis = Axis.Y;
+        [SerializeField]
+        private Axis axis = Axis.Y;
+
         [SerializeField] private Vector2 range = new Vector2(0, 1);
         [SerializeField] private float defaultValue = 0.25f;
         private float _normalizedDefault;
-        
+
         [SerializeField] private PickupFaderHandle faderHandle;
+        // [SerializeField] private InteractCallback desktopHandle;
 
         [Tooltip("should be the same as targetIndicator or a child")] //
-        [SerializeField] private Transform pickupReset;
+        [SerializeField]
+        private Transform pickupReset;
 
         private Vector3 _axisVector = Vector3.zero;
 
@@ -41,7 +46,8 @@ namespace nikkyai.Kinetic_Controls
         private Transform maxLimit;
 
         [Header("Drivers")] // header
-        [SerializeField] private Transform valueIndicator;
+        [SerializeField]
+        private Transform valueIndicator;
 
         [SerializeField] private Transform targetIndicator;
 
@@ -51,14 +57,13 @@ namespace nikkyai.Kinetic_Controls
         private bool _pickupHasObjectSync = false;
 
         protected override string LogPrefix => $"{nameof(PickupFader)} {name}";
-        
+
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
 
         [Header("State")] // header
-        
         [SerializeField, UdonSynced]
         private bool synced = true;
-        
+
         public override bool Synced
         {
             get => synced;
@@ -72,7 +77,7 @@ namespace nikkyai.Kinetic_Controls
                 synced = value;
                 Log($"set normalized to {_syncedValueNormalized} => {prevValue}");
                 _syncedValueNormalized = prevValue;
-                
+
                 RequestSerialization();
             }
         }
@@ -83,6 +88,7 @@ namespace nikkyai.Kinetic_Controls
 
         [UdonSynced] // IMPORTANT, DO NOT DELETE
         private bool _syncedIsBeingManipulated = false;
+
         protected override bool TargetIsBeingManipulated
         {
             get => _syncedIsBeingManipulated;
@@ -96,7 +102,7 @@ namespace nikkyai.Kinetic_Controls
         private float _minPos, _maxPos;
         protected override float MinPosOrRot => _minPos;
         protected override float MaxPosOrRot => _maxPos;
-        
+
         private float _minValue, _maxValue;
         protected override float MinValue => _minValue;
         protected override float MaxValue => _maxValue;
@@ -106,14 +112,14 @@ namespace nikkyai.Kinetic_Controls
         private VRCPlayerApi _localPlayer;
         private float _lastValue;
         private bool _isHeldLocally;
-        private bool _isDesktop = false;
+        private bool _isInVR = false;
 
         private void Start()
         {
             _EnsureInit();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupValuesAndComponents()
         {
             _axisVector[(int)axis] = 1;
@@ -124,11 +130,11 @@ namespace nikkyai.Kinetic_Controls
             _normalizedDefault = Mathf.InverseLerp(_minValue, _maxValue, defaultValue);
 
             _syncedValueNormalized = _normalizedDefault;
-            
+
             _localPlayer = Networking.LocalPlayer;
             if (_localPlayer != null)
             {
-                _isDesktop = !_localPlayer.IsUserInVR();
+                _isInVR = _localPlayer.IsUserInVR();
             }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
@@ -142,28 +148,30 @@ namespace nikkyai.Kinetic_Controls
 
             //TODO: move into running in editor
             // _floatDrivers = gameObject.GetComponents<FloatDriver>();
-            _valueFloatDrivers = valueIndicator.GetComponentsInChildren<FloatDriver>();
-            _targetFloatDrivers = targetIndicator.GetComponentsInChildren<FloatDriver>();
-            
+            ValueFloatDrivers = valueIndicator.GetComponentsInChildren<FloatDriver>();
+            TargetFloatDrivers = targetIndicator.GetComponentsInChildren<FloatDriver>();
+
             if (isAuthorizedIndicator)
             {
                 _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>();
             }
+
             // if (_floatDrivers != null)
             // {
             //     Log($"found {_floatDrivers.Length} drivers in fader");
             // }
-            if (_valueFloatDrivers != null)
+            if (ValueFloatDrivers != null)
             {
-                Log($"found {_valueFloatDrivers.Length} drivers for value");
+                Log($"found {ValueFloatDrivers.Length} drivers for value");
             }
-            if (_targetFloatDrivers != null)
+
+            if (TargetFloatDrivers != null)
             {
-                Log($"found {_targetFloatDrivers.Length} drivers for target");
+                Log($"found {TargetFloatDrivers.Length} drivers for target");
             }
         }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupFaderHandle()
         {
             if (faderHandle)
@@ -183,7 +191,7 @@ namespace nikkyai.Kinetic_Controls
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupPickup()
         {
             if (faderHandle)
@@ -197,13 +205,29 @@ namespace nikkyai.Kinetic_Controls
             if (_pickup == null)
             {
                 _pickup = gameObject.GetComponent<VRC_Pickup>();
-                _pickup.pickupable = !_isDesktop;
+                // _pickup.pickupable = !_isDesktop;
+            }
+
+            if (_pickup)
+            {
+                if (!_isInVR)
+                {
+                    //TODO: define pickup ranges for desktop and VR
+#if COMPILER_UDONSHARP
+                    _pickup.proximity = 5f;
+#endif
+                }
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupPickupRigidBody()
         {
+            // if (!_isInVR)
+            // {
+            //     Log("skipping pickup rigidbody setup in desktop");
+            //     return;
+            // }
             if (_pickup)
             {
                 _pickupRigidBody = _pickup.GetComponent<Rigidbody>();
@@ -217,13 +241,43 @@ namespace nikkyai.Kinetic_Controls
                 LogError("no pickup found");
             }
         }
-        
+
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
+//         private void SetupDesktopHandle()
+//         {
+//             if (desktopHandle != null)
+//             {
+//                 desktopHandle.gameObject.SetActive(true);
+// #if UNITY_EDITOR && !COMPILER_UDONSHARP
+//                 desktopHandle.EditorDebugLog = DebugLog;
+//                 desktopHandle.EditorACL = AccessControl;
+//                 desktopHandle.MarkDirty();
+// #endif
+//                 if (!_isInVR)
+//                 {
+//                     desktopHandle._Register(InteractCallback.EVENT_INTERACT, this, nameof(DesktopPickup));
+//                     desktopHandle._Register(InteractCallback.EVENT_RELEASE, this, nameof(DesktopDrop));
+//                 }
+//                 else
+//                 {
+// #if COMPILER_UDONSHARP
+//                     desktopHandle.gameObject.SetActive(false);
+// #endif
+//                 }
+//             }
+//             else
+//             {
+//                 LogWarning("no desktop handle assigned");
+//             }
+//         }
+
         protected override void _Init()
         {
             SetupValuesAndComponents();
             SetupFaderHandle();
             SetupPickup();
             SetupPickupRigidBody();
+            // SetupDesktopHandle();
 
             if (pickupReset == null)
             {
@@ -244,8 +298,11 @@ namespace nikkyai.Kinetic_Controls
 
         protected override void AccessChanged()
         {
-            _pickup.pickupable = isAuthorized;
-            
+            if (Utilities.IsValid(_pickup))
+            {
+                _pickup.pickupable = isAuthorized;
+            }
+
             for (var i = 0; i < _isAuthorizedBoolDrivers.Length; i++)
             {
                 _isAuthorizedBoolDrivers[i].UpdateBool(isAuthorized);
@@ -276,54 +333,95 @@ namespace nikkyai.Kinetic_Controls
             OnDeserialization();
         }
 
-        public void _HandleInteract()
-        {
-            if (!isAuthorized) return;
-            if (!_isDesktop) return;
+        // public void _HandleInteract()
+        // {
+        //     if (!isAuthorized) return;
+        //     if (!!_isInVR) return;
+        //
+        //     TakeOwnership();
+        //
+        //     // Log("Handle Interact");
+        //     DesktopPickup();
+        // }
+        //
+        // public void _HandleRelease()
+        // {
+        //     if (!isAuthorized) return;
+        //     if (!!_isInVR) return;
+        //
+        //     // Log("Handle Release");
+        //     DesktopDrop();
+        // }
 
-            TakeOwnership();
-
-            // Log("Handle Interact");
-            DesktopPickup();
-        }
-
-        public void _HandleRelease()
-        {
-            if (!isAuthorized) return;
-            if (!_isDesktop) return;
-
-            // Log("Handle Release");
-            DesktopDrop();
-        }
-
-        private void DesktopPickup()
-        {
-            _isHeldLocally = true;
-            _syncedIsBeingManipulated = true;
-            Log($"Desktop Pickup with target at {_syncedValueNormalized}");
-
-            if (synced)
-            {
-                RequestSerialization();
-            }
-        }
+        // private void DesktopPickup()
+        // {
+        //     _isHeldLocally = true;
+        //     _syncedIsBeingManipulated = true;
+        //     Log($"Desktop Pickup with target at {_syncedValueNormalized}");
+        //
+        //     if (synced)
+        //     {
+        //         RequestSerialization();
+        //     }
+        // }
 
 
-        private void DesktopDrop()
-        {
-            if(_isHeldLocally)
-            {
-                Log($"Desktop Drop with target at {_syncedValueNormalized}");
-            }
-            _isHeldLocally = false;
-            _syncedIsBeingManipulated = false;
+        // private void DesktopDrop()
+        // {
+        //     if (_isHeldLocally)
+        //     {
+        //         Log($"Desktop Drop with target at {_syncedValueNormalized}");
+        //     }
+        //
+        //     _isHeldLocally = false;
+        //     _syncedIsBeingManipulated = false;
+        //
+        //     if (synced)
+        //     {
+        //         RequestSerialization();
+        //     }
+        // }
 
-            if (synced)
-            {
-                RequestSerialization();
-            }
-        }
-        
+        // private const float DesktopDampening = 20;
+        //
+        // public override void InputLookVertical(float value, UdonInputEventArgs args)
+        // {
+        //     if (!isAuthorized) return;
+        //     if (!!_isInVR) return;
+        //     if (!_isHeldLocally) return;
+        //     // if (axis != Axis.Y) return; 
+        //     // Log($"InputLookVertical {value} {args.handType}");
+        //
+        //     if (!_localPlayer.IsOwner(gameObject))
+        //     {
+        //         Networking.SetOwner(_localPlayer, gameObject);
+        //     }
+        //
+        //     //TODO: figure out if this is necessary
+        //     // if (!valueInitialized)
+        //     // {
+        //     //     _syncedValueNormalized = _normalizedDefault;
+        //     //     smoothedCurrentNormalized = _normalizedDefault;
+        //     //     smoothingTargetNormalized = _normalizedDefault;
+        //     //     valueInitialized = true;
+        //     // }
+        //
+        //     var offset = value / DesktopDampening;
+        //     // syncedValueNormalized = Mathf.Clamp(syncedValueNormalized + offset, minValue, maxValue);
+        //     _syncedValueNormalized = Mathf.Clamp(_syncedValueNormalized + offset, 0f, 1f);
+        //
+        //     // if (_syncedValueNormalized != _lastSyncedValueNormalized)
+        //     // {
+        //
+        //     if (synced)
+        //     {
+        //         RequestSerialization();
+        //     }
+        //
+        //     OnDeserialization();
+        //     // }
+        // }
+
         public void _OnPickup()
         {
             if (_isHeldLocally)
@@ -346,11 +444,12 @@ namespace nikkyai.Kinetic_Controls
 
             _isHeldLocally = false;
             _syncedIsBeingManipulated = false;
-            
+
             if (synced)
             {
                 RequestSerialization();
             }
+
             OnDeserialization();
 
             UpdatePickupPosition();
@@ -381,11 +480,12 @@ namespace nikkyai.Kinetic_Controls
                 this.SendCustomEventDelayedFrames(nameof(_OnFollowPickup), 0);
             }
 
-            
+
             if (synced)
             {
                 RequestSerialization();
             }
+
             OnDeserialization();
         }
 
@@ -396,7 +496,7 @@ namespace nikkyai.Kinetic_Controls
             Vector3 newPos = targetIndicator.transform.localPosition;
             newPos[(int)axis] = clampedPos;
             targetIndicator.transform.localPosition = newPos;
-            
+
             if (!_pickupHasObjectSync && !_isHeldLocally)
             {
                 UpdatePickupPosition();
@@ -424,13 +524,19 @@ namespace nikkyai.Kinetic_Controls
 
         private void UpdatePickupPosition()
         {
-            _pickupRigidBody.angularVelocity = Vector3.zero;
-            _pickupRigidBody.velocity = Vector3.zero;
-            // parentConstraint.GlobalWeight = 1;
-            _pickup.transform.SetPositionAndRotation(
-                pickupReset.position,
-                pickupReset.rotation
-            );
+            if (_pickupRigidBody)
+            {
+                _pickupRigidBody.angularVelocity = Vector3.zero;
+                _pickupRigidBody.velocity = Vector3.zero;
+            }
+
+            if (_pickup)
+            {
+                _pickup.transform.SetPositionAndRotation(
+                    pickupReset.position,
+                    pickupReset.rotation
+                );
+            }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             _pickupRigidBody.MarkDirty();
@@ -453,12 +559,15 @@ namespace nikkyai.Kinetic_Controls
                 _lastSyncedValueNormalized = _syncedValueNormalized;
             }
         }
-        
+
         // ReSharper disable InconsistentNaming
-        [NonSerialized] private float 
-            prevMinPos, prevMaxPos,
-            prevMinValue, prevMaxValue, 
+        [NonSerialized] private float
+            prevMinPos,
+            prevMaxPos,
+            prevMinValue,
+            prevMaxValue,
             prevDefault;
+
         [NonSerialized] private Vector3 prevResetPos;
         [NonSerialized] private Quaternion prevResetRot;
         // ReSharper restore InconsistentNaming
@@ -474,7 +583,7 @@ namespace nikkyai.Kinetic_Controls
                 prevMinValue != range.x ||
                 prevMaxValue != range.y ||
                 !prevResetPos.Compare(pickupReset.position, 1) ||
-                !prevResetRot.Compare(pickupReset.rotation, 1) || 
+                !prevResetRot.Compare(pickupReset.rotation, 1) ||
                 prevDefault != defaultValue
             )
             {
@@ -493,12 +602,12 @@ namespace nikkyai.Kinetic_Controls
         [ContextMenu("Apply Values")]
         public void ApplyValues()
         {
-            
             SetupValuesAndComponents();
             SetupFaderHandle();
             // SetupPickupTrigger();
             SetupPickup();
             SetupPickupRigidBody();
+            // SetupDesktopHandle();
             OnDeserialization();
             UpdateValueIndicator(
                 Mathf.Lerp(_minPos, _maxPos, smoothedCurrentNormalized)
@@ -508,16 +617,17 @@ namespace nikkyai.Kinetic_Controls
             );
             UpdatePickupPosition();
 
-            foreach (var valueFloatDriver in _valueFloatDrivers)
+            foreach (var valueFloatDriver in ValueFloatDrivers)
             {
                 valueFloatDriver.ApplyFloatValue(
-                    Math.Clamp(defaultValue,_minValue,_maxValue)
+                    Math.Clamp(defaultValue, _minValue, _maxValue)
                 );
             }
-            foreach (var targetFloatDriver in _targetFloatDrivers)
+
+            foreach (var targetFloatDriver in TargetFloatDrivers)
             {
                 targetFloatDriver.ApplyFloatValue(
-                    Math.Clamp(defaultValue,_minValue,_maxValue)
+                    Math.Clamp(defaultValue, _minValue, _maxValue)
                 );
             }
         }

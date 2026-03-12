@@ -1,5 +1,6 @@
 ﻿using Texel;
 using UnityEngine;
+using VRC;
 using VRC.SDKBase;
 
 namespace nikkyai.common
@@ -47,7 +48,7 @@ namespace nikkyai.common
                 }
                 else
                 {
-                    LogError("No ACL set");
+                    LogError($"No ACL set on {LogPrefix}");
                     isAuthorized = false;
                     AccessChanged();
                 }
@@ -76,12 +77,21 @@ namespace nikkyai.common
         public virtual AccessControl EditorACL
         {
             get => AccessControl;
-            set => AccessControl = value;
+            set
+            {
+                AccessControl = value;
+                this.MarkDirty();
+            }
         }
+
         public virtual bool EditorEnforceACL
         {
             get => EnforceACL;
-            set => EnforceACL = value;
+            set
+            {
+                EnforceACL = value;
+                this.MarkDirty();
+            }
         }
 #endif
     }

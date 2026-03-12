@@ -18,7 +18,7 @@ namespace nikkyai.Kinetic_Controls
     {
         [SerializeField] internal PickupFader pickupFader;
 
-        protected override string LogPrefix => nameof(PickupFaderHandle);
+        protected override string LogPrefix => $"{nameof(PickupFaderHandle)} {pickupFader}";
 
         private VRCPlayerApi _localPlayer;
 
@@ -34,34 +34,32 @@ namespace nikkyai.Kinetic_Controls
         {
             _localPlayer = Networking.LocalPlayer;
             _isInVR = _localPlayer.IsUserInVR();
-            DisableInteractive = _isInVR;
             _pickup = GetComponent<VRC_Pickup>();
-            _pickup.pickupable = _isInVR;
         }
 
         protected override void AccessChanged()
         {
-            DisableInteractive = !isAuthorized || _isInVR;
+            DisableInteractive = !isAuthorized;
         }
 
         private bool _isInteracting = false;
 
-        public override void Interact()
-        {
-            if (!isAuthorized) return;
-            _isInteracting = true;
-            pickupFader._HandleInteract();
-        }
+        // public override void Interact()
+        // {
+        //     if (!isAuthorized) return;
+        //     _isInteracting = true;
+        //     pickupFader._HandleInteract();
+        // }
 
-        public override void InputUse(bool value, VRC.Udon.Common.UdonInputEventArgs args)
-        {
-            if (!_isInteracting) return;
-            if (!isAuthorized) return;
-            if (!value)
-            {
-                pickupFader._HandleRelease();
-            }
-        }
+        // public override void InputUse(bool value, VRC.Udon.Common.UdonInputEventArgs args)
+        // {
+        //     if (!_isInteracting) return;
+        //     if (!isAuthorized) return;
+        //     if (!value)
+        //     {
+        //         pickupFader._HandleRelease();
+        //     }
+        // }
         
         
         public override void OnPickup()

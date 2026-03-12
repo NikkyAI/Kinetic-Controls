@@ -47,7 +47,7 @@ namespace nikkyai.Kinetic_Controls
 
         private Rigidbody _rigidbody;
         
-        protected override string LogPrefix => $"{nameof(ContactFaderDeprecated)} {name}";
+        protected override string LogPrefix => $"{nameof(ContactFaderDeprecated)} {gameObject.name}";
 
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
 
@@ -122,7 +122,7 @@ namespace nikkyai.Kinetic_Controls
             _EnsureInit();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupValuesAndComponents()
         {
 #if COMPILER_UDONSHARP
@@ -131,8 +131,22 @@ namespace nikkyai.Kinetic_Controls
             _axisVector[(int)axis] = 1;
             _minValue = range.x;
             _maxValue = range.y;
-            _minPos = minLimit.localPosition[(int)axis];
-            _maxPos = maxLimit.localPosition[(int)axis];
+            if (Utilities.IsValid(minLimit))
+            {
+                _minPos = minLimit.localPosition[(int)axis];
+            }
+            else
+            {
+                LogError("minLimit not set");
+            }
+            if (Utilities.IsValid(maxLimit))
+            {
+                _maxPos = maxLimit.localPosition[(int)axis];
+            }
+            else
+            {
+                LogError("maxLimit not set");
+            }
             _normalizedDefault = Mathf.InverseLerp(_minValue, _maxValue, defaultValue);
             _syncedValueNormalized = _normalizedDefault;
 
@@ -144,8 +158,14 @@ namespace nikkyai.Kinetic_Controls
             }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-            minLimit.transform.MarkDirty();
-            maxLimit.transform.MarkDirty();
+            if (Utilities.IsValid(minLimit))
+            {
+                minLimit.transform.MarkDirty();
+            }
+            if (Utilities.IsValid(maxLimit))
+            {
+                maxLimit.transform.MarkDirty();
+            }
 #endif
 
             smoothedCurrentNormalized = _normalizedDefault;
@@ -153,26 +173,34 @@ namespace nikkyai.Kinetic_Controls
             // enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
 
             //TODO: move into running in editor
-            _valueFloatDrivers = valueIndicator.GetComponentsInChildren<FloatDriver>();
-            _targetFloatDrivers = targetIndicator.GetComponentsInChildren<FloatDriver>();
+
+            if (Utilities.IsValid(valueIndicator))
+            {
+                ValueFloatDrivers = valueIndicator.GetComponentsInChildren<FloatDriver>();
+            }
+
+            if (Utilities.IsValid(targetIndicator))
+            {
+                TargetFloatDrivers = targetIndicator.GetComponentsInChildren<FloatDriver>();
+            }
 
             if (isAuthorizedIndicator != null)
             {
                 _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>();
             }
 
-            if (_valueFloatDrivers != null)
+            if (ValueFloatDrivers != null)
             {
-                Log($"found {_valueFloatDrivers.Length} drivers for value");
+                Log($"found {ValueFloatDrivers.Length} drivers for value");
             }
 
-            if (_targetFloatDrivers != null)
+            if (TargetFloatDrivers != null)
             {
-                Log($"found {_targetFloatDrivers.Length} drivers for target");
+                Log($"found {TargetFloatDrivers.Length} drivers for target");
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupFaderHandle()
         {
             faderHandle = this.gameObject;
@@ -903,14 +931,14 @@ namespace nikkyai.Kinetic_Controls
             );
 
             Debug.Log("Applying target and value floats");
-            foreach (var valueFloatDriver in _valueFloatDrivers)
+            foreach (var valueFloatDriver in ValueFloatDrivers)
             {
                 valueFloatDriver.ApplyFloatValue(
                     Math.Clamp(defaultValue,_minValue,_maxValue)
                 );
             }
 
-            foreach (var targetFloatDriver in _targetFloatDrivers)
+            foreach (var targetFloatDriver in TargetFloatDrivers)
             {
                 targetFloatDriver.ApplyFloatValue(
                     Math.Clamp(defaultValue,_minValue,_maxValue)

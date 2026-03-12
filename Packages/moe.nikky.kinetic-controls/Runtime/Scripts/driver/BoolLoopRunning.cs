@@ -17,7 +17,8 @@ namespace nikkyai.driver
         {
             if (!enabled) return;
         
-            loopTrigger.enabled = value;
+            // Log($"time running: {value}");
+            loopTrigger.TimerRunning = value;
         }
     }
 }

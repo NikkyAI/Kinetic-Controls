@@ -18,7 +18,7 @@ using VRC.Udon.Serialization.OdinSerializer;
 namespace nikkyai.Kinetic_Controls
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class PickupLever : BaseSmoothedBehaviour
+    public class PickupRadial : BaseSmoothedBehaviour
     {
         [Header("Pickup Lever")] // header
         [SerializeField]
@@ -32,14 +32,11 @@ namespace nikkyai.Kinetic_Controls
 
         [SerializeField] private float defaultValue = 0.25f;
 
-        [Range(-180, 180), SerializeField, PreviouslySerializedAs("_minRot")]
-        private float minRot = -45;
+        private float MIN_ROT = -180;
+        private float MAX_ROT = 180;
 
-        [Range(-180, 180), SerializeField, PreviouslySerializedAs("_maxRot")]
-        private float maxRot = 45;
-
-        protected override float MinPosOrRot => minRot;
-        protected override float MaxPosOrRot => maxRot;
+        protected override float MinPosOrRot => MIN_ROT;
+        protected override float MaxPosOrRot => MAX_ROT;
 
         private float _normalizedDefault;
         [SerializeField] private PickupTrigger pickupTrigger;
@@ -50,15 +47,15 @@ namespace nikkyai.Kinetic_Controls
 
         private Vector3 _axisVector = Vector3.zero;
 
-        [FormerlySerializedAs("minRotation"), // force newline
-         InspectorName("minRotation"),
-         SerializeField]
-        private Transform minLimit;
-
-        [FormerlySerializedAs("maxRotation"), // force newline
-         InspectorName("maxRotation"),
-         SerializeField]
-        private Transform maxLimit;
+        // [FormerlySerializedAs("minRotation"), // force newline
+        //  InspectorName("minRotation"),
+        //  SerializeField]
+        // private Transform minLimit;
+        //
+        // [FormerlySerializedAs("maxRotation"), // force newline
+        //  InspectorName("maxRotation"),
+        //  SerializeField]
+        // private Transform maxLimit;
 
         [FormerlySerializedAs("valueRotation"), // force newline
          InspectorName("valueRotation"),
@@ -148,10 +145,10 @@ namespace nikkyai.Kinetic_Controls
 
             OnDeserialization();
             UpdateValueIndicator(
-                Mathf.Lerp(minRot, maxRot, smoothedCurrentNormalized)
+                Mathf.Lerp(MIN_ROT, MAX_ROT, smoothedCurrentNormalized)
             );
             UpdateTargetIndicator(
-                Mathf.Lerp(minRot, maxRot, smoothingTargetNormalized)
+                Mathf.Lerp(MIN_ROT, MAX_ROT, smoothingTargetNormalized)
             );
             UpdatePickupPosition();
 
@@ -189,31 +186,32 @@ namespace nikkyai.Kinetic_Controls
 
             _syncedValueNormalized = _normalizedDefault;
 
-            if (minLimit)
-            {
-                minLimit.localRotation = Quaternion.AngleAxis(minRot, _axisVector);
-            }
-            else
-            {
-                LogError("minLimit is not set");
-            }
-
-            if (maxLimit)
-            {
-                maxLimit.localRotation = Quaternion.AngleAxis(maxRot, _axisVector);
-            }
-            else
-            {
-                LogError("maxLimit is not set");
-            }
-
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
-            minLimit.transform.MarkDirty();
-            maxLimit.transform.MarkDirty();
-#endif
+//             if (minLimit)
+//             {
+//                 minLimit.localRotation = Quaternion.AngleAxis(MIN_ROT, _axisVector);
+//             }
+//             else
+//             {
+//                 LogError("minLimit is not set");
+//             }
+//
+//             if (maxLimit)
+//             {
+//                 maxLimit.localRotation = Quaternion.AngleAxis(MAX_ROT, _axisVector);
+//             }
+//             else
+//             {
+//                 LogError("maxLimit is not set");
+//             }
+//
+// #if UNITY_EDITOR && !COMPILER_UDONSHARP
+//             minLimit.transform.MarkDirty();
+//             maxLimit.transform.MarkDirty();
+// #endif
 
             smoothedCurrentNormalized = _normalizedDefault;
             smoothingTargetNormalized = _normalizedDefault;
+            isAngle = true;
             // enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
 
             //TODO: move into running in editor ?
@@ -400,11 +398,11 @@ namespace nikkyai.Kinetic_Controls
             // UpdateIndicatorPosition(clampedPos);
 
             _syncedValueNormalized = Mathf.InverseLerp(
-                a: minRot,
-                b: maxRot,
+                a: MIN_ROT,
+                b: MAX_ROT,
                 value: angle
             );
-            Log($"InverseLerp: {minRot} .. {maxRot}");
+            Log($"InverseLerp: {MIN_ROT} .. {MAX_ROT}");
             Log($"normalized: {_syncedValueNormalized}");
 
             if (_isHeldLocally)
@@ -504,8 +502,8 @@ namespace nikkyai.Kinetic_Controls
             UnityEditor.EditorUtility.SetDirty(this);
 
             if (
-                prevMinRot != minRot ||
-                prevMaxRot != maxRot ||
+                prevMinRot != MIN_ROT ||
+                prevMaxRot != MAX_ROT ||
                 prevMinValue != range.x ||
                 prevMaxValue != range.y ||
                 !prevResetPos.Compare(pickupReset.position, 1) ||
@@ -515,8 +513,8 @@ namespace nikkyai.Kinetic_Controls
             {
                 ApplyValues();
 
-                prevMinRot = minRot;
-                prevMaxRot = maxRot;
+                prevMinRot = MIN_ROT;
+                prevMaxRot = MAX_ROT;
                 prevMinValue = range.x;
                 prevMaxValue = range.y;
                 prevResetPos = pickupReset.position;
@@ -536,10 +534,10 @@ namespace nikkyai.Kinetic_Controls
             SetupPickupRigidBody();
             OnDeserialization();
             UpdateValueIndicator(
-                Mathf.Lerp(minRot, maxRot, smoothedCurrentNormalized)
+                Mathf.Lerp(MIN_ROT, MAX_ROT, smoothedCurrentNormalized)
             );
             UpdateTargetIndicator(
-                Mathf.Lerp(minRot, maxRot, smoothingTargetNormalized)
+                Mathf.Lerp(MIN_ROT, MAX_ROT, smoothingTargetNormalized)
             );
             UpdatePickupPosition();
 

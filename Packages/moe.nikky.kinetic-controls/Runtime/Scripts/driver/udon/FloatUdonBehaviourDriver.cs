@@ -1,5 +1,6 @@
 ﻿using nikkyai.common;
 using UnityEngine;
+using VRC.SDKBase;
 using VRC.Udon;
 
 namespace nikkyai.driver.udon
@@ -34,14 +35,23 @@ namespace nikkyai.driver.udon
         {
             for (var i = 0; i < externalBehaviours.Length; i++)
             {
-                externalBehaviours[i].SetProgramVariable(floatField, value);
+                var ext = externalBehaviours[i];
+                if (Utilities.IsValid(ext))
+                {
+                    ext.SetProgramVariable(floatField, value);
+                }
+                
             }
 
             if (eventName.Length > 0)
             {
                 for (var i = 0; i < externalBehaviours.Length; i++)
                 {
-                    externalBehaviours[i].SendCustomEvent(eventName);
+                    var ext = externalBehaviours[i];
+                    if (Utilities.IsValid(ext))
+                    {
+                        ext.SendCustomEvent(eventName);
+                    }
                 }
             }
         }

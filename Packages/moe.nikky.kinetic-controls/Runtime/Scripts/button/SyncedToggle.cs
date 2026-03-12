@@ -97,9 +97,8 @@ namespace nikkyai.button
                 Log($"found {_isAuthorizedBoolDrivers.Length} auth indicator bool drivers");
             }
 
-            LogWarning("setting default value");
+            Log($"setting default value {defaultValue}");
             SyncedState = defaultValue;
-            LogWarning("done setting default value");
             
             OnDeserialization();
         }

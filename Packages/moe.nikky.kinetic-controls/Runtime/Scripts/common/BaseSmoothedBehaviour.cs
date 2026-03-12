@@ -1,14 +1,13 @@
-﻿using System.Runtime.CompilerServices;
-using nikkyai.common;
-using nikkyai.driver;
+﻿using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace nikkyai.Kinetic_Controls
+namespace nikkyai.common
 {
     public abstract class BaseSmoothedBehaviour: BaseSyncedBehaviour
     {
-        protected FloatDriver[] _targetFloatDrivers = { };
-        protected FloatDriver[] _valueFloatDrivers = { };
+        protected FloatDriver[] TargetFloatDrivers = { };
+        protected FloatDriver[] ValueFloatDrivers = { };
 
         protected abstract float MinPosOrRot { 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -78,8 +77,10 @@ namespace nikkyai.Kinetic_Controls
         }
         protected float smoothingTargetNormalized;
         protected float smoothedCurrentNormalized;
+
+        protected bool isAngle = false;
         
-        private const float epsilon = 0.01f;//0.005f
+        private const float epsilon = 0.005f;
         private bool valueInitialized = false;
         private bool isSmoothing = false;
         private float lastFrameTime = 0;
@@ -106,9 +107,9 @@ namespace nikkyai.Kinetic_Controls
             var clampedPosRotEuler = Mathf.Lerp(MinPosOrRot, MaxPosOrRot, normalizedTargetValue);
             UpdateTargetIndicator(clampedPosRotEuler);
             var floatValue = Mathf.Lerp(MinValue, MaxValue, normalizedTargetValue);
-            for (var i = 0; i < _targetFloatDrivers.Length; i++)
+            for (var i = 0; i < TargetFloatDrivers.Length; i++)
             {
-                _targetFloatDrivers[i].UpdateFloat(floatValue);
+                TargetFloatDrivers[i].UpdateFloat(floatValue);
             }
 
             // immediate update
@@ -118,9 +119,9 @@ namespace nikkyai.Kinetic_Controls
                 // {
                 //     _floatDrivers[i].UpdateFloat(floatValue);
                 // }
-                for (var i = 0; i < _valueFloatDrivers.Length; i++)
+                for (var i = 0; i < ValueFloatDrivers.Length; i++)
                 {
-                    _valueFloatDrivers[i].UpdateFloat(floatValue);
+                    ValueFloatDrivers[i].UpdateFloat(floatValue);
                 }
 
                 UpdateValueIndicator(clampedPosRotEuler);
@@ -151,6 +152,7 @@ namespace nikkyai.Kinetic_Controls
             }
         }
 
+        private float _velocity;
         public void _OnValueSmoothedUpdate()
         {
             // Log($"UpdateLoop {smoothedCurrentNormalized} => {smoothingTargetNormalized}");
@@ -159,11 +161,56 @@ namespace nikkyai.Kinetic_Controls
             var deltaTime = currentFrameTime - lastFrameTime;
             lastFrameTime = currentFrameTime;
 
-            smoothedCurrentNormalized = Mathf.Lerp(
-                smoothingTargetNormalized,
-                smoothedCurrentNormalized,
-                Mathf.Exp(-smoothingRate * deltaTime)
-            );
+            if (isAngle)
+            {
+                //TODO: implement delta for 0-1 range to adjust target
+                var delta = Mathf.Repeat(smoothingTargetNormalized - smoothedCurrentNormalized, 1f); // (smoothingTargetNormalized - smoothedCurrentNormalized) % 1f;
+                if (delta > 0.5f)
+                {
+                    delta -= 1f;
+                }
+                
+                Log($"radial smoothing current {smoothedCurrentNormalized}");
+                Log($"radial smoothing target  {smoothingTargetNormalized} + {delta}");
+                
+                smoothedCurrentNormalized = Mathf.Lerp(
+                    smoothedCurrentNormalized + delta,
+                    smoothedCurrentNormalized,
+                    Mathf.Exp(-smoothingRate * deltaTime)
+                );
+                if (smoothedCurrentNormalized < 0f)
+                {
+                    smoothedCurrentNormalized += 1f;
+                }
+                if (smoothedCurrentNormalized > 1f)
+                {
+                    smoothedCurrentNormalized -= 1f;
+                }
+                // if (smoothedCurrentNormalized < 0f)
+                // {
+                //     smoothedCurrentNormalized += 1f;
+                // }
+                //TODO: use modulo after to get value in expected range
+
+                // smoothedCurrentNormalized %= 1f;
+
+                // smoothedCurrentNormalized = Mathf.SmoothDampAngle(
+                //     current: smoothedCurrentNormalized * 360f,
+                //     target: smoothingTargetNormalized * 360f,
+                //     currentVelocity: ref _velocity,
+                //     smoothTime: 1f / smoothingRate, 
+                //     maxSpeed: 10f,
+                //     deltaTime: deltaTime
+                // ) / 360f;
+            }
+            else
+            {
+                smoothedCurrentNormalized = Mathf.Lerp(
+                    smoothingTargetNormalized,
+                    smoothedCurrentNormalized,
+                    Mathf.Exp(-smoothingRate * deltaTime)
+                );
+            }
 
             if (!TargetIsBeingManipulated && Mathf.Abs(smoothingTargetNormalized - smoothedCurrentNormalized) <= epsilon)
             {
@@ -184,9 +231,9 @@ namespace nikkyai.Kinetic_Controls
             // {
             //     _floatDrivers[i].UpdateFloat(floatValue);
             // }
-            for (var i = 0; i < _valueFloatDrivers.Length; i++)
+            for (var i = 0; i < ValueFloatDrivers.Length; i++)
             {
-                _valueFloatDrivers[i].UpdateFloat(floatValue);
+                ValueFloatDrivers[i].UpdateFloat(floatValue);
             }
 
             UpdateValueIndicator(

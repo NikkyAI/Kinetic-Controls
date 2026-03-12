@@ -101,7 +101,7 @@ namespace nikkyai
                     currentVelocity: ref _velocity,
                     smoothTime: 0.1f, 
                     maxSpeed: 10f,
-                    deltaTime: deltaTime * smoothingUpdateInterval
+                    deltaTime: deltaTime // * smoothingUpdateInterval
                 );
                 // maybe Mathf.LerpAngle
                 // _smoothedCurrent = Mathf.Lerp(

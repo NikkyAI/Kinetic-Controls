@@ -48,7 +48,7 @@ namespace nikkyai
                 var mat = materials[i];
                 for (var j = 0; j < _propertyIds.Length; j++)
                 {
-                    Log($"Set {propertyNames[j]} to {value}");
+                    // Log($"Set {propertyNames[j]} to {value}");
                     mat.SetColor(_propertyIds[j], value);
                 }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP

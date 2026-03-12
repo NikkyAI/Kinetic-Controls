@@ -18,7 +18,7 @@ namespace nikkyai.Kinetic_Controls
     {
         [FormerlySerializedAs("touchFaderWithHandle")] [SerializeField] internal TouchFader touchFader;
 
-        protected override string LogPrefix => nameof(TouchFaderHandle);
+        protected override string LogPrefix => $"{nameof(TouchFaderHandle)} {touchFader}";
 
         private VRCContactReceiver _receiver;
         private VRCPlayerApi _localPlayer;
