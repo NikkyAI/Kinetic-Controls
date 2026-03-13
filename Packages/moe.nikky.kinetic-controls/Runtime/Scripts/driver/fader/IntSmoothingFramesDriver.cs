@@ -2,6 +2,7 @@
 using nikkyai.Kinetic_Controls;
 using UnityEngine;
 using VRC;
+using VRC.SDKBase;
 
 namespace nikkyai.driver.fader
 {
@@ -29,7 +30,7 @@ namespace nikkyai.driver.fader
 
             foreach (var behaviour in smoothedBehaviours)
             {
-                if (behaviour)
+                if (Utilities.IsValid(behaviour))
                 {
                     behaviour.SmoothingFrames = value;
 

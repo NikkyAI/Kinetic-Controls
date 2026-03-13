@@ -5,40 +5,33 @@ using VRC.Udon;
 
 namespace nikkyai.driver.udon
 {
-    public class FloatUdonBehaviourDriver : FloatDriver
+    public class BoolUdonDriver : BoolDriver
     {
         [Header("External Behaviours")] // header
         [SerializeField]
         private UdonBehaviour[] externalBehaviours;
 
         [SerializeField]
-        private string floatField;
+        private string boolField;
         [SerializeField]
         private string eventName;
 
-        protected override string LogPrefix => nameof(FloatUdonBehaviourDriver);
+        protected override string LogPrefix => nameof(BoolUdonDriver);
 
         void Start()
         {
             _EnsureInit();
         }
-
-        protected override void _Init()
-        {
-            base._Init();
-            
-            //TODO: check if all fields are valid
-            // or find the TMP component
-        }
-
-        public override void UpdateFloat(float value)
+    
+    
+        public override void UpdateBool(bool value)
         {
             for (var i = 0; i < externalBehaviours.Length; i++)
             {
                 var ext = externalBehaviours[i];
                 if (Utilities.IsValid(ext))
                 {
-                    ext.SetProgramVariable(floatField, value);
+                    ext.SetProgramVariable(boolField, value);
                 }
                 
             }
@@ -57,9 +50,9 @@ namespace nikkyai.driver.udon
         }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        public override void ApplyFloatValue(float value)
+        public override void ApplyBoolValue(bool value)
         {
-            UpdateFloat(value);
+            UpdateBool(value);
             
         }
 #endif

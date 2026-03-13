@@ -4,36 +4,36 @@ using nikkyai.driver;
 using TMPro;
 using UdonSharp;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VRC;
 using VRC.SDKBase;
 
 namespace nikkyai.button
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class SyncedToggle : BaseSyncedBehaviour
+    public class ToggleButton : BaseSyncedBehaviour
     {
+        [Header("Toggle")] // header
         [Tooltip(
              "The button will initialize into this value, toggle this for elements that should be enabled by default"),
          SerializeField]
         private bool defaultValue = false;
 
-        // [Header("UI")] // header
-        // [SerializeField]
-        // private string label;
-        // [SerializeField]
-        // private string label2;
-
-        
-        [Header("Drivers")] // header
-        [SerializeField] private Transform valueIndicator;
-
-        [SerializeField] private Transform isAuthorizedIndicator;
-
-        protected override string LogPrefix => $"{nameof(SyncedToggle)} {name}";
-
         [Header("State")] // header
         [SerializeField, UdonSynced]
         private bool synced = true;
+
+        [Header("Drivers")] // header
+        [FormerlySerializedAs("valueIndicator")] //
+        [SerializeField]
+        private Transform boolStatedDrivers;
+
+        [FormerlySerializedAs("isAuthorizedIndicator")] // 
+        [SerializeField]
+        private Transform boolAuthorizedDrivers;
+
+        protected override string LogPrefix => $"{nameof(ToggleButton)} {name}";
+
 
         public override bool Synced
         {
@@ -48,7 +48,7 @@ namespace nikkyai.button
                 synced = value;
                 Log($"set normalized to {_syncedState} => {prevValue}");
                 _syncedState = prevValue;
-                
+
                 RequestSerialization();
             }
         }
@@ -59,27 +59,29 @@ namespace nikkyai.button
         public bool SyncedState
         {
             get => _syncedState;
-            set {
+            set
+            {
                 _syncedState = value;
-                
+
                 Log($"SyncedState set to {_syncedState}");
-            
+
                 for (var i = 0; i < _valueBoolDrivers.Length; i++)
                 {
                     _valueBoolDrivers[i].UpdateBool(_syncedState);
                 }
             }
         }
-        
+
         public const int EVENT_UPDATE = 0;
         public const int EVENT_COUNT = 1;
 
         protected override int EventCount => EVENT_COUNT;
 
         // private BoolDriver[] _boolDrivers = { };
-        
+
         private BoolDriver[] _valueBoolDrivers = { };
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
+
         void Start()
         {
             _EnsureInit();
@@ -89,24 +91,24 @@ namespace nikkyai.button
         {
             DisableInteractive = true;
 
-            _valueBoolDrivers = valueIndicator.GetComponentsInChildren<BoolDriver>();
+            _valueBoolDrivers = boolStatedDrivers.GetComponentsInChildren<BoolDriver>();
             Log($"found {_valueBoolDrivers.Length} bool drivers");
-            if (isAuthorizedIndicator)
+            if (boolAuthorizedDrivers)
             {
-                _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>();
+                _isAuthorizedBoolDrivers = boolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
                 Log($"found {_isAuthorizedBoolDrivers.Length} auth indicator bool drivers");
             }
 
             Log($"setting default value {defaultValue}");
             SyncedState = defaultValue;
-            
+
             OnDeserialization();
         }
 
         protected override void AccessChanged()
         {
             DisableInteractive = !isAuthorized;
-            
+
             for (var i = 0; i < _isAuthorizedBoolDrivers.Length; i++)
             {
                 _isAuthorizedBoolDrivers[i].UpdateBool(isAuthorized);

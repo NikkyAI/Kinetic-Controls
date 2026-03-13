@@ -53,7 +53,6 @@ namespace nikkyai.Kinetic_Controls
 
         [SerializeField] private Transform isAuthorizedIndicator;
 
-        private Rigidbody _rigidbody;
         private bool _pickupHasObjectSync = false;
 
         protected override string LogPrefix => $"{nameof(PickupFader)} {name}";
@@ -513,10 +512,6 @@ namespace nikkyai.Kinetic_Controls
             newPos[(int)axis] = clampedPos;
             valueIndicator.transform.localPosition = newPos;
 
-            // if (!_pickupHasObjectSync && !_isHeldLocally)
-            // {
-            //     UpdatePickupPosition();
-            // }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             valueIndicator.transform.MarkDirty();
 #endif

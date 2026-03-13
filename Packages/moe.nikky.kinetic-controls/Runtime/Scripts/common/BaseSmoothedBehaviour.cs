@@ -78,7 +78,7 @@ namespace nikkyai.common
         protected float smoothingTargetNormalized;
         protected float smoothedCurrentNormalized;
 
-        protected bool isAngle = false;
+        protected bool isCyclic = false;
         
         private const float epsilon = 0.005f;
         private bool valueInitialized = false;
@@ -161,7 +161,7 @@ namespace nikkyai.common
             var deltaTime = currentFrameTime - lastFrameTime;
             lastFrameTime = currentFrameTime;
 
-            if (isAngle)
+            if (isCyclic)
             {
                 //TODO: implement delta for 0-1 range to adjust target
                 var delta = Mathf.Repeat(smoothingTargetNormalized - smoothedCurrentNormalized, 1f); // (smoothingTargetNormalized - smoothedCurrentNormalized) % 1f;
@@ -170,8 +170,8 @@ namespace nikkyai.common
                     delta -= 1f;
                 }
                 
-                Log($"radial smoothing current {smoothedCurrentNormalized}");
-                Log($"radial smoothing target  {smoothingTargetNormalized} + {delta}");
+                // Log($"cyclic smoothing current {smoothedCurrentNormalized}");
+                // Log($"cyclic smoothing target  {smoothingTargetNormalized} + {delta}");
                 
                 smoothedCurrentNormalized = Mathf.Lerp(
                     smoothedCurrentNormalized + delta,
@@ -186,10 +186,6 @@ namespace nikkyai.common
                 {
                     smoothedCurrentNormalized -= 1f;
                 }
-                // if (smoothedCurrentNormalized < 0f)
-                // {
-                //     smoothedCurrentNormalized += 1f;
-                // }
                 //TODO: use modulo after to get value in expected range
 
                 // smoothedCurrentNormalized %= 1f;

@@ -1,9 +1,8 @@
 ﻿using nikkyai.common;
-using Texel;
 using UdonSharp;
 using UnityEngine;
 
-namespace nikkyai
+namespace nikkyai.button
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class InteractCallback : ACLBase

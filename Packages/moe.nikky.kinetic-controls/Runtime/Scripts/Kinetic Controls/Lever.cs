@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using nikkyai.driver;
 using nikkyai.ArrayExtensions;
@@ -18,14 +19,13 @@ using VRC.Udon.Serialization.OdinSerializer;
 namespace nikkyai.Kinetic_Controls
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class PickupLever : BaseSmoothedBehaviour
+    public class Lever : BaseKineticControl
     {
-        [Header("Pickup Lever")] // header
+        [Header("Lever")] // header
         [SerializeField]
         private Axis axis = Axis.Z;
 
         private Vector3 _forwardVector = Vector3.forward;
-        [SerializeField] private Transform leverBase;
 
         [SerializeField, InspectorName("output range")]
         private Vector2 range = new Vector2(0, 1);
@@ -42,8 +42,17 @@ namespace nikkyai.Kinetic_Controls
         protected override float MaxPosOrRot => maxRot;
 
         private float _normalizedDefault;
-        [SerializeField] private PickupTrigger pickupTrigger;
+        // [SerializeField] private PickupTrigger pickupTrigger;
 
+        [Header("VR")] // header
+        [SerializeField, Description("switches between finger contacts and pickup")]
+        private bool useContactsInVR = true;
+        protected override bool UseContactsInVR => useContactsInVR;
+
+        [Header("Components")] //
+        [SerializeField] private Handle leverHandle;
+        protected override Handle Handle => leverHandle;
+        
         [Tooltip("should be the same as targetIndicator or a child")] //
         [SerializeField]
         private Transform pickupReset;
@@ -70,61 +79,32 @@ namespace nikkyai.Kinetic_Controls
          SerializeField]
         private Transform targetIndicator;
 
-        [SerializeField] private Transform isAuthorizedIndicator;
+        [Header("Drivers")] // header
+        
+        [SerializeField] private Transform floatValueDrivers;
+
+        [SerializeField] private Transform floatTargetDrivers;
+        
+        [SerializeField] private Transform boolAuthorizedDrivers;
         
         private Rigidbody _rigidbody;
-        private bool _pickupHasObjectSync = false;
 
-        protected override string LogPrefix => $"{nameof(PickupLever)} {name}";
+        protected override string LogPrefix => $"{nameof(Lever)} {name}";
 
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
-
-        [Header("State")] // header
         
-        [SerializeField, UdonSynced]
-        private bool synced = true;
-        public override bool Synced
-        {
-            get => synced;
-            set
-            {
-                if (!isAuthorized) return;
-
-                var prevValue = _syncedValueNormalized;
-                TakeOwnership();
-                Log($"set synced to {value}");
-                synced = value;
-                Log($"set normalized to {_syncedValueNormalized} => {prevValue}");
-                _syncedValueNormalized = prevValue;
-                
-                RequestSerialization();
-            }
-        }
+        protected override Transform HandleReset => pickupReset;
         
-        [UdonSynced] // IMPORTANT, DO NOT DELETE
-        private float _syncedValueNormalized;
-
-        [UdonSynced] // IMPORTANT, DO NOT DELETE
-        private bool _syncedIsBeingManipulated = false;
-        protected override bool TargetIsBeingManipulated
-        {
-            get => _syncedIsBeingManipulated;
-            set => _syncedIsBeingManipulated = value;
-        }
-
-        private float _lastSyncedValueNormalized = 0;
-
         // internal values
 
         private float _minValue, _maxValue;
         protected override float MinValue => _minValue;
         protected override float MaxValue => _maxValue;
 
-        private VRC_Pickup _pickup;
-        private Rigidbody _pickupRigidBody;
-        private VRCPlayerApi _localPlayer;
-        private float _lastValue;
-        private bool _isHeldLocally;
+        // private VRC_Pickup _pickup;
+        // private Rigidbody _pickupRigidBody;
+        // private float _lastValue;
+        // private bool _isHeldLocally;
 
         private void Start()
         {
@@ -133,13 +113,9 @@ namespace nikkyai.Kinetic_Controls
 
         protected override void _Init()
         {
+            base._Init();
             Log("Init");
             SetupValuesAndComponents();
-            UpdateSmoothing();
-            FindPickupTrigger();
-            SetupPickupTrigger();
-            SetupPickup();
-            SetupPickupRigidBody();
 
             if (pickupReset == null)
             {
@@ -153,7 +129,7 @@ namespace nikkyai.Kinetic_Controls
             UpdateTargetIndicator(
                 Mathf.Lerp(minRot, maxRot, smoothingTargetNormalized)
             );
-            UpdatePickupPosition();
+            UpdateHandlePosition();
 
             Log("Init Done");
             // pickup.transform.SetPositionAndRotation(pickupReset.position, pickupReset.rotation);
@@ -187,7 +163,7 @@ namespace nikkyai.Kinetic_Controls
             _maxValue = range.y;
             _normalizedDefault = Mathf.InverseLerp(_minValue, _maxValue, defaultValue);
 
-            _syncedValueNormalized = _normalizedDefault;
+            SyncedValueNormalized = _normalizedDefault;
 
             if (minLimit)
             {
@@ -207,6 +183,12 @@ namespace nikkyai.Kinetic_Controls
                 LogError("maxLimit is not set");
             }
 
+            LocalPlayer = Networking.LocalPlayer;
+            if (Utilities.IsValid(LocalPlayer))
+            {
+                IsInVR = LocalPlayer.IsUserInVR();
+            }
+
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             minLimit.transform.MarkDirty();
             maxLimit.transform.MarkDirty();
@@ -216,103 +198,52 @@ namespace nikkyai.Kinetic_Controls
             smoothingTargetNormalized = _normalizedDefault;
             // enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
 
-            //TODO: move into running in editor ?
-            Log("Searching for float drivers");
-            ValueFloatDrivers = valueIndicator.GetComponentsInChildren<FloatDriver>();
-            TargetFloatDrivers = targetIndicator.GetComponentsInChildren<FloatDriver>();
+            isCyclic = Mathf.Approximately(minRot, -180f) && Mathf.Approximately(maxRot, 180f);
             
-            if (isAuthorizedIndicator)
+            //TODO: move into running in editor ?
+            Log($"Searching for float value drivers in {floatValueDrivers}");
+            if (floatValueDrivers != null && Utilities.IsValid(floatValueDrivers))
             {
-                _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>();
-            }
-            if (ValueFloatDrivers != null)
-            {
+                Log("GetComponentsInChildren float value drivers");
+                ValueFloatDrivers = floatValueDrivers.GetComponentsInChildren<FloatDriver>();
                 Log($"found {ValueFloatDrivers.Length} drivers for value");
             }
-
-            if (TargetFloatDrivers != null)
+            else
             {
+                LogError("missing transform for float value drivers");
+            }
+            Log($"Searching for float target drivers in {floatTargetDrivers}");
+            if (floatTargetDrivers != null && Utilities.IsValid(floatTargetDrivers))
+            {
+                Log("GetComponentsInChildren float target drivers");
+                TargetFloatDrivers = floatTargetDrivers.GetComponentsInChildren<FloatDriver>();
                 Log($"found {TargetFloatDrivers.Length} drivers for target");
             }
-
-            Log("Searching for leverBase");
-            if (leverBase == null)
-            {
-                leverBase = this.transform;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void FindPickupTrigger()
-        {
-            if (pickupTrigger == null)
-            {
-                LogWarning("PickupTrigger not found");
-                pickupTrigger = gameObject.GetComponent<PickupTrigger>();
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetupPickupTrigger()
-        {
-            if (pickupTrigger)
-            {
-                Log("SetupPickupTrigger");
-                pickupTrigger.accessControl = AccessControl;
-                pickupTrigger.enforceACL = EnforceACL;
-                pickupTrigger._Register(PickupTrigger.EVENT_PICKUP, this, nameof(_OnPickup));
-                pickupTrigger._Register(PickupTrigger.EVENT_DROP, this, nameof(_OnDrop));
-            }
             else
             {
-                LogError("missing pickup trigger");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetupPickup()
-        {
-            if (pickupTrigger)
-            {
-                Log("SetupPickup");
-                if (_pickup == null)
-                {
-                    _pickup = pickupTrigger.GetComponent<VRC_Pickup>();
-                }
+                LogError("missing transform for float target drivers");
             }
 
-            if (_pickup == null)
+            if (Utilities.IsValid(boolAuthorizedDrivers))
             {
-                _pickup = gameObject.GetComponent<VRC_Pickup>();
-                // _pickup.pickupable = false;
+                Log($"Searching for bool authorized drivers in {boolAuthorizedDrivers}");
+                _isAuthorizedBoolDrivers = boolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
+                Log($"found {_isAuthorizedBoolDrivers.Length} drivers for authorized");
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetupPickupRigidBody()
-        {
-            if (_pickup)
-            {
-                _pickupRigidBody = _pickup.GetComponent<Rigidbody>();
-                _pickupRigidBody.useGravity = false;
-                _pickupRigidBody.isKinematic = false;
-                _pickupHasObjectSync = _pickup.GetComponent<VRCObjectSync>() != null ||
-                                       _pickup.GetComponent("MMMaellon.SmartObjectSync") != null;
-            }
-            else
-            {
-                LogError("no pickup found");
-            }
-        }
-
-        private void UpdateSmoothing()
-        {
-            // TODO: enable or disable components used for smoothing
+            // if (Utilities.IsValid(ValueFloatDrivers))
+            // {
+            //     Log($"found {ValueFloatDrivers.Length} drivers for value");
+            // }
+            //
+            // if (Utilities.IsValid(TargetFloatDrivers))
+            // {
+            //     Log($"found {TargetFloatDrivers.Length} drivers for target");
+            // }
         }
 
         protected override void AccessChanged()
         {
-            _pickup.pickupable = isAuthorized;
+            Pickup.pickupable = isAuthorized;
             for (var i = 0; i < _isAuthorizedBoolDrivers.Length; i++)
             {
                 _isAuthorizedBoolDrivers[i].UpdateBool(isAuthorized);
@@ -323,7 +254,7 @@ namespace nikkyai.Kinetic_Controls
         public override void Reset()
         {
             if (!isAuthorized) return;
-            _syncedValueNormalized = _normalizedDefault;
+            SyncedValueNormalized = _normalizedDefault;
             if (synced)
             {
                 RequestSerialization();
@@ -335,7 +266,7 @@ namespace nikkyai.Kinetic_Controls
         public override void SetValue(float normalizedValue)
         {
             if (!isAuthorized) return;
-            _syncedValueNormalized = normalizedValue;
+            SyncedValueNormalized = normalizedValue;
             if (synced)
             {
                 RequestSerialization();
@@ -344,51 +275,8 @@ namespace nikkyai.Kinetic_Controls
             OnDeserialization();
         }
 
-        public void _OnPickup()
+        protected override float RelativePosToNormalized(Vector3 relativePos)
         {
-            if (_isHeldLocally)
-            {
-                Log("already being adjusted");
-                return;
-            }
-
-            TakeOwnership();
-
-            _isHeldLocally = true;
-            _syncedIsBeingManipulated = true;
-            // this.SendCustomEventDelayedFrames(nameof(FollowPickup), 1);
-            _OnFollowPickup();
-        }
-
-        public void _OnDrop()
-        {
-            TakeOwnership();
-
-            _isHeldLocally = false;
-            _syncedIsBeingManipulated = false;
-
-            if (synced)
-            {
-                RequestSerialization();
-            }
-            OnDeserialization();
-
-            UpdatePickupPosition();
-            // Log("handle released, resetting position");
-            // SendCustomNetworkEvent(NetworkEventTarget.All, nameof(UpdatePickupPosition));
-        }
-
-        public void _OnFollowPickup()
-        {
-            if (!_isHeldLocally) return;
-
-            // var clampedPos = Mathf.Clamp(
-            //     pickup.transform.localRotation[(int)axis],
-            //     _minPos,
-            //     _maxPos
-            // );
-            var relativePos = leverBase.transform.InverseTransformPoint(_pickup.transform.position);
-            // var relativePos = pickup.transform.localPosition;
             relativePos[(int)axis] = 0;
 
             var angle = Vector3.SignedAngle(_forwardVector, relativePos, _axisVector);
@@ -399,50 +287,99 @@ namespace nikkyai.Kinetic_Controls
 
             // UpdateIndicatorPosition(clampedPos);
 
-            _syncedValueNormalized = Mathf.InverseLerp(
+            var normalized = Mathf.InverseLerp(
                 a: minRot,
                 b: maxRot,
                 value: angle
             );
             Log($"InverseLerp: {minRot} .. {maxRot}");
-            Log($"normalized: {_syncedValueNormalized}");
-
-            if (_isHeldLocally)
-            {
-                this.SendCustomEventDelayedFrames(nameof(_OnFollowPickup), 0);
-            }
-
-            if (synced)
-            {
-                RequestSerialization();
-            }
-            OnDeserialization();
+            Log($"normalized: {normalized}");
+            return normalized;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+        protected override void FollowPickup()
+        {
+            if (IsInVR)
+            {
+                var relativePos = transform.InverseTransformPoint(Pickup.transform.position);
+                SyncedValueNormalized = RelativePosToNormalized(relativePos);
+            }
+            else
+            {
+                var trackingData = LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Head);
+                var inPoint = transform.position;
+                var planeDirection = Vector3.zero;
+                //TODO: get correct side facing towards player
+                planeDirection[(int)axis] = 1;
+
+                var plane = new Plane(
+                    Vector3.Normalize(planeDirection),
+                    inPoint
+                );
+                // var lookDirection = trackingData.rotation * Vector3.forward;
+                var lookDirection = Vector3.Normalize(Pickup.transform.position - trackingData.position);
+                var ray = new Ray(
+                    trackingData.position,
+                    lookDirection
+                );
+
+                if (plane.Raycast(ray, out var distance))
+                {
+                    var lookDirectionAxisLocked = lookDirection;
+                    lookDirectionAxisLocked[(int)axis] = 0;
+                    // var angle = Vector3.Angle(lookDirectionAxisLocked, -planeDirection);
+                    // // Log($"angle: {angle}");
+                    // if (angle < 45)
+                    // {
+                        var hitPosition = ray.GetPoint(distance);
+                        Log($"raycast hit, distance: {distance}, point: {hitPosition}");
+                        var localHit = transform.InverseTransformPoint(hitPosition);
+
+                        if (Utilities.IsValid(debugRaytrace))
+                        {
+                            debugRaytrace.gameObject.SetActive(true);
+                            debugRaytrace.position = hitPosition;
+                        }
+                        SyncedValueNormalized = RelativePosToNormalized(localHit);
+                    // }
+                }
+                else
+                {
+                    if (Utilities.IsValid(debugRaytrace))
+                    {
+                        debugRaytrace.gameObject.SetActive(false);
+                    }
+                }
+            }
+
+        }
+
+
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void UpdateTargetIndicator(float clampedRotEuler)
         {
             // if (!enableValueSmoothing) return;
-            if (targetIndicator == null) return;
+            if (!Utilities.IsValid(targetIndicator)) return;
 
             // Vector3 newRot = targetIndicator.localEulerAngles;
             // newRot[(int)axis] = clampedRotEuler;
             // targetIndicator.localRotation = Quaternion.Euler(newRot);
             targetIndicator.localRotation = Quaternion.AngleAxis(clampedRotEuler, _axisVector);
 
-            if (!_pickupHasObjectSync && !_isHeldLocally)
+            if (!PickupHasObjectSync && !IsHeldLocally)
             {
-                UpdatePickupPosition();
+                UpdateHandlePosition();
             }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             targetIndicator.transform.MarkDirty();
 #endif
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void UpdateValueIndicator(float clampedRotEuler)
         {
-            if (valueIndicator == null) return;
+            if (!Utilities.IsValid(valueIndicator)) return;
 
             // Vector3 newRot = valueIndicator.localEulerAngles;
             // newRot[(int)axis] = clampedRotEuler;
@@ -458,32 +395,15 @@ namespace nikkyai.Kinetic_Controls
 #endif
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdatePickupPosition()
-        {
-            _pickupRigidBody.angularVelocity = Vector3.zero;
-            _pickupRigidBody.velocity = Vector3.zero;
-            _pickup.transform.SetPositionAndRotation(
-                pickupReset.position,
-                pickupReset.rotation
-            );
-
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
-            _pickupRigidBody.MarkDirty();
-            _pickup.transform.MarkDirty();
-#endif
-        }
-
-
-        public override void OnDeserialization()
-        {
-            if (_syncedValueNormalized != _lastSyncedValueNormalized)
-            {
-                _UpdateTargetValue(_syncedValueNormalized);
-
-                _lastSyncedValueNormalized = _syncedValueNormalized;
-            }
-        }
+        // public override void OnDeserialization()
+        // {
+        //     if (SyncedValueNormalized != LastSyncedValueNormalized)
+        //     {
+        //         _UpdateTargetValue(SyncedValueNormalized);
+        //
+        //         LastSyncedValueNormalized = SyncedValueNormalized;
+        //     }
+        // }
 
         // ReSharper disable InconsistentNaming
         [NonSerialized] private float
@@ -508,8 +428,6 @@ namespace nikkyai.Kinetic_Controls
                 prevMaxRot != maxRot ||
                 prevMinValue != range.x ||
                 prevMaxValue != range.y ||
-                !prevResetPos.Compare(pickupReset.position, 1) ||
-                !prevResetRot.Compare(pickupReset.rotation, 1) ||
                 prevDefault != defaultValue
             )
             {
@@ -519,21 +437,16 @@ namespace nikkyai.Kinetic_Controls
                 prevMaxRot = maxRot;
                 prevMinValue = range.x;
                 prevMaxValue = range.y;
-                prevResetPos = pickupReset.position;
-                prevResetRot = pickupReset.rotation;
                 prevDefault = defaultValue;
             }
         }
 
         [ContextMenu("Apply Values")]
-        public void ApplyValues()
+        public override void ApplyValues()
         {
+            base.ApplyValues();
             SetupValuesAndComponents();
-            UpdateSmoothing();
-            FindPickupTrigger();
-            // SetupPickupTrigger();
-            SetupPickup();
-            SetupPickupRigidBody();
+            
             OnDeserialization();
             UpdateValueIndicator(
                 Mathf.Lerp(minRot, maxRot, smoothedCurrentNormalized)
@@ -541,7 +454,7 @@ namespace nikkyai.Kinetic_Controls
             UpdateTargetIndicator(
                 Mathf.Lerp(minRot, maxRot, smoothingTargetNormalized)
             );
-            UpdatePickupPosition();
+            UpdateHandlePosition();
 
             foreach (var valueFloatDriver in ValueFloatDrivers)
             {

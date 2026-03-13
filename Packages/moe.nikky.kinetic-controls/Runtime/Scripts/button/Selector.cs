@@ -15,6 +15,7 @@ namespace nikkyai.button
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class Selector : BaseSyncedBehaviour
     {
+        [Header("Selector")] // header
         [SerializeField, Min(0)] private int defaultIndex = 0;
         [SerializeField] private bool clickOnActiveDisables = false;
         [SerializeField, Min(0)] private int disabledIndex = 0;
@@ -35,8 +36,9 @@ namespace nikkyai.button
 
         [Header("Drivers")] // header
         [FormerlySerializedAs("drivers")]
-        [SerializeField] private Transform selectionIndicator;
-        [SerializeField] private Transform isAuthorizedIndicator;
+        [SerializeField] private Transform intSelectedDrivers;
+        [FormerlySerializedAs("isAuthorizedIndicator")]
+        [SerializeField] private Transform boolAuthorizedDrivers;
         
         protected override string LogPrefix => $"{nameof(Selector)} {name}";
 
@@ -145,7 +147,7 @@ namespace nikkyai.button
         private void SetupComponents()
         {
             _syncedIndex = defaultIndex;
-            _intDrivers = selectionIndicator.GetComponentsInChildren<IntDriver>();
+            _intDrivers = intSelectedDrivers.GetComponentsInChildren<IntDriver>();
             _interactCallbacks = GetComponentsInChildren<InteractCallback>();
             _boolDrivers = new BoolDriver[_interactCallbacks.Length][];
             
@@ -154,9 +156,9 @@ namespace nikkyai.button
                 _interactCallbacks[i].Index = i;
                 _boolDrivers[i] = _interactCallbacks[i].GetComponentsInChildren<BoolDriver>();
             }
-            if (isAuthorizedIndicator)
+            if (boolAuthorizedDrivers)
             {
-                _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>();
+                _isAuthorizedBoolDrivers = boolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
             }
         }
 

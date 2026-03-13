@@ -1214,7 +1214,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7823753757260826841, guid: 1ac75656e384b784585721b4a65133ad, type: 3}
       propertyPath: title
-      value: Debug Touch Fader
+      value: Debug Pickup Fader
       objectReference: {fileID: 0}
     - target: {fileID: 7823753757260826841, guid: 1ac75656e384b784585721b4a65133ad, type: 3}
       propertyPath: serializationData.Prefab

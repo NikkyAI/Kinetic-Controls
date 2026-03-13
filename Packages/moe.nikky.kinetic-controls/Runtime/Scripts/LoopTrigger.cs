@@ -116,7 +116,10 @@ namespace nikkyai
 
         public override void OnMasterTransferred(VRCPlayerApi newMaster)
         {
-            Log($"New master: {newMaster.displayName}");
+            if (Utilities.IsValid(newMaster))
+            {
+                Log($"New master: {newMaster.displayName}");
+            }
         }
     }
 }

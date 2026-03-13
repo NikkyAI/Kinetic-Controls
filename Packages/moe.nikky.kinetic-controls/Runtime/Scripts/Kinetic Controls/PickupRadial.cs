@@ -72,7 +72,7 @@ namespace nikkyai.Kinetic_Controls
         private Rigidbody _rigidbody;
         private bool _pickupHasObjectSync = false;
 
-        protected override string LogPrefix => $"{nameof(PickupLever)} {name}";
+        protected override string LogPrefix => $"{nameof(Lever)} {name}";
 
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
 
@@ -211,12 +211,13 @@ namespace nikkyai.Kinetic_Controls
 
             smoothedCurrentNormalized = _normalizedDefault;
             smoothingTargetNormalized = _normalizedDefault;
-            isAngle = true;
+            isCyclic = true;
             // enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
 
             //TODO: move into running in editor ?
-            Log("Searching for float drivers");
+            Log($"Searching for float value drivers in {valueIndicator}");
             ValueFloatDrivers = valueIndicator.GetComponentsInChildren<FloatDriver>();
+            Log($"Searching for float target drivers in {targetIndicator}");
             TargetFloatDrivers = targetIndicator.GetComponentsInChildren<FloatDriver>();
             
             if (isAuthorizedIndicator)

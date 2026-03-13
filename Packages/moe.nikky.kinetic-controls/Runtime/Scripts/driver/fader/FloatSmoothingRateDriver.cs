@@ -3,6 +3,7 @@ using nikkyai.Kinetic_Controls;
 using UnityEngine;
 using UnityEngine.Serialization;
 using VRC;
+using VRC.SDKBase;
 
 namespace nikkyai.driver.fader
 {
@@ -31,11 +32,14 @@ namespace nikkyai.driver.fader
 
             foreach (var behaviour in smoothedBehaviours)
             {
-                behaviour.SmoothingRate = value;
-
+                if (Utilities.IsValid(behaviour))
+                {
+                    behaviour.SmoothingRate = value;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-                behaviour.MarkDirty();
+                    behaviour.MarkDirty();
 #endif
+                }
+
             }
         }
 

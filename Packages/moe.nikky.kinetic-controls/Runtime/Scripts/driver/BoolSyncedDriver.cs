@@ -1,6 +1,7 @@
 ﻿using nikkyai.common;
 using UnityEngine;
 using VRC;
+using VRC.SDKBase;
 
 namespace nikkyai.driver
 {
@@ -10,7 +11,7 @@ namespace nikkyai.driver
         [SerializeField]
         private BaseSyncedBehaviour[] syncedBehaviours;
 
-        protected override string LogPrefix { get; }
+        protected override string LogPrefix => nameof(BoolSyncedDriver);
 
         public override void UpdateBool(bool value)
         {
@@ -18,10 +19,13 @@ namespace nikkyai.driver
 
             foreach (var behaviour in syncedBehaviours)
             {
-                behaviour.Synced = value;
+                if (Utilities.IsValid(behaviour))
+                {
+                    behaviour.Synced = value;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-                behaviour.MarkDirty();
+                    behaviour.MarkDirty();
 #endif
+                }
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using nikkyai.common;
 using UnityEngine;
 using VRC;
+using VRC.SDKBase;
 
 namespace nikkyai.driver
 {
@@ -15,7 +16,7 @@ namespace nikkyai.driver
             if (!enabled) return;
             foreach (var obj in targetsOn)
             {
-                if (obj)
+                if (Utilities.IsValid(obj))
                 {
                     obj.SetActive(value);
                 }
@@ -23,7 +24,7 @@ namespace nikkyai.driver
 
             foreach (var obj in targetsOff)
             {
-                if (obj)
+                if (Utilities.IsValid(obj))
                 {
                     obj.SetActive(!value);
                 }

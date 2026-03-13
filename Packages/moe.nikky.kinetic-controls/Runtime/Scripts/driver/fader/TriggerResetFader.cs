@@ -1,6 +1,7 @@
 ﻿using nikkyai.common;
 using nikkyai.Kinetic_Controls;
 using UnityEngine;
+using VRC.SDKBase;
 
 namespace nikkyai.driver.fader
 {
@@ -20,7 +21,11 @@ namespace nikkyai.driver.fader
             if (!enabled) return;
             for (var i = 0; i < _smoothedBehaviours.Length; i++)
             {
-                _smoothedBehaviours[i].Reset();
+                var behaviour = _smoothedBehaviours[i];
+                if (Utilities.IsValid(behaviour))
+                { 
+                    _smoothedBehaviours[i].Reset();
+                }
             }
         }
     }

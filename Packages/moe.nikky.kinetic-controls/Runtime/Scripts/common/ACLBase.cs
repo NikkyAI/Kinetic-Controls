@@ -66,7 +66,13 @@ namespace nikkyai.common
             isAuthorized = AccessControl._LocalHasAccess();
             if (isAuthorized != oldAuth)
             {
-                Log($"setting isAuthorized to {this.isAuthorized} for {Networking.LocalPlayer.displayName}");
+                var localPlayer = Networking.LocalPlayer;
+                var localName = "???";
+                if (Utilities.IsValid(localPlayer))
+                {
+                    localName = localPlayer.displayName;
+                }
+                Log($"setting isAuthorized to {this.isAuthorized} for {localName}");
                 AccessChanged();
             }
         }

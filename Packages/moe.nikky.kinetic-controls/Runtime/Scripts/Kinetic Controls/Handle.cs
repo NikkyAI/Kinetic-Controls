@@ -14,16 +14,32 @@ using VRC.Udon.Common.Interfaces;
 namespace nikkyai.Kinetic_Controls
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class TouchFaderHandle : ACLBase
+    public class Handle : ACLBase
     {
-        [FormerlySerializedAs("touchFaderWithHandle")] [SerializeField] internal TouchFader touchFader;
+        [FormerlySerializedAs("fader")] //
+        [FormerlySerializedAs("touchFader")] //
+        [SerializeField]
+        //
+        internal BaseKineticControl controlBehaviour;
 
-        protected override string LogPrefix => $"{nameof(TouchFaderHandle)} {touchFader}";
+        protected override string LogPrefix
+        {
+            get
+            {
+                if (Utilities.IsValid(controlBehaviour))
+                {
+                    return $"{nameof(Handle)} {controlBehaviour.name}";
+                }
+                else
+                {
+                    return $"{nameof(Handle)}";
+                }
+            }
+        }
 
-        private VRCContactReceiver _receiver;
+        // private VRCContactReceiver _receiver;
+        // private VRC_Pickup _pickup;
         private VRCPlayerApi _localPlayer;
-        //private bool _inLeftTrigger;
-        //private bool _inRightTrigger;
 
         void Start()
         {
@@ -35,8 +51,13 @@ namespace nikkyai.Kinetic_Controls
         protected override void _Init()
         {
             _localPlayer = Networking.LocalPlayer;
-            _isInVR = _localPlayer.IsUserInVR();
-            _receiver = GetComponent<VRCContactReceiver>();
+            if (Utilities.IsValid(_localPlayer))
+            {
+                _isInVR = _localPlayer.IsUserInVR();
+            }
+
+            // _receiver = GetComponent<VRCContactReceiver>();
+            // _pickup = GetComponent<VRC_Pickup>();
             DisableInteractive = _isInVR;
         }
 
@@ -45,24 +66,24 @@ namespace nikkyai.Kinetic_Controls
             DisableInteractive = !isAuthorized || _isInVR;
         }
 
-        private bool _isInteracting = false;
-
-        public override void Interact()
-        {
-            if (!isAuthorized) return;
-            _isInteracting = true;
-            touchFader._HandleInteract();
-        }
-
-        public override void InputUse(bool value, VRC.Udon.Common.UdonInputEventArgs args)
-        {
-            if (!_isInteracting) return;
-            if (!isAuthorized) return;
-            if (!value)
-            {
-                touchFader._HandleRelease();
-            }
-        }
+        // private bool _isInteracting = false;
+        //
+        // public override void Interact()
+        // {
+        //     if (!isAuthorized) return;
+        //     _isInteracting = true;
+        //     touchFader._HandleInteract();
+        // }
+        //
+        // public override void InputUse(bool value, VRC.Udon.Common.UdonInputEventArgs args)
+        // {
+        //     if (!_isInteracting) return;
+        //     if (!isAuthorized) return;
+        //     if (!value)
+        //     {
+        //         touchFader._HandleRelease();
+        //     }
+        // }
 
         [NonSerialized] public bool rightGrabbed;
         [NonSerialized] public bool leftGrabbed;
@@ -136,7 +157,7 @@ namespace nikkyai.Kinetic_Controls
             // touchFader._OnTriggerExit(other.GetInstanceID());
         }
 
-        
+
         // [NonSerialized] public ContactSenderProxy _leftSender, _rightSender;
         public override void OnContactEnter(ContactEnterInfo contactInfo)
         {
@@ -153,15 +174,15 @@ namespace nikkyai.Kinetic_Controls
 
             if (contactInfo.matchingTags.Contains("FingerIndexL"))
             {
-                touchFader.leftSender = contactInfo.contactSender;
-                touchFader.OnLeftContactEnter();
+                controlBehaviour.LeftSender = contactInfo.contactSender;
+                controlBehaviour.OnLeftContactEnter();
                 return;
             }
 
             if (contactInfo.matchingTags.Contains("FingerIndexR"))
             {
-                touchFader.rightSender = contactInfo.contactSender;
-                touchFader.OnRightContactEnter();
+                controlBehaviour.RightSender = contactInfo.contactSender;
+                controlBehaviour.OnRightContactEnter();
                 return;
             }
         }
@@ -173,18 +194,49 @@ namespace nikkyai.Kinetic_Controls
             if (!isAuthorized) return;
             Log($"Contact Exit");
 
-            if (contactInfo.contactSender == touchFader.leftSender)
+            if (contactInfo.contactSender == controlBehaviour.LeftSender)
             {
                 Log($"Contact Exit Left");
-                touchFader.leftSender = null;
-                touchFader.OnLeftContactExit();
+                controlBehaviour.LeftSender = null;
+                controlBehaviour.OnLeftContactExit();
             }
 
-            if (contactInfo.contactSender == touchFader.rightSender)
+            if (contactInfo.contactSender == controlBehaviour.RightSender)
             {
                 Log($"Contact Exit Right");
-                touchFader.rightSender = null;
-                touchFader.OnRightContactExit();
+                controlBehaviour.RightSender = null;
+                controlBehaviour.OnRightContactExit();
+            }
+        }
+
+
+        public override void OnPickup()
+        {
+            if (!isAuthorized)
+                return;
+
+            if (Utilities.IsValid(controlBehaviour))
+            {
+                controlBehaviour._OnPickup();
+            }
+            else
+            {
+                LogError("OnPickup: controller not set");
+            }
+        }
+
+        public override void OnDrop()
+        {
+            if (!isAuthorized)
+                return;
+
+            if (Utilities.IsValid(controlBehaviour))
+            {
+                controlBehaviour._OnDrop();
+            }
+            else
+            {
+                LogError("OnDrop: controller not set");
             }
         }
     }
