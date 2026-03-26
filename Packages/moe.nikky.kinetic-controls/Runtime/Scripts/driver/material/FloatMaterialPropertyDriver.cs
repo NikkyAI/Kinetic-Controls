@@ -35,7 +35,7 @@ namespace nikkyai.driver.material
             }
         }
 
-        public override void UpdateFloat(float value)
+        protected override void UpdateFloat(float value)
         {
             if (!enabled) return;
             if (_lastValue == value) return;

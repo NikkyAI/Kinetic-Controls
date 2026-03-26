@@ -35,7 +35,7 @@ namespace nikkyai.driver.text
             // or find the TMP component
         }
 
-        public override void UpdateFloat(float value)
+        protected override void UpdateFloat(float value)
         {
             if(textMeshPro) {
                 textMeshPro.text = value.ToString(valueDisplayFormat);

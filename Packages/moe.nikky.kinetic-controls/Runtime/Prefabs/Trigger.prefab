@@ -169,8 +169,8 @@ MonoBehaviour:
   debugLog: {fileID: 0}
   enforceACL: 1
   accessControl: {fileID: 0}
-  triggerHolder: {fileID: 2591282970287247980}
-  isAuthorizedIndicator: {fileID: 2382448935148679166}
+  triggerDrivers: {fileID: 2591282970287247980}
+  boolAuthorizedDrivers: {fileID: 2382448935148679166}
 --- !u!114 &2968163458061880519
 MonoBehaviour:
   m_ObjectHideFlags: 0

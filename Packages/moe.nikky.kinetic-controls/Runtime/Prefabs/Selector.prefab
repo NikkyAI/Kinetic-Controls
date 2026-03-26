@@ -575,6 +575,10 @@ PrefabInstance:
       propertyPath: _syncMethod
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6080699999172237475, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
+      propertyPath: serializedProgramAsset
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 6280973461286357974, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
       propertyPath: index
       value: 1
@@ -685,6 +689,10 @@ PrefabInstance:
       propertyPath: _syncMethod
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6080699999172237475, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
+      propertyPath: serializedProgramAsset
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 6280973461286357974, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
       propertyPath: index
       value: 3
@@ -790,6 +798,10 @@ PrefabInstance:
     - target: {fileID: 6080699999172237475, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
       propertyPath: _syncMethod
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6080699999172237475, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
+      propertyPath: serializedProgramAsset
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 6280973461286357974, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
       propertyPath: index
@@ -897,6 +909,10 @@ PrefabInstance:
       propertyPath: _syncMethod
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6080699999172237475, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
+      propertyPath: serializedProgramAsset
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 6280973461286357974, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
       propertyPath: index
       value: 2
@@ -998,6 +1014,10 @@ PrefabInstance:
     - target: {fileID: 6080699999172237475, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
       propertyPath: _syncMethod
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6080699999172237475, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
+      propertyPath: serializedProgramAsset
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 6280973461286357974, guid: 8b67e1b8ca9c9e34498308b8b26b340e, type: 3}
       propertyPath: debugLog

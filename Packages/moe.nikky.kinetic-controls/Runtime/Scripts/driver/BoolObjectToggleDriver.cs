@@ -5,7 +5,7 @@ using VRC.SDKBase;
 
 namespace nikkyai.driver
 {
-    public class ObjectToggleDriver : BoolDriver
+    public class BoolObjectToggleDriver : BoolDriver
     {
         [SerializeField] private GameObject[] targetsOn = { };
         [SerializeField] private GameObject[] targetsOff = { };

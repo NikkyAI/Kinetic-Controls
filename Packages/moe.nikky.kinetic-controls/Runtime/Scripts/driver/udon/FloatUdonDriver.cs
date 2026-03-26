@@ -30,7 +30,7 @@ namespace nikkyai.driver.udon
             //TODO: check if all fields are valid ?
         }
 
-        public override void UpdateFloat(float value)
+        protected override void UpdateFloat(float value)
         {
             for (var i = 0; i < externalBehaviours.Length; i++)
             {

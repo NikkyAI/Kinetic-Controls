@@ -1,4 +1,5 @@
 ﻿using System;
+using nikkyai.ArrayExtensions;
 using nikkyai.common;
 using nikkyai.driver;
 using TMPro;
@@ -24,9 +25,10 @@ namespace nikkyai.button
         private bool synced = true;
 
         [Header("Drivers")] // header
+        [FormerlySerializedAs("boolStatedDrivers")] //
         [FormerlySerializedAs("valueIndicator")] //
         [SerializeField]
-        private Transform boolStatedDrivers;
+        private Transform boolStateDrivers;
 
         [FormerlySerializedAs("isAuthorizedIndicator")] // 
         [SerializeField]
@@ -59,7 +61,7 @@ namespace nikkyai.button
         public bool SyncedState
         {
             get => _syncedState;
-            set
+            private set
             {
                 _syncedState = value;
 
@@ -89,14 +91,17 @@ namespace nikkyai.button
 
         protected override void _Init()
         {
+            Log("Initializing");
             DisableInteractive = true;
 
-            _valueBoolDrivers = boolStatedDrivers.GetComponentsInChildren<BoolDriver>();
+            _valueBoolDrivers = transform.GetComponents<BoolDriver>().AddRange(
+                boolStateDrivers.GetComponentsInChildren<BoolDriver>()
+            );
             Log($"found {_valueBoolDrivers.Length} bool drivers");
-            if (boolAuthorizedDrivers)
+            if (Utilities.IsValid(boolAuthorizedDrivers))
             {
                 _isAuthorizedBoolDrivers = boolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
-                Log($"found {_isAuthorizedBoolDrivers.Length} auth indicator bool drivers");
+                Log($"found {_isAuthorizedBoolDrivers.Length} auth bool drivers");
             }
 
             Log($"setting default value {defaultValue}");
@@ -119,10 +124,7 @@ namespace nikkyai.button
         public void SetState(bool newValue)
         {
             if (!isAuthorized) return;
-            if (!Networking.IsOwner(gameObject))
-            {
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            }
+            TakeOwnership();
 
             SyncedState = newValue;
 
@@ -130,7 +132,7 @@ namespace nikkyai.button
             {
                 RequestSerialization();
             }
-            // OnDeserialization();
+            OnDeserialization();
         }
 
         public void Reset()
@@ -185,57 +187,30 @@ namespace nikkyai.button
             // _UpdateState();
         }
 
-        [NonSerialized] private string prevLabel;
-        [NonSerialized] private string prevLabel2;
-        [NonSerialized] private TextMeshPro prevTMPLabel;
-
-        // [Header("Editor Only")] // header
-        // [SerializeField] private TMP_FontAsset fontAsset;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-
-        private void OnValidate()
-        {
-            if (Application.isPlaying) return;
-            UnityEditor.EditorUtility.SetDirty(this);
-
-            // TODO: check on localTransforms too
-            // if (label != prevLabel || label2 != prevLabel2 || tmpLabel != prevTMPLabel)
-            // {
-            //     // To prevent trying to apply the theme to often, as without it every single change in the scene causes it to be applied
-            //     prevLabel = label;
-            //     prevLabel2 = label2;
-            //     prevTMPLabel = tmpLabel;
-            //
-            //     ApplyValues();
-            // }
-        }
-
-        [ContextMenu("Apply Values")]
-        public void ApplyValues()
-        {
-            if (Application.isPlaying) return;
-            UnityEditor.EditorUtility.SetDirty(this);
-
-            // if (!string.IsNullOrEmpty(label))
-            // {
-            //     InteractionText = label;
-            //     this.MarkDirty();
-            //     // this.MarkDirty();
-            //     if (tmpLabel != null)
-            //     {
-            //         var text = (label.Trim() + "\n" + label2.Trim()).Trim('\n', ' ');
-            //         tmpLabel.text = text;
-            //         tmpLabel.MarkDirty();
-            //     }
-            // }
-        }
-
         [ContextMenu("Assign Defaults")]
         public void AssignDefaults()
         {
             if (Application.isPlaying) return;
-            UnityEditor.EditorUtility.SetDirty(this);
+            // UnityEditor.EditorUtility.SetDirty(this);
 
+            var candidates = transform.GetComponentsInChildren<Transform>();
+            if (boolStateDrivers == null)
+            {
+                foreach (var candidate in candidates)
+                {
+                    if (candidate.name == "Bool State Drivers")
+                    {
+                        boolStateDrivers = candidate;
+                        Log("Found and assigned Bool State Drivers");
+                        UnityEditor.EditorUtility.SetDirty(this);
+                        break;
+                    }
+                }
+                
+            }
+            
+            UnityEditor.EditorUtility.SetDirty(this);
             // if (button == null)
             // {
             //     button = gameObject;

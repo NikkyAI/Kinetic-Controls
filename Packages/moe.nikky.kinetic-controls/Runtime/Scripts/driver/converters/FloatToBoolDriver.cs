@@ -34,7 +34,7 @@ namespace nikkyai.driver
     
         private bool _state = false;
         private bool _initialized = false;
-        public override void UpdateFloat(float value)
+        protected override void UpdateFloat(float value)
         {
             if (!enabled) return;
             var prevState = _state;

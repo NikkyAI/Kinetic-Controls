@@ -21,7 +21,7 @@ namespace nikkyai.driver.fader
             _EnsureInit();
         }
 
-        public override void UpdateFloat(float value)
+        protected override void UpdateFloat(float value)
         {
             if (!enabled) return;
             if (value <= 0f)

@@ -50,8 +50,9 @@ namespace nikkyai.Kinetic_Controls
         protected override bool UseContactsInVR => useContactsInVR;
 
         [Header("Components")] //
-        [SerializeField] private Handle leverHandle;
-        protected override Handle Handle => leverHandle;
+        [FormerlySerializedAs("leverHandle")] //
+        [SerializeField] private Handle handle;
+        protected override Handle Handle => handle;
         
         [Tooltip("should be the same as targetIndicator or a child")] //
         [SerializeField]
@@ -89,7 +90,7 @@ namespace nikkyai.Kinetic_Controls
         
         private Rigidbody _rigidbody;
 
-        protected override string LogPrefix => $"{nameof(Lever)} {name}";
+        protected override string LogPrefix => $"{nameof(Lever)} @ {name}";
 
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
         
@@ -202,10 +203,12 @@ namespace nikkyai.Kinetic_Controls
             
             //TODO: move into running in editor ?
             Log($"Searching for float value drivers in {floatValueDrivers}");
-            if (floatValueDrivers != null && Utilities.IsValid(floatValueDrivers))
+            if (Utilities.IsValid(floatValueDrivers))
             {
-                Log("GetComponentsInChildren float value drivers");
-                ValueFloatDrivers = floatValueDrivers.GetComponentsInChildren<FloatDriver>();
+                ValueFloatDrivers = gameObject.GetComponents<FloatDriver>()
+                    .AddRange(
+                        floatValueDrivers.GetComponentsInChildren<FloatDriver>()
+                    );
                 Log($"found {ValueFloatDrivers.Length} drivers for value");
             }
             else
@@ -213,9 +216,8 @@ namespace nikkyai.Kinetic_Controls
                 LogError("missing transform for float value drivers");
             }
             Log($"Searching for float target drivers in {floatTargetDrivers}");
-            if (floatTargetDrivers != null && Utilities.IsValid(floatTargetDrivers))
+            if (Utilities.IsValid(floatTargetDrivers))
             {
-                Log("GetComponentsInChildren float target drivers");
                 TargetFloatDrivers = floatTargetDrivers.GetComponentsInChildren<FloatDriver>();
                 Log($"found {TargetFloatDrivers.Length} drivers for target");
             }
@@ -280,10 +282,10 @@ namespace nikkyai.Kinetic_Controls
             relativePos[(int)axis] = 0;
 
             var angle = Vector3.SignedAngle(_forwardVector, relativePos, _axisVector);
-            Log($"forwardVector: {_forwardVector}");
-            Log($"axisVector: {_axisVector}");
-            Log($"relativePos: {relativePos}");
-            Log($"angle: {angle}");
+            // Log($"forwardVector: {_forwardVector}");
+            // Log($"axisVector: {_axisVector}");
+            // Log($"relativePos: {relativePos}");
+            // Log($"angle: {angle}");
 
             // UpdateIndicatorPosition(clampedPos);
 
@@ -292,8 +294,8 @@ namespace nikkyai.Kinetic_Controls
                 b: maxRot,
                 value: angle
             );
-            Log($"InverseLerp: {minRot} .. {maxRot}");
-            Log($"normalized: {normalized}");
+            // Log($"InverseLerp: {minRot} .. {maxRot}");
+            // Log($"normalized: {normalized}");
             return normalized;
         }
 
@@ -395,15 +397,15 @@ namespace nikkyai.Kinetic_Controls
 #endif
         }
 
-        // public override void OnDeserialization()
-        // {
-        //     if (SyncedValueNormalized != LastSyncedValueNormalized)
-        //     {
-        //         _UpdateTargetValue(SyncedValueNormalized);
-        //
-        //         LastSyncedValueNormalized = SyncedValueNormalized;
-        //     }
-        // }
+        public override void OnDeserialization()
+        {
+            if (SyncedValueNormalized != LastSyncedValueNormalized)
+            {
+                _UpdateTargetValue(SyncedValueNormalized);
+        
+                LastSyncedValueNormalized = SyncedValueNormalized;
+            }
+        }
 
         // ReSharper disable InconsistentNaming
         [NonSerialized] private float

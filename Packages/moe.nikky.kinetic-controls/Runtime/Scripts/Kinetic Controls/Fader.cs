@@ -1,9 +1,12 @@
-﻿using System;
+using System;
 using System.ComponentModel;
+using System.Linq;
+using nikkyai.ArrayExtensions;
 using nikkyai.common;
 using Texel;
 using UdonSharp;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VRC;
 using VRC.Dynamics;
 using VRC.SDK3.Components;
@@ -23,22 +26,27 @@ namespace nikkyai.Kinetic_Controls
 
         [SerializeField, InspectorName("output range")]
         private Vector2 range = new Vector2(0, 1);
+
         [SerializeField] private float defaultValue = 0.25f;
         private float _normalizedDefault;
 
         [Header("VR")] // header
         [SerializeField, Description("switches between finger contacts and pickup")]
         private bool useContactsInVR = true;
+
         protected override bool UseContactsInVR => useContactsInVR;
 
         [Header("Desktop")] // header
         [SerializeField, Range(5, 90)]
         private float minLookAngle = 30f;
-        
-        [Header("Components")] //
-        [SerializeField] private Handle faderHandle;
-        protected override Handle Handle => faderHandle;
-        
+
+        [Header("Components")] // header
+        [FormerlySerializedAs("faderHandle")] //
+        [SerializeField]
+        private Handle handle;
+
+        protected override Handle Handle => handle;
+
         private Vector3 _axisVector = Vector3.zero;
 
         [InspectorName("minPosition"),
@@ -52,27 +60,27 @@ namespace nikkyai.Kinetic_Controls
         [SerializeField] private Transform valueIndicator;
 
         [SerializeField] private Transform targetIndicator;
-        
+
         // [Header("VR")] // header
         // [SerializeField, Description("switches between finger contacts and pickup")]
         // private bool useContactsInVR = true;
 
 
         [Header("Drivers")] // header
-
-        [SerializeField] private Transform floatValueDrivers;
+        [SerializeField]
+        private Transform floatValueDrivers;
 
         [SerializeField] private Transform floatTargetDrivers;
 
         [SerializeField] private Transform boolAuthorizedDrivers;
 
 
-        protected override string LogPrefix => $"{nameof(Fader)} {name}";
+        protected override string LogPrefix => $"{nameof(Fader)} @ {name}";
 
         private BoolDriver[] _isAuthorizedBoolDrivers = { };
 
         protected override Transform HandleReset => targetIndicator;
-        
+
         // internal values
 
         private float _minPos, _maxPos;
@@ -97,8 +105,11 @@ namespace nikkyai.Kinetic_Controls
             _axisVector[(int)axis] = 1;
             _minValue = range.x;
             _maxValue = range.y;
-            _minPos = minLimit.localPosition[(int)axis];
-            _maxPos = maxLimit.localPosition[(int)axis];
+
+            var minLocalPos = transform.InverseTransformPoint(minLimit.position);
+            var maxLocalPos = transform.InverseTransformPoint(maxLimit.position);
+            _minPos = minLocalPos[(int)axis];
+            _maxPos = maxLocalPos[(int)axis];
             _normalizedDefault = Mathf.InverseLerp(_minValue, _maxValue, defaultValue);
 
             SyncedValueNormalized = _normalizedDefault;
@@ -113,8 +124,31 @@ namespace nikkyai.Kinetic_Controls
             // enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
 
             //TODO: move into running in editor ?
-            ValueFloatDrivers = floatValueDrivers.GetComponentsInChildren<FloatDriver>();
-            TargetFloatDrivers = floatTargetDrivers.GetComponentsInChildren<FloatDriver>();
+            Log($"Searching for float value drivers in {floatValueDrivers}");
+            if (Utilities.IsValid(floatValueDrivers))
+            {
+                ValueFloatDrivers = gameObject.GetComponents<FloatDriver>()
+                    .AddRange(
+                        floatValueDrivers.GetComponentsInChildren<FloatDriver>()
+                    );
+                Log($"found {ValueFloatDrivers.Length} drivers for value");
+            }
+            else
+            {
+                LogError("missing transform for float value drivers");
+            }
+
+            Log($"Searching for float target drivers in {floatTargetDrivers}");
+            if (Utilities.IsValid(floatTargetDrivers))
+            {
+                TargetFloatDrivers = floatTargetDrivers.GetComponentsInChildren<FloatDriver>();
+                Log($"found {TargetFloatDrivers.Length} drivers for target");
+            }
+            else
+            {
+                LogError("missing transform for float target drivers");
+            }
+
 
             if (boolAuthorizedDrivers != null)
             {
@@ -239,6 +273,7 @@ namespace nikkyai.Kinetic_Controls
                             debugRaytrace.gameObject.SetActive(true);
                             debugRaytrace.position = hitPosition;
                         }
+
                         SyncedValueNormalized = RelativePosToNormalized(localHit);
                     }
                     else
@@ -258,7 +293,7 @@ namespace nikkyai.Kinetic_Controls
                 }
             }
         }
-        
+
         protected override void UpdateTargetIndicator(float clampedPos)
         {
             // if (!enableValueSmoothing) return;
@@ -381,10 +416,10 @@ namespace nikkyai.Kinetic_Controls
         [ContextMenu("Apply ACLs and Log")]
         private void ApplyACLsAndLog()
         {
-            faderHandle.EditorACL = AccessControl;
-            faderHandle.EditorDebugLog = DebugLog;
-            faderHandle.EditorEnforceACL = EnforceACL;
-            faderHandle.MarkDirty();
+            handle.EditorACL = AccessControl;
+            handle.EditorDebugLog = DebugLog;
+            handle.EditorEnforceACL = EnforceACL;
+            handle.MarkDirty();
         }
 #endif
     }

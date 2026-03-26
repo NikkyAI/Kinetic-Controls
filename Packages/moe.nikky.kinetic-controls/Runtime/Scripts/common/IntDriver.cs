@@ -11,6 +11,7 @@ namespace nikkyai.common
         
         // modern ui defaults for modern UI selector
         [NonSerialized, UsedImplicitly] public int selectedId;
+        [UsedImplicitly]
         public void _SelectionChanged()
         {
             UpdateInt(selectedId);

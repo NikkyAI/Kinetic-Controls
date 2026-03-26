@@ -4,20 +4,25 @@ using nikkyai.driver;
 using Texel;
 using UdonSharp;
 using UnityEngine;
+using UnityEngine.Serialization;
+using VRC;
+using VRC.SDKBase;
 
 namespace nikkyai
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class TriggerButton : ACLBase
     {
+        [FormerlySerializedAs("triggerHolder")]
         [Header("Drivers")] // header
-        [SerializeField] private Transform triggerHolder;
-        [SerializeField] private Transform isAuthorizedIndicator;
+        [SerializeField] private Transform triggerDrivers;
+        [FormerlySerializedAs("isAuthorizedIndicator")] //
+        [SerializeField] private Transform boolAuthorizedDrivers;
 
         protected override string LogPrefix => $"{nameof(TriggerButton)} {name}";
     
         private TriggerDriver[] _triggerDrivers = { };
-        private BoolDriver[] _isAuthorizedBoolDrivers = { };
+        private BoolDriver[] _boolAuthorizedDrivers = { };
 
         void Start()
         {
@@ -26,17 +31,24 @@ namespace nikkyai
 
         protected override void _Init()
         {
-            if (triggerHolder == null)
+            if (triggerDrivers == null)
             {
-                triggerHolder = this.transform;
+                triggerDrivers = this.transform;
             }
 
-            _triggerDrivers = triggerHolder.GetComponentsInChildren<TriggerDriver>();
-            Log($"Found {_triggerDrivers.Length} trigger drivers");
-            if (isAuthorizedIndicator)
+            _triggerDrivers = gameObject.GetComponents<TriggerDriver>();
+            if (Utilities.IsValid(triggerDrivers))
             {
-                _isAuthorizedBoolDrivers = isAuthorizedIndicator.GetComponentsInChildren<BoolDriver>();
-                Log($"Found {_isAuthorizedBoolDrivers.Length} isAuthorized bool drivers");
+                _triggerDrivers = _triggerDrivers.AddRange(
+                        triggerDrivers.GetComponentsInChildren<TriggerDriver>()
+                );
+            }
+            _triggerDrivers = triggerDrivers.GetComponentsInChildren<TriggerDriver>();
+            Log($"Found {_triggerDrivers.Length} trigger drivers");
+            if (boolAuthorizedDrivers)
+            {
+                _boolAuthorizedDrivers = boolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
+                Log($"Found {_boolAuthorizedDrivers.Length} isAuthorized bool drivers");
             }
         }
 
@@ -44,9 +56,9 @@ namespace nikkyai
         {
             DisableInteractive = !isAuthorized;
         
-            for (var i = 0; i < _isAuthorizedBoolDrivers.Length; i++)
+            for (var i = 0; i < _boolAuthorizedDrivers.Length; i++)
             {
-                _isAuthorizedBoolDrivers[i].UpdateBool(isAuthorized);
+                _boolAuthorizedDrivers[i].UpdateBool(isAuthorized);
             }
         }
 
@@ -59,5 +71,34 @@ namespace nikkyai
                 _triggerDrivers[i].Trigger();
             }
         }
+        
+        
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+        [ContextMenu("Assign Defaults")]
+        public void AssignDefaults()
+        {
+            if (Application.isPlaying) return;
+            // UnityEditor.EditorUtility.SetDirty(this);
+
+            var candidates = transform.GetComponentsInChildren<Transform>();
+            if (triggerDrivers == null)
+            {
+                foreach (var candidate in candidates)
+                {
+                    if (candidate.name == "Trigger Drivers")
+                    {
+                        triggerDrivers = candidate;
+                        Log("Found and assigned Trigger Drivers");
+                        UnityEditor.EditorUtility.SetDirty(this);
+                        break;
+                    }
+                }
+            }
+            
+            UnityEditor.EditorUtility.SetDirty(this);
+
+            this.MarkDirty();
+        }
+#endif
     }
 }

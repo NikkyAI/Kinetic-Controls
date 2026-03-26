@@ -163,10 +163,10 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 2573194583304611563}
-  index: 0
+  debugLog: {fileID: 0}
   enforceACL: 1
   accessControl: {fileID: 0}
-  debugLog: {fileID: 0}
+  index: 0
 --- !u!114 &2573194583304611563
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -247,6 +247,7 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 6080699999172237475}
+  debugLog: {fileID: 0}
   targetsOn:
   - {fileID: 7426857997442053589}
   targetsOff:

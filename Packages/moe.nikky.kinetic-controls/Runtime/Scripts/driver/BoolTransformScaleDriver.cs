@@ -1,14 +1,20 @@
-﻿using nikkyai.common;
+﻿using System;
+using nikkyai.common;
 using UnityEngine;
 using VRC;
 
 namespace nikkyai.driver
 {
-    public class TransformScaleToggleDriver : BoolDriver
+    public class BoolTransformScaleDriver : BoolDriver
     {
         [SerializeField] private Transform[] targetsOn = { };
         [SerializeField] private Transform[] targetsOff = { };
-        protected override string LogPrefix => $"TransformScaleToggleDriver {name}";
+        protected override string LogPrefix => $"{nameof(BoolTransformScaleDriver)} {name}";
+
+        private void Start()
+        {
+            _EnsureInit();
+        }
 
         public override void UpdateBool(bool value)
         {
@@ -28,7 +34,7 @@ namespace nikkyai.driver
                     obj.localScale = !value ?  Vector3.one : Vector3.zero;
                 }
             }
-        } 
+        }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public override void ApplyBoolValue(bool value)
         {

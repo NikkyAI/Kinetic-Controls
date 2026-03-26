@@ -39,10 +39,12 @@ namespace nikkyai.Kinetic_Controls
                 SyncedValueNormalized = prevValue;
 
                 RequestSerialization();
+                OnDeserialization();
             }
         }
         
         protected abstract bool UseContactsInVR { get; }
+        
         [HideInInspector, FieldChangeCallback(nameof(UseContactsInVRLocal))]
         public bool useContactsInVRLocal = true;
 
@@ -51,7 +53,7 @@ namespace nikkyai.Kinetic_Controls
             get => useContactsInVRLocal;
             set
             {
-                Log($"UseContactsInVRSynced {useContactsInVRLocal} -> {value}");
+                Log($"UseContactsInVR (vr: {IsInVR}) {useContactsInVRLocal} -> {value}");
                 useContactsInVRLocal = value;
 
                 if (IsInVR)
@@ -59,17 +61,22 @@ namespace nikkyai.Kinetic_Controls
                     if (useContactsInVRLocal)
                     {
                         Pickup.pickupable = false;
+                        Pickup.proximity = -1f;
+                        Pickup.InteractionText = "error";
                         // _contactReceiver.contentTypes = DynamicsUsageFlags.Avatar;
                     }
                     else
                     {
                         Pickup.pickupable = true;
+                        Pickup.proximity = 1f;
+                        Pickup.InteractionText = "Grab to adjust";
                         // _contactReceiver.contentTypes = DynamicsUsageFlags.Nothing;
                     }
                 }
                 else
                 {
                     Pickup.pickupable = true;
+                    Pickup.InteractionText = "Grab to adjust";
                     Pickup.proximity = 5f; // add serialized field to configure range
                     // _contactReceiver.contentTypes = DynamicsUsageFlags.Nothing;
                 }
@@ -143,16 +150,16 @@ namespace nikkyai.Kinetic_Controls
                 // _pickup.pickupable = !_isDesktop;
             }
 
-            if (Utilities.IsValid(Pickup))
-            {
-                if (!IsInVR)
-                {
-                    //TODO: define pickup ranges for desktop and VR
-#if COMPILER_UDONSHARP
-                    Pickup.proximity = 5f;
-#endif
-                }
-            }
+//             if (Utilities.IsValid(Pickup))
+//             {
+//                 if (!IsInVR)
+//                 {
+//                     //TODO: define pickup ranges for desktop and VR
+// #if COMPILER_UDONSHARP
+//                     Pickup.proximity = 5f;
+// #endif
+//                 }
+//             }
         }
 
         private void SetupPickupRigidBody()
@@ -174,6 +181,7 @@ namespace nikkyai.Kinetic_Controls
         protected override void _Init()
         {
             base._Init();
+            Log("base kinetic Init");
             SetupFaderHandle();
             SetupPickup();
             SetupPickupRigidBody();
@@ -185,14 +193,13 @@ namespace nikkyai.Kinetic_Controls
                 IsInVR = LocalPlayer.IsUserInVR();
             }
             
-            if (Networking.IsMaster)
-            {
-                UseContactsInVRLocal = UseContactsInVR;
-            }
+            // UseContactsInVRLocal = !UseContactsInVR;
+            UseContactsInVRLocal = UseContactsInVR;
         }
 
         public void _OnPickup()
         {
+            Log("_OnPickup");
             if (IsHeldLocally)
             {
                 Log("already being adjusted");
@@ -201,6 +208,8 @@ namespace nikkyai.Kinetic_Controls
 
             if (IsInVR && useContactsInVRLocal)
             {
+                LogWarning("dropping pickup");
+                Pickup.Drop();
                 return;
             }
 
@@ -214,15 +223,16 @@ namespace nikkyai.Kinetic_Controls
 
         public void _OnDrop()
         {
+            Log("_OnDrop");
             TakeOwnership();
-
-            if (IsInVR && useContactsInVRLocal)
-            {
-                return;
-            }
 
             IsHeldLocally = false;
             SyncedIsBeingManipulated = false;
+
+            //if (IsInVR && useContactsInVRLocal)
+            //{
+            //    return;
+            //}
 
             if (synced)
             {
@@ -300,7 +310,7 @@ namespace nikkyai.Kinetic_Controls
         public void OnLeftContactEnter()
         {
             if (!isAuthorized) return;
-            Log($"received {LeftSender.usage}");
+            Log($"OnLeftContactEnter received {LeftSender.usage}");
             Log($"Left Contact Enter");
 
             if (!IsInVR)
@@ -336,7 +346,7 @@ namespace nikkyai.Kinetic_Controls
         public void OnRightContactEnter()
         {
             if (!isAuthorized) return;
-            Log($"received {RightSender.usage}");
+            Log($"OnRightContactEnter received {RightSender.usage}");
             Log($"Right Contact Enter");
 
             if (!IsInVR)
@@ -374,6 +384,7 @@ namespace nikkyai.Kinetic_Controls
             if (!isAuthorized) return;
             Log($"Left Contact Exit");
             _inLeftTrigger = false;
+            UpdateHandlePosition();
             // _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Left, 1f, 1f, 0.2f);
         }
 
@@ -382,6 +393,7 @@ namespace nikkyai.Kinetic_Controls
             if (!isAuthorized) return;
             Log($"Right Contact Exit");
             _inRightTrigger = false;
+            UpdateHandlePosition();
             // _localPlayer.PlayHapticEventInHand(VRC_Pickup.PickupHand.Right, 1f, 1f, 0.2f);
         }
         
@@ -492,6 +504,10 @@ namespace nikkyai.Kinetic_Controls
                     handleReset.position,
                     handleReset.rotation
                 );
+            }
+            else
+            {
+                LogWarning("failed to update handle position");
             }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP

@@ -54,7 +54,7 @@ namespace nikkyai.driver.audiolink
             }
         }
         
-        public override void UpdateFloat(float value)
+        protected override void UpdateFloat(float value)
         {
             if (!enabled) return;
             _audioLinkUI.SetFloat(_propertyId, value);

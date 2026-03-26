@@ -1,13 +1,15 @@
 ﻿using nikkyai.common;
 using nikkyai.Kinetic_Controls;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VRC.SDKBase;
 
 namespace nikkyai.driver.fader
 {
     public class TriggerResetFader : TriggerDriver
     {
-        [SerializeField] private BaseSmoothedBehaviour[] _smoothedBehaviours = { };
+        [FormerlySerializedAs("_smoothedBehaviours")] //
+        [SerializeField] private BaseSmoothedBehaviour[] smoothedBehaviours = { };
 
         void Start()
         {
@@ -19,12 +21,12 @@ namespace nikkyai.driver.fader
         public override void Trigger()
         {
             if (!enabled) return;
-            for (var i = 0; i < _smoothedBehaviours.Length; i++)
+            for (var i = 0; i < smoothedBehaviours.Length; i++)
             {
-                var behaviour = _smoothedBehaviours[i];
+                var behaviour = smoothedBehaviours[i];
                 if (Utilities.IsValid(behaviour))
                 { 
-                    _smoothedBehaviours[i].Reset();
+                    smoothedBehaviours[i].Reset();
                 }
             }
         }

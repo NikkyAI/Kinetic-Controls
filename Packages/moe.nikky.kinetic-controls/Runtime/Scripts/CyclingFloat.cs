@@ -9,7 +9,7 @@ namespace nikkyai
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class CyclingFloat : LoggerBase
     {
-        public float offset = 0f;
+        [Range(0,1)] public float offset = 0f;
 
         [SerializeField] private Transform floatDriverHolder;
 
@@ -32,7 +32,7 @@ namespace nikkyai
 
         [Tooltip("amount of frames to skip when approaching target value," +
                  "higher number == less load, but more choppy smoothing"),
-         SerializeField, Min(1)]
+         SerializeField, Range(1,10)]
         private int smoothingUpdateInterval = 3;
 
         private float _rate = 0f;
@@ -112,16 +112,16 @@ namespace nikkyai
             }
             // Log($"after: {_smoothedCurrent}");
             //
-            var value = (float) (offset + (_smoothedCurrent * _rate)) / 360f;
+            var value = (float) (offset + (_smoothedCurrent / 360f * _rate)) % 1f;
             // Log($"value w/ offset: {value}");
             for (var i = 0; i < _floatDrivers.Length; i++)
             {
-                _floatDrivers[i].UpdateFloat(value);
+                _floatDrivers[i].UpdateFloatRescale(value);
             }
         }
     
          protected override string LogPrefix => nameof(CyclingFloat);
-//         public override void UpdateFloat(float value)
+//         protected override void UpdateFloat(float value)
 //         {
 //             if (!enabled) return;
 //             _rate = value;

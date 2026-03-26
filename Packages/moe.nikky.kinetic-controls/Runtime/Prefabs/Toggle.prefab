@@ -264,7 +264,7 @@ MonoBehaviour:
   accessControl: {fileID: 0}
   defaultValue: 0
   synced: 1
-  boolStatedDrivers: {fileID: 1426628406371371301}
+  boolStateDrivers: {fileID: 1426628406371371301}
   boolAuthorizedDrivers: {fileID: 0}
 --- !u!65 &7231121164485612933
 BoxCollider:

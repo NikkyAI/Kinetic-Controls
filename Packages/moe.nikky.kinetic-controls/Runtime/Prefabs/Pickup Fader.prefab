@@ -120,6 +120,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 6979130348967843530}
   debugLog: {fileID: 0}
+  remapRange: {x: 0, y: 1}
   textMeshPro: {fileID: 6556220324798417220}
   valueDisplayFormat: P2
 --- !u!114 &6979130348967843530

@@ -57,7 +57,7 @@ namespace nikkyai.common
 
         [Tooltip("amount of frames to skip when approaching target value," +
                  "higher number == less load, but more choppy smoothing"),
-         SerializeField, Min(1)]
+         SerializeField, Range(1,10)]
         private int smoothingUpdateInterval = 3;
 
         public int SmoothingFrames
@@ -109,7 +109,7 @@ namespace nikkyai.common
             var floatValue = Mathf.Lerp(MinValue, MaxValue, normalizedTargetValue);
             for (var i = 0; i < TargetFloatDrivers.Length; i++)
             {
-                TargetFloatDrivers[i].UpdateFloat(floatValue);
+                TargetFloatDrivers[i].UpdateFloatRescale(floatValue);
             }
 
             // immediate update
@@ -121,7 +121,7 @@ namespace nikkyai.common
                 // }
                 for (var i = 0; i < ValueFloatDrivers.Length; i++)
                 {
-                    ValueFloatDrivers[i].UpdateFloat(floatValue);
+                    ValueFloatDrivers[i].UpdateFloatRescale(floatValue);
                 }
 
                 UpdateValueIndicator(clampedPosRotEuler);
@@ -223,29 +223,19 @@ namespace nikkyai.common
             }
 
             var floatValue = Mathf.Lerp(MinValue, MaxValue, smoothedCurrentNormalized);
-            // for (var i = 0; i < _floatDrivers.Length; i++)
-            // {
-            //     _floatDrivers[i].UpdateFloat(floatValue);
-            // }
             for (var i = 0; i < ValueFloatDrivers.Length; i++)
             {
-                ValueFloatDrivers[i].UpdateFloat(floatValue);
+                ValueFloatDrivers[i].UpdateFloatRescale(floatValue);
             }
 
             UpdateValueIndicator(
                 Mathf.Lerp(MinPosOrRot, MaxPosOrRot, smoothedCurrentNormalized)
             );
         }
-        
-        
-        public virtual void Reset()
-        {
-            
-        }
 
-        public virtual void SetValue(float normalizedValue)
-        {
-            
-        }
+
+        public abstract void Reset();
+
+        public abstract void SetValue(float normalizedValue);
     }
 }

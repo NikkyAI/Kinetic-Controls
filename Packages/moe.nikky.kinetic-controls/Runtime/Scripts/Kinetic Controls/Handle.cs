@@ -28,7 +28,7 @@ namespace nikkyai.Kinetic_Controls
             {
                 if (Utilities.IsValid(controlBehaviour))
                 {
-                    return $"{nameof(Handle)} {controlBehaviour.name}";
+                    return $"{nameof(Handle)} @ {controlBehaviour.name}";
                 }
                 else
                 {
