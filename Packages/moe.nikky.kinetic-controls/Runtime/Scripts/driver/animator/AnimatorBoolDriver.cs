@@ -9,7 +9,7 @@ namespace nikkyai.driver.animator
         [SerializeField] private string boolParameterName;
         protected override string LogPrefix => $"{nameof(AnimatorBoolDriver)} {name}";
 
-        public override void UpdateBool(bool value)
+        public override void OnUpdateBool(bool value)
         {
             if (!enabled) return;
             animator.SetBool(boolParameterName, value);

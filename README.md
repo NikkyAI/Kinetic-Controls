@@ -10,78 +10,79 @@ using https://vrc-get.anatawa12.com/en/alcom/ is highly recommended
 Integrates with AccessControls and logs from AccessTXL / CommonTXL
 (with soba we might even be able to handle other auth provider implementations in the future) 
 
-## Value drivers
+## Drivers
 
-Control surfaces work with several forms of value drivers, simple abstract classes that can be implemented as udonbehaviours
+Controls work with several forms of drivers, simple abstract classes that can be implemented.
 
-the control surfaces look for them inside specified objects (transforms in the hierarchy)
+The control surfaces look for them inside specified game objects and their children (transforms in the hierarchy)
+
+the types of drivers being available are
+
+- `FloatDriver`
+- `IntDriver`
+- `BoolDriver`
+- `VectorDriver`
+- `TriggerDriver`
+
+see which drivers are being used below
 
 Faders, Levers and such use `FloatDriver`  
 Selectors use `IntDriver`  
 Toggles use `BoolDriver`  
 Buttons use `TriggerDriver`  
 
-### authorization indicators
+## Access Control and authorization indicators
+
+Kinetic Controls implements Access control with `TXL Access`
 
 every component that can be configured to use ACL will alos have the ability to update `BoolDriver` to indicate authorization state
-
 this can help with making a component visually distinct when it is disabled due to lacking permissions
 
-### Value smoothing and "target" values
+## Value smoothing: `target` and `smoothed` values
+
+Applies to `Fader` and `Lever`
 
 for float based controls local value smoothing can be enabled
-this means the target wil lbe synced but locally the current value gradually moves towards the target
+this means the target value will be synced but locally the smoothed value gradually moves towards the target
 
 this can help keeping intense visual changes gradual and avoid flashing or such things
 
-there is a seperate set of float drivers to show the "target" value and the "actual" smoothhed value
+there is a seperate set of float drivers to show the "target" value and the "smoothed" smoothhed value
 
 this is useful for preview purposes
 
+## Kinetic Controls VR input mode: Finger Contacts & Pickups
 
-### builtin drivers
+Moveable controls can be controlled via 
+finger contacts while gripping your hand and sticking out the index finger
+or pickups
+this can be switched at runtime using a provided bool driver
 
-this list is incomplete and may grow, change or be refactored as needed
+## builtin drivers
 
-├───uncategorized  
-│   BoolLoopRunning  
-│   BoolObjectToggleDriver  
-│   BoolScaleToggleByPostfixDriver (TODO: shorter name)  
-│   BoolSyncedDriver  
-│   BoolTransformScaleDriver  
-│   FloatCyclingRate  
-│   TriggerRandom  
-│   TriggerResetToggleButton  
-│  
-├───animator  
-│       AnimatorBoolDriver  
-│       AnimatorFloatDriver  
-│       AnimatorIntDriver  
-│  
-├───audiolink  
-│       AudiolinkDriver  
-│  
-├───blendshape  
-│       FloatBlendshapeDriver  
-│  
-├───converters  
-│       FloatToBoolDriver  
-│  
-├───fader  
-│       FloatSmoothingRateDriver  
-│       IntSmoothingFramesDriver  
-│       TriggerResetFader  
-│  
-├───material  
-│       BoolMaterialSwap  
-│       FloatMaterialPropertyDriver  
-│       IntMaterialPropertyDriver  
-│       MaterialIntToggleBoolDriver (to be renamed?)  
-│  
-├───text  
-│       FloatTextDriver  
-│       IntTextDriver  
-│  
-├───udon  
-│       BoolUdonDriver  
-│       FloatUdonDriver  
+This list is incomplete and will grow, change or be refactored as needed
+
+Existing drivers are implemented for:
+
+- Kinetic Controls Internals
+  - Reset, Smoothing, Randomization and more
+- Animator Parameters
+- Material Properties
+  - Float, Int, Vector and more 
+- Property Blocks
+  - everything that Materials can do and more
+- UdonBehaviour Program Variables and Events
+- GameObject SetActive
+- Transforms
+- Audiolink Thresholds and Gain
+- Text (TextMeshPro)
+  - format strings to display values
+- Blendshapes
+- Postprocessing Volumes
+
+Please feel free to request more things
+
+## ModernUI integration
+
+there is integration to trigger drivers via ModernUI sliders and selectors
+

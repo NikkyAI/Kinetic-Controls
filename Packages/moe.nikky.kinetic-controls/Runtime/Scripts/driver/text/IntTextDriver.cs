@@ -1,5 +1,7 @@
 ﻿using System;
 using nikkyai.common;
+using nikkyai.Kinetic_Controls;
+using nikkyai.Utils;
 using TMPro;
 using UnityEngine;
 using VRC;
@@ -35,44 +37,75 @@ namespace nikkyai.driver.text
             // or find the TMP component
         }
 
-        public override void UpdateInt(int value)
+        public override void OnUpdateInt(int value)
         {
             if(textMeshPro) {
                 textMeshPro.text = value.ToString(valueDisplayFormat);
             }
         }
-
-        [NonSerialized] private int cachedValue;
-        [NonSerialized] private String prevFormat;
         
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
+        // protected override int ValidationHash => HashCode.Combine(base.GetHashCode(), valueDisplayFormat, cachedValue);
+        //
+        // public override void OnValidateApplyValues()
+        // {
+        //     if (Application.isPlaying) return;
+        //     base.OnValidateApplyValues();
+        //
+        //     if(cachedValue == int.MinValue) return;
+        //     
+        //     OnUpdateInt(cachedValue);
+        //     if (textMeshPro)
+        //     {
+        //         textMeshPro.MarkDirty();
+        //     }
+        // }
 
-        [ContextMenu("Update UI")]
-        private void OnValidate()
+        protected override void OnValidate()
         {
-            if (Application.isPlaying) return;
-            UnityEditor.EditorUtility.SetDirty(this);
+            if(!Application.isPlaying) return;
+            base.OnValidate();
 
-            if (valueDisplayFormat != prevFormat && !float.IsNaN(cachedValue))
+            if (cachedValue == int.MinValue) return;
+            
+            if (
+                ValidationCache.ShouldRunValidation(
+                    this,
+                    HashCode.Combine(
+                        valueDisplayFormat,
+                        cachedValue
+                    )
+                )
+            )
             {
-                UpdateInt(cachedValue);
-                if (textMeshPro)
-                {
-                    textMeshPro.MarkDirty();
-                }
-                prevFormat = valueDisplayFormat;
+                OnUpdateInt(cachedValue);
             }
         }
 
-        public override void ApplyIntValue(int value)
-        {
-            UpdateInt(value);
-            cachedValue = value;
-            if (textMeshPro)
-            {
-                textMeshPro.MarkDirty();
-            }
-        }
+        
+        // [ContextMenu("Update UI")]
+        // protected override void OnValidate()
+        // {
+        //     base.OnValidate();
+        //     if (Application.isPlaying) return;
+        //     UnityEditor.EditorUtility.SetDirty(this);
+        //
+        //     if (valueDisplayFormat != prevFormat && !float.IsNaN(cachedValue))
+        //     {
+        //         
+        //         prevFormat = valueDisplayFormat;
+        //     }
+        // }
+        //
+        // public override void ApplyIntValue(int value)
+        // {
+        //     OnUpdateInt(value);
+        //     cachedValue = value;
+        //     if (textMeshPro)
+        //     {
+        //         textMeshPro.MarkDirty();
+        //     }
+        // }
 #endif
     }
 }

@@ -24,7 +24,7 @@ namespace nikkyai.driver.udon
         }
     
     
-        public override void UpdateBool(bool value)
+        public override void OnUpdateBool(bool value)
         {
             for (var i = 0; i < externalBehaviours.Length; i++)
             {
@@ -33,7 +33,6 @@ namespace nikkyai.driver.udon
                 {
                     ext.SetProgramVariable(boolField, value);
                 }
-                
             }
 
             if (eventName.Length > 0)
@@ -52,7 +51,8 @@ namespace nikkyai.driver.udon
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public override void ApplyBoolValue(bool value)
         {
-            UpdateBool(value);
+            base.ApplyBoolValue(value);
+            OnUpdateBool(value);
             
         }
 #endif

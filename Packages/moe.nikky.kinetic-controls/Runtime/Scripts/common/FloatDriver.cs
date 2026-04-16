@@ -11,28 +11,32 @@ namespace nikkyai.common
     {
         [FormerlySerializedAs("range")] // 
         [SerializeField, InspectorName("remap range")]
-        private Vector2 remapRange = new Vector2(0, 1);
+        protected Vector2 remapRange = new Vector2(0, 1);
         
-        protected abstract void UpdateFloat(float value);
+        protected abstract void OnUpdateFloat(float value);
 
         public void UpdateFloatRescale(float normalizedValue)
         {
             var floatValue = Mathf.LerpUnclamped(remapRange.x, remapRange.y, normalizedValue);
-            UpdateFloat(floatValue);
+            OnUpdateFloat(floatValue);
         }
 
+        // defaults for Modern UI slider
+        // ReSharper disable once InconsistentNaming
         [NonSerialized, UsedImplicitly] public float sliderValue;
         [UsedImplicitly] 
         public void _SliderUpdated()
         {
             var floatValue = Mathf.Lerp(remapRange.x, remapRange.y, sliderValue);
-            UpdateFloat(floatValue);
-            // UpdateFloat(sliderValue);
+            OnUpdateFloat(floatValue);
         }
+        
+        protected float cachedValue = float.NaN;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-
         public virtual void ApplyFloatValue(float value)
         {
+            _EnsureInit();
+            cachedValue = value;
         }
 #endif
     }

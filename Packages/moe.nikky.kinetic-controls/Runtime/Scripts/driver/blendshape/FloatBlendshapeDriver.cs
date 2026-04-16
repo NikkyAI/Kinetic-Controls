@@ -37,7 +37,7 @@ namespace nikkyai.driver.blendshape
             }
         }
 
-        protected override void UpdateFloat(float value)
+        protected override void OnUpdateFloat(float value)
         {
             if (!enabled) return;
             // if (value <= 0f)
@@ -59,7 +59,8 @@ namespace nikkyai.driver.blendshape
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public override void ApplyFloatValue(float value)
         {
-            UpdateFloat(value);
+            base.ApplyFloatValue(value);
+            UpdateFloatRescale(value);
         }
 #endif
     }

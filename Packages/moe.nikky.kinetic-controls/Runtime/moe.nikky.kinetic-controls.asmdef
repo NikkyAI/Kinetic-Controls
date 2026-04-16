@@ -6,10 +6,10 @@
     "VRC.SDKBase",
     "VRC.Udon",
     "UdonSharp.Runtime",
-    "moe.nikky.core",
     "com.texelsaur.common",
     "com.texelsaur.misc",
     "Unity.TextMeshPro",
+    "Unity.Postprocessing.Runtime",
     "VRC.Udon.Serialization.OdinSerializer",
     "AudioLink"
   ],

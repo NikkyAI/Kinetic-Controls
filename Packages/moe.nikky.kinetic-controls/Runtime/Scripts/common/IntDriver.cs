@@ -7,19 +7,28 @@ namespace nikkyai.common
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public abstract class IntDriver: LoggerBase
     {
-        public abstract void UpdateInt(int value);
+        public abstract void OnUpdateInt(int value);
         
-        // modern ui defaults for modern UI selector
-        [NonSerialized, UsedImplicitly] public int selectedId;
+        // defaults for Modern UI selector
+        // ReSharper disable once InconsistentNaming
+        [NonSerialized, UsedImplicitly] public int selectionId;
         [UsedImplicitly]
         public void _SelectionChanged()
         {
-            UpdateInt(selectedId);
+            OnUpdateInt(selectionId);
         }
+
+        protected int cachedValue = int.MinValue;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
+
+        // protected override int ValidationHash => HashCode.Combine(base.GetHashCode(), cachedValue);
 
         public virtual void ApplyIntValue(int value)
         {
+            _EnsureInit();
+            cachedValue = value;
+            // OnUpdateInt(value);
+            // OnValidateApplyValues();
         }
 #endif
     }

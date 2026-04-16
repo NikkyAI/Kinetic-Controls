@@ -23,14 +23,7 @@ namespace nikkyai.driver.udon
             _EnsureInit();
         }
 
-        protected override void _Init()
-        {
-            base._Init();
-            
-            //TODO: check if all fields are valid ?
-        }
-
-        protected override void UpdateFloat(float value)
+        protected override void OnUpdateFloat(float value)
         {
             for (var i = 0; i < externalBehaviours.Length; i++)
             {
@@ -39,7 +32,6 @@ namespace nikkyai.driver.udon
                 {
                     ext.SetProgramVariable(floatField, value);
                 }
-                
             }
 
             if (eventName.Length > 0)
@@ -58,8 +50,8 @@ namespace nikkyai.driver.udon
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public override void ApplyFloatValue(float value)
         {
-            UpdateFloat(value);
-            
+            base.ApplyFloatValue(value);
+            UpdateFloatRescale(value);
         }
 #endif
     }
