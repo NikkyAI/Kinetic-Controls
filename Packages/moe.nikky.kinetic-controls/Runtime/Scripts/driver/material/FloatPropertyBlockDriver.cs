@@ -17,7 +17,7 @@ namespace nikkyai.driver.material
         private int _propertyId;
         private MaterialPropertyBlock _propertyBlock;
 
-        protected override string LogPrefix => nameof(VectorPropertyBlockDriver);
+        protected override string LogPrefix => nameof(FloatPropertyBlockDriver);
 
         private void Start()
         {
@@ -34,7 +34,7 @@ namespace nikkyai.driver.material
         private void InitProperties()
         {
             if (_propertyBlock == null) _propertyBlock = new MaterialPropertyBlock();
-            _propertyId = VRCShader.PropertyToID(propertyName);
+            if (_propertyId == 0) _propertyId = VRCShader.PropertyToID(propertyName);
         //     _propertyIds = new int[propertyNames.Length];
         //     for (var i = 0; i < propertyNames.Length; i++)
         //     {
@@ -46,8 +46,11 @@ namespace nikkyai.driver.material
         protected override void OnUpdateFloat(float value)
         {
             if (!enabled) return;
+            
+            if (_propertyBlock == null) _propertyBlock = new MaterialPropertyBlock();
+            if (_propertyId == 0) _propertyId = VRCShader.PropertyToID(propertyName);
             // if (_lastValue == value) return;
-            // Log($"UpdateFloat {value} on {materials.Length} materials {_propertyIds.Length} properties");
+            Log($"UpdateFloat {propertyName} to {value} on {materialSource}");
             // _lastValue = value
             
             materialSource.GetPropertyBlock(_propertyBlock);
@@ -60,7 +63,6 @@ namespace nikkyai.driver.material
         {
             base.ApplyFloatValue(value);
             Log($"applying new value: {value}");
-            _EnsureInit();
             UpdateFloatRescale(value);
         }
 #endif

@@ -237,7 +237,7 @@ Material:
     - _IgnoreRealtimeGI: 0
     - _MappingSpace: 0
     - _MetalChannel: 0
-    - _Metallic: 1
+    - _Metallic: 0.8
     - _Mode: 0
     - _NonlinearSH: 0
     - _OcclusionStrength: 1

@@ -6,18 +6,15 @@ using VRC.SDKBase;
 
 namespace nikkyai.driver.material
 {
-    public class VectorPropertyBlockDriver : VectorDriver
+    public class ColorPropertyBlockDriver : ColorDriver
     {
         [SerializeField] private Renderer materialSource;
-        // [SerializeField] private string[] propertyNames = { };
         [SerializeField] private string propertyName = "";
-        // private int[] _propertyIds = { };
-        // private Vector4 _lastValue = Vector4.negativeInfinity;
 
         private int _propertyId;
         private MaterialPropertyBlock _propertyBlock;
 
-        protected override string LogPrefix => nameof(VectorPropertyBlockDriver);
+        protected override string LogPrefix => nameof(ColorDriver);
 
         private void Start()
         {
@@ -43,27 +40,24 @@ namespace nikkyai.driver.material
         //     }
         }
 
-        protected override void OnUpdateVector(Vector4 value)
+        public override void OnUpdateColor(Color value)
         {
             if (!enabled) return;
             
             if (_propertyBlock == null) _propertyBlock = new MaterialPropertyBlock();
             if (_propertyId == 0) _propertyId = VRCShader.PropertyToID(propertyName);
-            // if (_lastValue == value) return;
-            // Log($"UpdateFloat {value} on {materials.Length} materials {_propertyIds.Length} properties");
-            // _lastValue = value
             
             materialSource.GetPropertyBlock(_propertyBlock);
-            _propertyBlock.SetVector(_propertyId, value);
+            _propertyBlock.SetColor(_propertyId, value);
             materialSource.SetPropertyBlock(_propertyBlock);
         }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        public override void ApplyVectorValue(Vector4 value)
+        public override void ApplyColorValue(Color value)
         {
-            base.ApplyVectorValue(value);
+            base.ApplyColorValue(value);
             Log($"applying new value: {value}");
-            UpdateVector(value);
+            OnUpdateColor(value);
         }
 #endif
     }

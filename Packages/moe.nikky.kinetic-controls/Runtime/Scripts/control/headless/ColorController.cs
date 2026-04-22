@@ -15,7 +15,7 @@ namespace nikkyai.control.headless
         // [Header("External Behaviours")] // header
         // [SerializeField] private UdonBehaviour[] externalBehaviours;
         // [SerializeField] private string colorPropertyField;
-        [SerializeField] private Transform colorDrivers;
+        [SerializeField] private GameObject colorDrivers;
         private ColorDriver[] _colorDrivers = {};
         
         // private int[] _propertyIds = { };
@@ -42,7 +42,7 @@ namespace nikkyai.control.headless
             }
             else
             {
-                LogError("missing transform for float value drivers");
+                LogError("missing object for color drivers");
             }
         }
 

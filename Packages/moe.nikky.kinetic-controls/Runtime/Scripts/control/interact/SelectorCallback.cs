@@ -2,22 +2,21 @@
 using nikkyai.common;
 using UdonSharp;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace nikkyai.control.interact
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class SelectorCallback : ACLBase
-    { 
-        [SerializeField, HideInInspector] private int index;
-        [NonSerialized, HideInInspector] public Selector selector;
+    {
+        [Header("Selector Callback")] [SerializeField]
+        public GameObject boolToggleDriver;
         
-        public int Index
-        {
-            get => index;
-            set => index = value;
-        }
+        [Header("Internals")]
+        public Selector selector;
+        public int index = -1;
 
-        protected override string LogPrefix => $"{nameof(SelectorCallback)} {name}";
+        protected override string LogPrefix => $"{nameof(SelectorCallback)} : {name}";
 
         // public const int EVENT_INTERACT = 0;
         // public const int EVENT_RELEASE = 1;
@@ -32,14 +31,14 @@ namespace nikkyai.control.interact
 
         protected override void AccessChanged()
         {
-            DisableInteractive = !isAuthorized;
+            DisableInteractive = !IsAuthorized;
         }
 
         // private bool _isInteracting = false;
         public override void Interact()
         {
             // if (_isInteracting) return;
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             // _isInteracting = true;
             Log($"interact on {index}");
             selector._OnInteract(index);

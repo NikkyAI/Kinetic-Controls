@@ -38,15 +38,23 @@ namespace nikkyai.common
             private set => accessControl = value;
         }
 
-        [FormerlySerializedAs("boolAuthorizedDrivers")]
         [SerializeField] //
-        [Description("object containing bool drivers, will be updated with current auth status")]
-        [InspectorName("boolAuthorizedDrivers")]
-        private Transform boolAuthorizedDriversTransform;
+        [Description("object containing bool drivers, drivers will be updated with current auth status")]
+        //
+        [FormerlySerializedAs("boolAuthorizedDriversObj")] //
+        private GameObject boolAuthorizedDrivers;
+
+        // [SerializeField] //
+        // [Description("object containing bool drivers, will be updated with current auth status")]
+        // //
+        // [FormerlySerializedAs("boolAuthorizedDrivers")] //
+        // private Transform boolAuthorizedDriversTransform;
+        
 
         // [SerializeField] private bool editorIsAuthorized = false;
 
-        protected bool isAuthorized = false;
+        private bool _isAuthorized = false;
+        protected bool IsAuthorized => _isAuthorized;
 
         protected override void _Init()
         {
@@ -60,10 +68,10 @@ namespace nikkyai.common
 
         private void FindBoolAuthDrivers()
         {
-            if (Utilities.IsValid(boolAuthorizedDriversTransform))
+            if (Utilities.IsValid(boolAuthorizedDrivers))
             {
                 Log($"loading auth drivers");
-                IsAuthorizedBoolDrivers = boolAuthorizedDriversTransform.GetComponentsInChildren<BoolDriver>();
+                IsAuthorizedBoolDrivers = boolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
                 Log($"found {IsAuthorizedBoolDrivers.Length} auth bool drivers");
             }
         }
@@ -75,48 +83,59 @@ namespace nikkyai.common
                 if (AccessControl)
                 {
                     // Log($"registering events on {AccessControl}");
-                    AccessControl._Register(AccessControl.EVENT_VALIDATE, this, nameof(_OnValidate));
-                    AccessControl._Register(AccessControl.EVENT_ENFORCE_UPDATE, this, nameof(_OnValidate));
+                    AccessControl._Register(AccessControl.EVENT_VALIDATE, this, nameof(_TXL_ACL_OnValidate));
+                    AccessControl._Register(AccessControl.EVENT_ENFORCE_UPDATE, this, nameof(_TXL_ACL_OnValidate));
 
-                    _OnValidate();
+                    _TXL_ACL_OnValidate();
                 }
                 else
                 {
                     LogError($"No ACL set on {name}");
-                    isAuthorized = false;
+                    _isAuthorized = false;
                     AccessChanged();
                 }
             }
             else
             {
                 Log("not using ACL, setting isAuthorized to true");
-                isAuthorized = true;
+                _isAuthorized = true;
                 AccessChanged();
             }
         }
 
-        public void _OnValidate()
+        public void _TXL_ACL_OnValidate()
         {
-            bool oldAuth = isAuthorized;
-            isAuthorized = AccessControl._LocalHasAccess();
-            if (isAuthorized != oldAuth)
+            bool oldAuth = IsAuthorized;
+            _isAuthorized = AccessControl._LocalHasAccess();
+            if (IsAuthorized != oldAuth)
             {
-                var localPlayer = Networking.LocalPlayer;
-                var localName = "???";
-                if (Utilities.IsValid(localPlayer))
-                {
-                    localName = localPlayer.displayName;
-                }
+                // TODO: move to Base class to reduce lookups
+                // var localPlayer = Networking.LocalPlayer;
+                // var localName = "???";
+                // if (Utilities.IsValid(localPlayer))
+                // {
+                //     localName = localPlayer.displayName;
+                // }
 
-                Log($"setting isAuthorized to {isAuthorized} for {localName}");
+                Log($"setting isAuthorized to {IsAuthorized} for {_localName}");
 
                 Log($"updating {IsAuthorizedBoolDrivers.Length} drivers");
                 for (var i = 0; i < IsAuthorizedBoolDrivers.Length; i++)
                 {
-                    IsAuthorizedBoolDrivers[i].OnUpdateBool(isAuthorized);
+                    IsAuthorizedBoolDrivers[i].OnUpdateBool(IsAuthorized);
                 }
 
                 AccessChanged();
+            }
+        }
+        
+        private string _localName = "???";
+        public override void OnPlayerJoined(VRCPlayerApi player)
+        {
+            base.OnPlayerJoined(player);
+            if (player == Networking.LocalPlayer)
+            {
+                _localName = player.displayName;
             }
         }
 
@@ -139,6 +158,18 @@ namespace nikkyai.common
         //     }
         //     
         // }
+
+        // protected override void OnValidate()
+        // {
+        //     base.OnValidate();
+        //     if (Utilities.IsValid(boolAuthorizedDriversTransform))
+        //     {
+        //         boolAuthorizedDrivers = boolAuthorizedDriversTransform.gameObject;
+        //         this.MarkDirty();
+        //     }
+        // }
+
+
         public virtual AccessControl EditorACL
         {
             get => AccessControl;

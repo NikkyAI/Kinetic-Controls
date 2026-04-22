@@ -73,7 +73,6 @@ namespace nikkyai.driver.material
         public override void ApplyColorValue(Color value)
         {
             base.ApplyColorValue(value);
-            InitProperties();
             OnUpdateColor(value);
             Log("marking materials as Dirty");
             foreach (var material in materials)

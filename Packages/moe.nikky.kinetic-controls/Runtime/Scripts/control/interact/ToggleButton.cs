@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.ComponentModel;
+using JetBrains.Annotations;
 using nikkyai.ArrayExtensions;
 using nikkyai.common;
 using UdonSharp;
@@ -17,16 +18,23 @@ namespace nikkyai.control.interact
              "The button will initialize into this value, toggle this for elements that should be enabled by default"),
          SerializeField]
         private bool defaultValue = false;
-
-        [Header("State")] // header
         [SerializeField, UdonSynced]
         private bool synced = true;
 
+        [Header("Toggle - MIDI - Requires VRC_MidiListener Component")] //
+        [SerializeField, Description("Requires a VRC MIDI Listened with NoteOn enabled")]
+        protected bool midiEnabled = true;
+        [SerializeField, Range(0,15)]
+        protected int midiChannel = 0;
+        [SerializeField, Range(0,127)]
+        protected int midiNumber = 0;
+        [SerializeField, Range(0,127)]
+        protected int midiMinVelocity = 127;
+
+        [FormerlySerializedAs("boolStateDriversObj")]
         [Header("Drivers")] // header
-        [FormerlySerializedAs("boolStatedDrivers")] //
-        [FormerlySerializedAs("valueIndicator")] //
         [SerializeField]
-        private Transform boolStateDrivers;
+        private GameObject boolStateDrivers;
 
         // [FormerlySerializedAs("isAuthorizedIndicator")] // 
         // [SerializeField]
@@ -39,7 +47,7 @@ namespace nikkyai.control.interact
             get => synced;
             set
             {
-                if (!isAuthorized) return;
+                if (!IsAuthorized) return;
 
                 var prevValue = _syncedState;
                 TakeOwnership();
@@ -91,7 +99,7 @@ namespace nikkyai.control.interact
             Log("Initializing");
             DisableInteractive = true;
 
-            _valueBoolDrivers = _valueBoolDrivers.AddRange(transform.GetComponents<BoolDriver>());
+            // _valueBoolDrivers = _valueBoolDrivers.AddRange(gameObject.GetComponents<BoolDriver>());
             if (Utilities.IsValid(boolStateDrivers))
             {
                 Log($"loading bool drivers");
@@ -110,20 +118,20 @@ namespace nikkyai.control.interact
 
         protected override void AccessChanged()
         {
-            Log($"AccessChanged: {isAuthorized}");
-            DisableInteractive = !isAuthorized;
+            Log($"AccessChanged: {IsAuthorized}");
+            DisableInteractive = !IsAuthorized;
         }
 
         [UsedImplicitly]
         public void SetState(bool newValue)
         {
-            if (!isAuthorized) return;
-            TakeOwnership();
+            if (!IsAuthorized) return;
 
             SyncedState = newValue;
 
             if (synced)
             {
+                TakeOwnership();
                 RequestSerialization();
             }
 
@@ -132,14 +140,11 @@ namespace nikkyai.control.interact
 
         public void Reset()
         {
-            if (!Networking.IsOwner(gameObject))
-            {
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            }
-
-            _syncedState = defaultValue;
+            if (!IsAuthorized) return;
+            SyncedState = defaultValue;
             if (synced)
             {
+                TakeOwnership();
                 RequestSerialization();
             }
             // OnDeserialization();
@@ -153,52 +158,73 @@ namespace nikkyai.control.interact
 
         public void _Interact()
         {
-            if (!isAuthorized) return;
-
-            if (!Networking.IsOwner(gameObject))
-            {
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            }
+            if (!IsAuthorized) return;
 
             SyncedState = !SyncedState;
             // _UpdateState();
             if (synced)
             {
+                TakeOwnership();
                 RequestSerialization();
             }
             // OnDeserialization();
         }
 
-        private void _UpdateState()
-        {
-            Log($"_UpdateState {_syncedState}");
-            
-            for (var i = 0; i < _valueBoolDrivers.Length; i++)
-            {
-                _valueBoolDrivers[i].OnUpdateBool(_syncedState);
-            }
-        }
+        // private void _UpdateState()
+        // {
+        //     Log($"_UpdateState {_syncedState}");
+        //     
+        //     for (var i = 0; i < _valueBoolDrivers.Length; i++)
+        //     {
+        //         _valueBoolDrivers[i].OnUpdateBool(_syncedState);
+        //     }
+        // }
 
         public override void OnDeserialization()
         {
             // _UpdateState();
         }
-
+        
+        public override void MidiNoteOn(int channel, int number, int velocity)
+        {
+            if (!IsAuthorized) return;
+            base.MidiNoteOn(channel, number, velocity);
+            if (!midiEnabled) return;
+            
+            Log($"MidiNoteOn({channel}, {number}, {velocity})");
+            if (channel == midiChannel && number == midiNumber && velocity >= midiMinVelocity)
+            {
+                Log("midi triggered");
+                _Interact();
+            }
+        }
+        
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
+
+        // protected override void OnValidate()
+        // {
+        //     base.OnValidate();
+        //     if (boolStateDrivers == null && Utilities.IsValid(boolStateDriversTransform))
+        //     {
+        //         boolStateDrivers = boolStateDriversTransform.gameObject;
+        //         this.MarkDirty();
+        //     }
+        // }
+
         [ContextMenu("Assign Defaults")]
         public void AssignDefaults()
         {
             if (Application.isPlaying) return;
             // UnityEditor.EditorUtility.SetDirty(this);
 
-            var candidates = transform.GetComponentsInChildren<Transform>();
+            var candidates = gameObject.GetComponentsInChildren<Transform>();
             if (boolStateDrivers == null)
             {
                 foreach (var candidate in candidates)
                 {
                     if (candidate.name == "Bool State Drivers")
                     {
-                        boolStateDrivers = candidate;
+                        boolStateDrivers = candidate.gameObject;
                         Log("Found and assigned Bool State Drivers");
                         UnityEditor.EditorUtility.SetDirty(this);
                         break;

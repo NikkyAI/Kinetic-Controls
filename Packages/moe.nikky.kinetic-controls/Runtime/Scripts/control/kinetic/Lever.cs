@@ -103,10 +103,10 @@ namespace nikkyai.control.kinetic
             _EnsureInit();
         }
 
-        protected override void _PreInit()
-        {
-            base._PreInit();
-        }
+        // protected override void _PreInit()
+        // {
+        //     base._PreInit();
+        // }
 
         protected override void _Init()
         {
@@ -243,11 +243,11 @@ namespace nikkyai.control.kinetic
 
         public override void SetValue(float normalizedValue)
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             SyncedValueNormalized = normalizedValue;
             // should already be done in OnDeserialization?
             _UpdateTargetValue(normalizedValue);
-            if (valueSynced)
+            if (synced)
             {
                 RequestSerialization();
             }

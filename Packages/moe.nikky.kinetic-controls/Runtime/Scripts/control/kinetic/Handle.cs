@@ -13,9 +13,9 @@ namespace nikkyai.control.kinetic
     public class Handle : ACLBase
     {
         // internal BaseKineticControl controlBehaviour;
-        [SerializeField] internal BaseKineticControl[] controlBehaviour = { };
+        private BaseKineticControl[] _controlBehaviour = { };
 
-        protected override string LogPrefix => $"{nameof(Handle)} @ {transform.parent.name}";
+        protected override string LogPrefix => $"{nameof(Handle)} : {name} @ {transform.parent.name}";
 
         [HideInInspector, FieldChangeCallback(nameof(UseContactsInVRLocal))]
         public bool useContactsInVRLocal = true;
@@ -100,13 +100,13 @@ namespace nikkyai.control.kinetic
                 _pickup = GetComponent<VRC_Pickup>();
             }
 
-            _pickup.pickupable = isAuthorized && !_isInVR;
+            _pickup.pickupable = IsAuthorized && !_isInVR;
         }
 
         public void Register(BaseKineticControl baseKineticControl)
         {
             Log($"registering {baseKineticControl}");
-            controlBehaviour = controlBehaviour.AddUnique(baseKineticControl);
+            _controlBehaviour = _controlBehaviour.AddUnique(baseKineticControl);
         }
 
         // private bool _isInteracting = false;
@@ -128,8 +128,8 @@ namespace nikkyai.control.kinetic
         //     }
         // }
 
-        [NonSerialized] public bool RightGrabbed;
-        [NonSerialized] public bool LeftGrabbed;
+        [HideInInspector] public bool RightGrabbed;
+        [HideInInspector] public bool LeftGrabbed;
 
         public override void InputGrab(bool value, UdonInputEventArgs args)
         {
@@ -189,13 +189,13 @@ namespace nikkyai.control.kinetic
 
         public void OnTriggerEnter(Collider other)
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             // touchFader._OnTriggerEnter(other.GetInstanceID());
         }
 
         public void OnTriggerExit(Collider other)
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             // touchFader._OnTriggerExit(other.GetInstanceID());
         }
 
@@ -203,7 +203,7 @@ namespace nikkyai.control.kinetic
         {
             if (!_isInVR) return;
             if (!contactInfo.contactSender.player.isLocal) return;
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
 
             Log($"Contact Enter {contactInfo.contactPoint} {contactInfo.matchingTags.Length}");
             for (var i = 0; i < contactInfo.matchingTags.Length; i++)
@@ -214,7 +214,7 @@ namespace nikkyai.control.kinetic
 
             if (contactInfo.matchingTags.Contains("FingerIndexL"))
             {
-                foreach (var cb in controlBehaviour)
+                foreach (var cb in _controlBehaviour)
                 {
                     cb.LeftSender = contactInfo.contactSender;
                     cb.OnLeftContactEnter();
@@ -225,7 +225,7 @@ namespace nikkyai.control.kinetic
 
             if (contactInfo.matchingTags.Contains("FingerIndexR"))
             {
-                foreach (var cb in controlBehaviour)
+                foreach (var cb in _controlBehaviour)
                 {
                     cb.RightSender = contactInfo.contactSender;
                     cb.OnRightContactEnter();
@@ -239,10 +239,10 @@ namespace nikkyai.control.kinetic
         {
             if (!_isInVR) return;
             if (!contactInfo.contactSender.player.isLocal) return;
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             Log($"Contact Exit");
 
-            foreach (var cb in controlBehaviour)
+            foreach (var cb in _controlBehaviour)
             {
                 if (contactInfo.contactSender == cb.LeftSender)
                 {
@@ -263,14 +263,14 @@ namespace nikkyai.control.kinetic
         public override void OnPickup()
         {
             Log("OnPickup");
-            if (!isAuthorized)
+            if (!IsAuthorized)
             {
                 _pickup.Drop();
                 //resetting position
 
-                for (var i = 0; i < controlBehaviour.Length; i++)
+                for (var i = 0; i < _controlBehaviour.Length; i++)
                 {
-                    var cb = controlBehaviour[i];
+                    var cb = _controlBehaviour[i];
                     if (Utilities.IsValid(cb))
                     {
                         cb.UpdateHandlePosition();
@@ -292,9 +292,9 @@ namespace nikkyai.control.kinetic
                 return;
             }
 
-            for (var i = 0; i < controlBehaviour.Length; i++)
+            for (var i = 0; i < _controlBehaviour.Length; i++)
             {
-                var cb = controlBehaviour[i];
+                var cb = _controlBehaviour[i];
                 if (Utilities.IsValid(cb))
                 {
                     cb._OnPickup();
@@ -310,12 +310,12 @@ namespace nikkyai.control.kinetic
         public override void OnDrop()
         {
             Log("OnDrop");
-            if (!isAuthorized)
+            if (!IsAuthorized)
                 return;
 
-            for (var index = 0; index < controlBehaviour.Length; index++)
+            for (var index = 0; index < _controlBehaviour.Length; index++)
             {
-                var cb = controlBehaviour[index];
+                var cb = _controlBehaviour[index];
                 if (Utilities.IsValid(cb))
                 {
                     cb._OnDrop();

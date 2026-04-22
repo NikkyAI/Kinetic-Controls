@@ -254,7 +254,7 @@ Material:
     - _IgnoreRealtimeGI: 0
     - _MappingSpace: 0
     - _MetalChannel: 0
-    - _Metallic: 0.5
+    - _Metallic: 0.8
     - _Mode: 0
     - _NeonTubeCapDirection: 5
     - _NeonTubeCapEnabled: 0
@@ -310,7 +310,7 @@ Material:
     - _GlassRimSmoothing: {r: 0.05, g: 0.7, b: 0, a: 0}
     - _GlassRimTint: {r: 1, g: 1, b: 1, a: 1}
     - _MetallicRemap: {r: 0, g: 1, b: 0, a: 1}
-    - _NeonColor: {r: 1, g: 0.008489716, b: 0, a: 1}
+    - _NeonColor: {r: 1, g: 0.007843138, b: 0, a: 1}
     - _NeonTubeCapColor: {r: 0.29999998, g: 0.29999998, b: 0.29999998, a: 1}
     - _NeonTubeColor: {r: 1, g: 1, b: 1, a: 1}
     - _SmoothnessRemap: {r: 0, g: 1, b: 0, a: 1}

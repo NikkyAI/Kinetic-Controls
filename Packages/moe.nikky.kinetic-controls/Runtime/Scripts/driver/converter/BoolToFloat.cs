@@ -2,14 +2,14 @@
 using UnityEngine;
 using VRC.SDKBase;
 
-namespace nikkyai.driver.converters
+namespace nikkyai.driver.converter
 {
     public class BoolToFloat : BoolDriver
     {
         [SerializeField] private float valueOff = 0f;
         [SerializeField] private float valueOn = 1f;
 
-        [SerializeField] private Transform floatDrivers;
+        [SerializeField] private GameObject floatDrivers;
     
         private FloatDriver[] _floatDrivers = {};
     
@@ -30,6 +30,7 @@ namespace nikkyai.driver.converters
 
         public override void OnUpdateBool(bool value)
         {
+            if(!enabled) return;
             float floatValue = value ? valueOn : valueOff;
             for (var i = 0; i < _floatDrivers.Length; i++)
             {

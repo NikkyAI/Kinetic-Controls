@@ -7,6 +7,7 @@ using nikkyai.Utils;
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.Serialization;
+using VRC;
 using VRC.SDKBase;
 
 namespace nikkyai.control
@@ -65,19 +66,12 @@ namespace nikkyai.control
         #region drivers
 
         [Header("Base Smoothed Control - Drivers")] // header
-        [FormerlySerializedAs("floatTargetValueDriversTransform")]
-        [FormerlySerializedAs("floatTargetDriversTransform")]
-        [FormerlySerializedAs("floatTargetDrivers")]
+        
         [SerializeField] //
-        [InspectorName("target value drivers")]
-        private Transform floatTargetValueDrivers;
+        private GameObject floatTargetValueDrivers;
 
-        [FormerlySerializedAs("floatSmoothedValueDriversTransform")]
-        [FormerlySerializedAs("floatValueDriversTransform")]
-        [FormerlySerializedAs("floatValueDrivers")]
         [SerializeField] //
-        [InspectorName("smoothed value drivers")]
-        private Transform floatSmoothedValueDrivers;
+        private GameObject floatSmoothedValueDrivers;
 
         private FloatDriver[] _targetValueFloatDrivers = { };
         private FloatDriver[] _smoothedValueFloatDrivers = { };
@@ -169,15 +163,12 @@ namespace nikkyai.control
             Log($"Searching for float value drivers in {floatSmoothedValueDrivers}");
             if (Utilities.IsValid(floatSmoothedValueDrivers))
             {
-                _smoothedValueFloatDrivers = gameObject.GetComponents<FloatDriver>()
-                    .AddRange(
-                        floatSmoothedValueDrivers.GetComponentsInChildren<FloatDriver>()
-                    );
+                _smoothedValueFloatDrivers = floatSmoothedValueDrivers.GetComponentsInChildren<FloatDriver>();
                 Log($"found {_smoothedValueFloatDrivers.Length} drivers for value");
             }
             else
             {
-                LogError("missing transform for float value drivers");
+                LogError("missing object for float value drivers");
             }
 
             Log($"Searching for float target drivers in {floatTargetValueDrivers}");
@@ -188,7 +179,7 @@ namespace nikkyai.control
             }
             else
             {
-                LogError("missing transform for float target drivers");
+                LogError("missing object for float target drivers");
             }
 
             if (_smoothedValueFloatDrivers != null)
@@ -351,7 +342,7 @@ namespace nikkyai.control
 
         public virtual void Reset()
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             Log("re-setting synced to default");
 
             SetValue(defaultValueNormalized);
@@ -361,7 +352,7 @@ namespace nikkyai.control
 
         public virtual void SetValue(float normalizedValue)
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             SyncedValueNormalized = normalizedValue;
             // should already be done in OnDeserialization?
             _UpdateTargetValue(normalizedValue);
@@ -378,12 +369,23 @@ namespace nikkyai.control
         private int lastHashSmoothedBase = 0;
         // ReSharper restore InconsistentNaming
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-
+        
         protected override void OnValidate()
         {
             if (Application.isPlaying) return;
             base.OnValidate();
 
+            // if (floatTargetValueDrivers == null && Utilities.IsValid(floatTargetValueDriversTransform))
+            // {
+            //     floatTargetValueDrivers = floatTargetValueDriversTransform.gameObject;
+            //     this.MarkDirty();
+            // }
+            // if (floatSmoothedValueDrivers == null && Utilities.IsValid(floatSmoothedValueDriversTransform))
+            // {
+            //     floatSmoothedValueDrivers = floatSmoothedValueDriversTransform.gameObject;
+            //     this.MarkDirty();
+            // }
+            
             if (
                 ValidationCache.ShouldRunValidation(
                     this,
@@ -405,7 +407,7 @@ namespace nikkyai.control
         [ContextMenu("Apply Values")]
         public virtual void ApplyValues()
         {
-            SetupValuesAndComponents();
+            _EnsureInit();
 
             //TODO move to helper script ?
             if (prevDefaultNormalized != defaultValueNormalized)

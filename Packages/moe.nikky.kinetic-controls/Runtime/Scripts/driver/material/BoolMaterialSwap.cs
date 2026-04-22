@@ -9,6 +9,7 @@ namespace nikkyai.driver.material
         [SerializeField] private Material disabledMat;
         [SerializeField] private Material enabledMat;
         [SerializeField] private Renderer meshRenderer;
+        [SerializeField] private Renderer[] meshRenderers = {};
         [SerializeField] private int materialSlot = 0;
 
         protected override string LogPrefix => nameof(BoolMaterialSwap);
@@ -33,17 +34,24 @@ namespace nikkyai.driver.material
             
             if (value)
             {
-                Log("setting material to enabled");
+                Log($"setting material to enabled: {enabledMat.name}");
                 newMats[materialSlot] = enabledMat;
                 // meshRenderer.materials[materialSlot] = enabledMat;
             }
             else
             {
-                Log("setting material to disabled");
+                Log($"setting material to disabled: {disabledMat.name}");
                 newMats[materialSlot] = disabledMat;
                 // meshRenderer.materials[materialSlot] = disabledMat;
             }
             meshRenderer.sharedMaterials = newMats;
+            if (Utilities.IsValid(meshRenderers))
+            {
+                foreach (var meshRenderer1 in meshRenderers)
+                {
+                    meshRenderer1.sharedMaterials = newMats;
+                }
+            }
             return;
             
             for (int j = 0; j < newMats.Length; j++)

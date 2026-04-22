@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ToggleDisabled
-  m_Shader: {fileID: -8512187303908658807, guid: bb1fc5fc14b648debb2f566068d58f43, type: 3}
+  m_Name: Handle
+  m_Shader: {fileID: -8512187303908658807, guid: b36109bcda611f9498611a60783d4d83, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
@@ -31,6 +31,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _BakedNoiseTex:
+        m_Texture: {fileID: 2800000, guid: 36a6b5f7eb3f4b4b9867affc51734894, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -80,6 +84,10 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NeonTubeCapMask:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -153,13 +161,17 @@ Material:
     - UI_GSAAHeader: 0
     - UI_GSAAIncludeNormalMapsNote: 0
     - UI_GSAANote: 0
+    - UI_GlassHeader: 1
     - UI_IgnoreMaskNote: 0
     - UI_IgnoreRealtimeGINote: 0
     - UI_InternalHeader: 0
     - UI_LightmappingDocs: 0
-    - UI_LightmappingHeader: 0
+    - UI_LightmappingHeader: 1
     - UI_MainHeader: 1
     - UI_MobileTweaks: 1
+    - UI_NeonDocs: 0
+    - UI_NeonHeader: 1
+    - UI_NeonTubeHeader: 1
     - UI_ParallaxDocs: 0
     - UI_ParallaxHeader: 0
     - UI_ParallaxScaleBasedOnAngleNote: 0
@@ -222,12 +234,17 @@ Material:
     - _EmissionEnabled: 0
     - _EnableGSAA: 1
     - _EnableParallax: 0
+    - _FlickerFrequency: 44
+    - _FlickerSpeed: 63
+    - _FlickerStrengthMultiplier: 1.78
     - _FlipBumpY: 0
     - _ForceBoxProjection: 0
     - _GIEmissiveBoost: 1
     - _GSAAIncludeNormalMaps: 0
     - _GSAAThreshold: 0.1
     - _GSAAVariance: 0.05
+    - _GlassRimPower: 1.38
+    - _GlassRimStrength: 0.97
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
@@ -237,8 +254,15 @@ Material:
     - _IgnoreRealtimeGI: 0
     - _MappingSpace: 0
     - _MetalChannel: 0
-    - _Metallic: 0.5
+    - _Metallic: 0.8
     - _Mode: 0
+    - _NeonTubeCapDirection: 5
+    - _NeonTubeCapEnabled: 0
+    - _NeonTubeCapOffset: 0
+    - _NeonTubeCapSmoothness: 0.5
+    - _NeonTubeCapSource: 0
+    - _NeonTubePower: 5
+    - _NeonTubeSmoothing: 10
     - _NonlinearSH: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
@@ -281,8 +305,14 @@ Material:
     - _ClothSheenColor: {r: 0.04, g: 0.04, b: 0.04, a: 1}
     - _ClothSubsurfaceColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _EmissionColor: {r: 0, g: 0.5104325, b: 1, a: 1}
+    - _FlickerStrength: {r: 0.85, g: 1, b: 0, a: 1}
+    - _GlassRimSmoothing: {r: 0.05, g: 0.7, b: 0, a: 0}
+    - _GlassRimTint: {r: 1, g: 1, b: 1, a: 1}
     - _MetallicRemap: {r: 0, g: 1, b: 0, a: 1}
+    - _NeonColor: {r: 0, g: 0.15, b: 0.5, a: 1}
+    - _NeonTubeCapColor: {r: 0.29999998, g: 0.29999998, b: 0.29999998, a: 1}
+    - _NeonTubeColor: {r: 1, g: 1, b: 1, a: 1}
     - _SmoothnessRemap: {r: 0, g: 1, b: 0, a: 1}
     - _VolumeInvSize: {r: 1000001, g: 1000001, b: 1000001, a: 1}
     - _VolumeMin: {r: 0, g: 0, b: 0, a: 1}

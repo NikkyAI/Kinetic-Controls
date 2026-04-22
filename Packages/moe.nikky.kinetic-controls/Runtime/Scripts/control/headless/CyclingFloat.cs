@@ -22,7 +22,7 @@ namespace nikkyai.control.headless
         [SerializeField, Range(0f, 1f)] public float maxSpeed = 10f;
 
         // private float _targetValue = 0f;
-        [SerializeField] private Transform floatDriverHolder;
+        [SerializeField] private GameObject floatDrivers;
 
         private float _smoothedCurrent = 0f;
         private FloatDriver[] _floatDrivers = { };
@@ -60,7 +60,7 @@ namespace nikkyai.control.headless
         {
             base._Init();
             _lastTime = Time.time;
-            _floatDrivers = floatDriverHolder.GetComponentsInChildren<FloatDriver>();
+            _floatDrivers = floatDrivers.GetComponentsInChildren<FloatDriver>();
 
             SendCustomEventDelayedFrames(nameof(OnUpdateCyclingValue), smoothingUpdateInterval);
             SendCustomEventDelayedFrames(nameof(PostInitResetValues), 5);
@@ -229,7 +229,7 @@ namespace nikkyai.control.headless
                         // maxSpeed,
                         // smoothTime,
                         // smoothingUpdateInterval,
-                        floatDriverHolder
+                        floatDrivers
                     )
                 )
             )
@@ -247,7 +247,7 @@ namespace nikkyai.control.headless
         [ContextMenu("Reset Values")]
         public void ApplyDefaultValues()
         {
-            _floatDrivers = floatDriverHolder.GetComponentsInChildren<FloatDriver>();
+            _floatDrivers = floatDrivers.GetComponentsInChildren<FloatDriver>();
             Log($"applying default to {_floatDrivers.Length} float drivers");
             for (var i = 0; i < _floatDrivers.Length; i++)
             {

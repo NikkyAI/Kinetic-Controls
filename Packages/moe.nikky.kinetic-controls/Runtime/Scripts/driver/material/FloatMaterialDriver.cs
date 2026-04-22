@@ -79,7 +79,6 @@ namespace nikkyai.driver.material
         public override void ApplyFloatValue(float value)
         {
             base.ApplyFloatValue(value);
-            _EnsureInit();
             Log($"applying new value: {value}");
             UpdateFloatRescale(value);
         }

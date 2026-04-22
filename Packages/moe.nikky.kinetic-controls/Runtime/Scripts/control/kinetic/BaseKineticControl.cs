@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using JetBrains.Annotations;
 using nikkyai.Utils;
 using UdonSharp;
@@ -17,10 +18,23 @@ namespace nikkyai.control.kinetic
     public abstract class BaseKineticControl : BaseSmoothedControl
     {
         [Header("Kinetic Control")] //
-        [FormerlySerializedAs("synced")] //
-        [SerializeField, UdonSynced]
-        protected bool valueSynced = true;
+        [SerializeField, UdonSynced] //
+        [FormerlySerializedAs("valueSynced")]//
+        protected bool synced = true;
 
+        [Header("Kinetic Control - MIDI - Requires VRC_MidiListener Component")] //
+        [SerializeField, Description("Requires a VRC MIDI Listened with CC enabled")]
+        protected bool midiEnabled = true;
+        [SerializeField, Range(0,15)]
+        protected int midiChannel = 0;
+        [SerializeField, Range(0,127)]
+        protected int midiNumber = 0;
+        [SerializeField, Range(0,127)]
+        protected int midiInputRangeStart = 0;
+        [SerializeField, Range(0,127)]
+        protected int midiInputRangeEnd = 127;
+        
+        
         [Header("Kinetic Control - Components")] //
         [SerializeField]
         internal Handle handle;
@@ -38,15 +52,15 @@ namespace nikkyai.control.kinetic
 
         public override bool Synced
         {
-            get => valueSynced;
+            get => synced;
             set
             {
-                if (!isAuthorized) return;
+                if (!IsAuthorized) return;
 
                 var prevValue = SyncedValueNormalized;
                 TakeOwnership();
                 Log($"set synced to {value}");
-                valueSynced = value;
+                synced = value;
                 Log($"set value to {SyncedValueNormalized} => {prevValue}");
                 SyncedValueNormalized = prevValue;
 
@@ -157,13 +171,13 @@ namespace nikkyai.control.kinetic
             Log("SetupPickup");
             if (Utilities.IsValid(handle))
             {
-                Log($"getting pickup from handle: {handle.name}");
+                // Log($"getting pickup from handle: {handle.name}");
                 pickup = handle.GetComponent<VRC_Pickup>();
             }
 
             if (!Utilities.IsValid(pickup))
             {
-                Log($"getting pickup from self: {name}");
+                // Log($"getting pickup from self: {name}");
                 pickup = gameObject.GetComponent<VRC_Pickup>();
                 // _pickup.pickupable = !_isDesktop;
             }
@@ -223,7 +237,7 @@ namespace nikkyai.control.kinetic
 
         public void _OnPickup()
         {
-            if (!isAuthorized)
+            if (!IsAuthorized)
             {
                 return;
             }
@@ -252,7 +266,7 @@ namespace nikkyai.control.kinetic
 
         public void _OnDrop()
         {
-            if (!isAuthorized)
+            if (!IsAuthorized)
             {
                 return;
             }
@@ -277,7 +291,7 @@ namespace nikkyai.control.kinetic
                 }
             }
 
-            if (valueSynced)
+            if (synced)
             {
                 RequestSerialization();
             }
@@ -291,7 +305,7 @@ namespace nikkyai.control.kinetic
 
         private bool _isTrackingLeft, _isTrackingRight;
         private bool _isRunningContactLoop;
-        [NonSerialized] public ContactSenderProxy LeftSender, RightSender;
+        [HideInInspector] public ContactSenderProxy LeftSender, RightSender;
 
         protected abstract void FollowPickup();
 
@@ -308,7 +322,7 @@ namespace nikkyai.control.kinetic
                 this.SendCustomEventDelayedFrames(nameof(_OnFollowPickup), 0);
             }
 
-            if (valueSynced)
+            if (synced)
             {
                 RequestSerialization();
             }
@@ -352,7 +366,7 @@ namespace nikkyai.control.kinetic
 
         public void OnLeftContactEnter()
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             Log($"OnLeftContactEnter received {LeftSender.usage}");
             Log($"Left Contact Enter");
 
@@ -389,7 +403,7 @@ namespace nikkyai.control.kinetic
 
         public void OnRightContactEnter()
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             Log($"OnRightContactEnter received {RightSender.usage}");
             Log($"Right Contact Enter");
 
@@ -426,7 +440,7 @@ namespace nikkyai.control.kinetic
 
         public void OnLeftContactExit()
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             Log($"Left Contact Exit");
             _inLeftTrigger = false;
             UpdateHandlePosition();
@@ -435,7 +449,7 @@ namespace nikkyai.control.kinetic
 
         public void OnRightContactExit()
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             Log($"Right Contact Exit");
             _inRightTrigger = false;
             UpdateHandlePosition();
@@ -445,7 +459,7 @@ namespace nikkyai.control.kinetic
 
         public void _OnFollowCollider()
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
             // if (_isDesktop) return; // should not be required
 
             var followLeft = handle.LeftGrabbed && _inLeftTrigger;
@@ -505,7 +519,7 @@ namespace nikkyai.control.kinetic
 
                 SyncedValueNormalized = RelativePosToNormalized(localFingerPos);
 
-                if (valueSynced)
+                if (synced)
                 {
                     RequestSerialization();
                 }
@@ -542,7 +556,6 @@ namespace nikkyai.control.kinetic
                 LogWarning($"handle reset is not valid on {name}");
             }
 
-
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             if (Utilities.IsValid(rigidBody))
             {
@@ -565,7 +578,39 @@ namespace nikkyai.control.kinetic
                 LastSyncedValueNormalized = SyncedValueNormalized;
             }
         }
+        
+        // public override void MidiNoteOn(int channel, int number, int velocity)
+        // {
+        //     if (!IsAuthorized) return;
+        //     base.MidiNoteOn(channel, number, velocity);
+        //     if (!midiEnabled) return;
+        //     
+        //     Log($"MidiNoteOn({channel}, {number}, {velocity})");
+        // }
+        //
+        // public override void MidiNoteOff(int channel, int number, int velocity)
+        // {
+        //     if (!IsAuthorized) return;
+        //     base.MidiNoteOff(channel, number, velocity);
+        //     if (!midiEnabled) return;
+        //     
+        //     Log($"MidiNoteOff({channel}, {number}, {velocity})");
+        // }
 
+        public override void MidiControlChange(int channel, int number, int value)
+        {
+            if (!IsAuthorized) return;
+            base.MidiControlChange(channel, number, value);
+            if (!midiEnabled) return;
+            
+            Log($"MidiControlChange({channel}, {number}, {value})");
+            if (channel == midiChannel && number == midiNumber)
+            {
+                float normalizedValue = Mathf.InverseLerp(midiInputRangeStart, midiInputRangeEnd, value);
+                Log($"normalized value: {normalizedValue}");
+                SetValue(normalizedValue);
+            }
+        }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         protected override void OnValidate()

@@ -2,11 +2,11 @@
 using UnityEngine;
 using VRC.SDKBase;
 
-namespace nikkyai.driver.converters
+namespace nikkyai.driver.converter
 {
     public class IntToBoolArray : IntDriver
     {
-        [SerializeField] private Transform[] boolDrivers = { };
+        [SerializeField] private GameObject[] boolDrivers = { };
 
         private BoolDriver[][] _boolDrivers = { };
     

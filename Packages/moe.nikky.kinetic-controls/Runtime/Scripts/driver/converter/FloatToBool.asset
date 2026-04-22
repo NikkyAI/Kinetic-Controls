@@ -20,7 +20,7 @@ MonoBehaviour:
   compiledVersion: 2
   behaviourSyncMode: 1
   hasInteractEvent: 0
-  scriptID: 8554302825597528535
+  scriptID: 3297325311437748193
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -481,7 +481,7 @@ MonoBehaviour:
       Data: 
     - Name: <IsSerialized>k__BackingField
       Entry: 5
-      Data: false
+      Data: true
     - Name: _fieldAttributes
       Entry: 7
       Data: 28|System.Collections.Generic.List`1[[System.Attribute, mscorlib]], mscorlib
@@ -490,7 +490,7 @@ MonoBehaviour:
       Data: 2
     - Name: 
       Entry: 7
-      Data: 29|System.NonSerializedAttribute, mscorlib
+      Data: 29|UnityEngine.HideInInspector, UnityEngine.CoreModule
     - Name: 
       Entry: 8
       Data: 
@@ -577,7 +577,7 @@ MonoBehaviour:
       Data: 34|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: nikkyai.driver.ComparisonType, moe.nikky.kinetic-controls
+      Data: nikkyai.driver.converter.ComparisonType, moe.nikky.kinetic-controls
     - Name: 
       Entry: 8
       Data: 
@@ -685,7 +685,7 @@ MonoBehaviour:
       Data: 40|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: UnityEngine.Transform, UnityEngine.CoreModule
+      Data: UnityEngine.GameObject, UnityEngine.CoreModule
     - Name: 
       Entry: 8
       Data: 

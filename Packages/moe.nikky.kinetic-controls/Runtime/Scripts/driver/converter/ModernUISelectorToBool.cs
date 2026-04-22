@@ -5,13 +5,13 @@ using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 
-namespace nikkyai.driver.converters
+namespace nikkyai.driver.converter
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class ModernUISelectorToBool : LoggerBase
     {
         [SerializeField] private Vector2Int selectedIdMatch = Vector2Int.up;
-        [SerializeField] private Transform boolDrivers;
+        [SerializeField] private GameObject boolDrivers;
         private BoolDriver[] _boolDrivers = {};
     
         protected override string LogPrefix => nameof(ModernUISelectorToBool);
@@ -32,7 +32,7 @@ namespace nikkyai.driver.converters
             }
         }
         // ReSharper disable once InconsistentNaming
-        [NonSerialized, UsedImplicitly] public int selectionId;
+        [HideInInspector, UsedImplicitly] public int selectionId;
         [UsedImplicitly]
         public void _SelectionChanged()
         {

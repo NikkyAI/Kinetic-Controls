@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using UdonSharp;
+using UnityEngine;
 
 namespace nikkyai.common
 {
@@ -11,7 +12,7 @@ namespace nikkyai.common
         
         // defaults for Modern UI selector
         // ReSharper disable once InconsistentNaming
-        [NonSerialized, UsedImplicitly] public int selectionId;
+        [HideInInspector, UsedImplicitly] public int selectionId;
         [UsedImplicitly]
         public void _SelectionChanged()
         {

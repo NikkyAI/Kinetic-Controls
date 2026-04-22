@@ -13,9 +13,7 @@ namespace nikkyai.utils
     public class ACLBaseManager : ACLBase
     {
 
-        [SerializeField] private Transform aclComponents;
-        [SerializeField] private Transform boolAuthorizedDrivers;
-        private BoolDriver[] _isAuthorizedBoolDrivers = { };
+        [SerializeField] private GameObject aclComponents;
         private ACLBase[] _aclBases = { };
     
         protected override string LogPrefix => nameof(ACLBaseManager);
@@ -25,31 +23,27 @@ namespace nikkyai.utils
             _EnsureInit();
         }
 
-        protected override void _Init()
-        {
-            base._Init();
-
-            if (Utilities.IsValid(aclComponents))
-            {
-                _aclBases = aclComponents.GetComponentsInChildren<ACLBase>();
-            }
-
-            if (boolAuthorizedDrivers != null)
-            {
-                _isAuthorizedBoolDrivers = boolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
-            }
-        }
+        // protected override void _Init()
+        // {
+        //     base._Init();
+        //
+        //     if (Utilities.IsValid(aclComponents))
+        //     {
+        //         _aclBases = aclComponents.GetComponentsInChildren<ACLBase>();
+        //     }
+        //
+        //     // if (boolAuthorizedDrivers != null)
+        //     // {
+        //     //     _isAuthorizedBoolDrivers = boolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
+        //     // }
+        // }
 
         protected override void AccessChanged()
         {
-            for (var i = 0; i < _isAuthorizedBoolDrivers.Length; i++)
-            {
-                _isAuthorizedBoolDrivers[1].OnUpdateBool(isAuthorized);
-            }
         }
     
-        [NonSerialized] private AccessControl prevAccessControl;
-        [NonSerialized] private bool prevEnforceACL;
+        /*[NonSerialized]*/ private AccessControl prevAccessControl;
+        /*[NonSerialized]*/ private bool prevEnforceACL;
     
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         private void OnValidate()

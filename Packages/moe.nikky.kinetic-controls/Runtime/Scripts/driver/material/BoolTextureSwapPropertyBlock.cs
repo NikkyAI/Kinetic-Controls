@@ -2,6 +2,7 @@
 using nikkyai.common;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 using VRC.SDKBase;
 
 namespace nikkyai.driver.material
@@ -11,7 +12,7 @@ namespace nikkyai.driver.material
         [SerializeField] private Renderer materialSource;
         // [SerializeField] private Material[] materials = { };
         // [SerializeField] private MeshRenderer[] renderers = { };
-        [SerializeField] private string property;
+        [FormerlySerializedAs("property")] [SerializeField] private string propertyName;
         [SerializeField] private RenderTexture disabledTexture;
         [SerializeField] private RenderTexture enabledTexture;
 
@@ -31,28 +32,16 @@ namespace nikkyai.driver.material
             base._Init();
             
             if (_propertyBlock == null) _propertyBlock = new MaterialPropertyBlock();
-            
-            // if (Utilities.IsValid(materials))
-            // {
-            //     _materials = _materials.AddRange(materials);
-            // }
-            //
-            // for (var index = 0; index < renderers.Length; index++)
-            // {
-            //     var meshRenderer =  renderers[index];
-            //     if(Utilities.IsValid(meshRenderer))
-            //     {
-            //         _materials = _materials.AddRange(meshRenderer.materials);
-            //     }
-            // }
-
-            _propertyId = VRCShader.PropertyToID(property);
+            if (_propertyId == 0) _propertyId = VRCShader.PropertyToID(propertyName);
         }
 
         public override void OnUpdateBool(bool value)
         {
             if (!enabled) return;
             
+            if (_propertyBlock == null) _propertyBlock = new MaterialPropertyBlock();
+            if (_propertyId == 0) _propertyId = VRCShader.PropertyToID(propertyName);
+
             materialSource.GetPropertyBlock(_propertyBlock);
             if (value)
             {

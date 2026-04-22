@@ -1,16 +1,15 @@
 ﻿using nikkyai.common;
 using UnityEngine;
-using UnityEngine.Serialization;
 using VRC.SDKBase;
 
-namespace nikkyai.driver.converters
+namespace nikkyai.driver.converter
 {
     public class BoolToVector : BoolDriver
     {
         [SerializeField] private Vector4 valueOff = Vector4.zero;
         [SerializeField] private Vector4 valueOn = Vector4.one;
 
-        [SerializeField] private Transform vectorDrivers;
+        [SerializeField] private GameObject vectorDrivers;
     
         private VectorDriver[] _vectorDrivers = {};
     

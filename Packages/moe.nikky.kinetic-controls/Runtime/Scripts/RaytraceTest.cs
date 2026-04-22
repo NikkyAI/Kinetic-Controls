@@ -9,6 +9,7 @@ namespace nikkyai
     public class RaytraceTest : LoggerBase
     {
         [SerializeField] private Transform hitTracker;
+        [SerializeField, Min(0)] private float maxRange = 5;
 
         private VRCPlayerApi _localPlayer;
 
@@ -47,21 +48,37 @@ namespace nikkyai
                 trackingData.position,
                 lookDirection
             );
-            var wasHit = plane.Raycast(ray, out var distance);
-            var lookDirectionAxisLocked = lookDirection;
-            lookDirectionAxisLocked.y = 0;
-            var angle = Vector3.Angle(lookDirectionAxisLocked, -planeDirection);
-            if (wasHit && angle < 45f)
+            
+            //TODO: setup layer mask
+            var wasHit = Physics.Raycast(
+                ray: ray, 
+                hitInfo: out RaycastHit hit,
+                maxDistance: maxRange,
+                Physics.DefaultRaycastLayers,
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
+                );
+            // var wasHit = plane.Raycast(ray, out var distance);
+            // if (!wasHit)
+            // {
+            //     distance = maxRange;
+            // }
+            // var lookDirectionAxisLocked = lookDirection;
+            // lookDirectionAxisLocked.y = 0;
+            // var angle = Vector3.Angle(lookDirectionAxisLocked, -planeDirection);
+            if (wasHit)
             {
-                Log($"angle: {angle}");
-                var hitPosition = ray.GetPoint(distance);
-                Log($"raycast hit, distance: {distance}, point: {hitPosition}");
-                hitTracker.gameObject.SetActive(true);
-                hitTracker.position = hitPosition;
+                // Log($"angle: {angle}");
+                // var hitPosition = ray.GetPoint(distance);
+                
+                Log($"raycast hit, distance: {hit.distance}, point: {hit.point}");
+                hitTracker.transform.position = hit.point;
+                // hitTracker.gameObject.SetActive(true);
+                // hitTracker.position = hitPosition;
             }
             else
             {
-                hitTracker.gameObject.SetActive(false);
+                hitTracker.transform.position = ray.GetPoint(maxRange);
+                // hitTracker.gameObject.SetActive(false);
             }
         }
     }

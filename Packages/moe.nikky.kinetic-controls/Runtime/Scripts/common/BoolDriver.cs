@@ -13,7 +13,7 @@ namespace nikkyai.common
         // [SerializeField] private Vector2Int selectedIdMatch = Vector2Int.up;
         // defaults for Modern UI selector
         // ReSharper disable once InconsistentNaming
-        [NonSerialized, UsedImplicitly] public int selectionId;
+        [HideInInspector, UsedImplicitly] public int selectionId;
         [UsedImplicitly]
         public void _SelectionChanged()
         {

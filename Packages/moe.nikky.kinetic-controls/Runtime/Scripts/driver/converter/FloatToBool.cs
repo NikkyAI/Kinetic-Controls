@@ -1,9 +1,8 @@
-﻿using System;
-using nikkyai.common;
+﻿using nikkyai.common;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace nikkyai.driver
+namespace nikkyai.driver.converter
 {
     public enum ComparisonType
     {
@@ -22,7 +21,7 @@ namespace nikkyai.driver
         public float compareTo = 0.0f;
     
         [FormerlySerializedAs("boolDriverHolder")] //
-        [SerializeField] private Transform boolDrivers;
+        [SerializeField] private GameObject boolDrivers;
 
         protected override string LogPrefix => nameof(FloatToBool);
 

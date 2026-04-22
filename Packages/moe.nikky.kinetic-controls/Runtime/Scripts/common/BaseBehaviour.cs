@@ -1,5 +1,6 @@
 ﻿using UdonSharp;
 using UnityEngine;
+using VRC.SDKBase;
 
 namespace nikkyai.common
 {
@@ -51,7 +52,6 @@ namespace nikkyai.common
         protected virtual void LogAssert(string message)
         {
         }
-
 
         // private int lastValidationHash = 0;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP

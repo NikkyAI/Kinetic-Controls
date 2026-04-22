@@ -51,7 +51,7 @@ namespace nikkyai.control.interact
 
         protected override void AccessChanged()
         {
-            DisableInteractive = !isAuthorized;
+            DisableInteractive = !IsAuthorized;
         }
 
         public override void OnPlayerRestored(VRCPlayerApi player)
@@ -75,7 +75,7 @@ namespace nikkyai.control.interact
 
         public override void Interact()
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
 
             _isOn = !_isOn;
             _UpdateState();

@@ -33,19 +33,19 @@ namespace nikkyai.control.interact
             }
         }
 
+        // [SerializeField] private GameObject selectorCallbacks;
+
         [Header("Drivers")] // header
-        [FormerlySerializedAs("drivers")]
-        [SerializeField] private Transform intSelectedDrivers;
-        [FormerlySerializedAs("isAuthorizedIndicator")]
-        [SerializeField] private Transform boolAuthorizedDrivers;
+        [FormerlySerializedAs("intSelectedDrivers")]
+        [SerializeField] private GameObject intDrivers;
         
-        protected override string LogPrefix => $"{nameof(Selector)} {name}";
+        protected override string LogPrefix => $"{nameof(Selector)} : {name}";
 
         //TODO: replace with Texel.InteractTrigger and handle ACL centrally
         private SelectorCallback[] _interactCallbacks = { };
         private IntDriver[] _intDrivers = { };
         private BoolDriver[][] _boolDrivers = { };
-        private BoolDriver[] _isAuthorizedBoolDrivers = { };
+        // private BoolDriver[] _isAuthorizedBoolDrivers = { };
 
         [Header("State")] // header
         [SerializeField, UdonSynced]
@@ -56,7 +56,7 @@ namespace nikkyai.control.interact
             get => synced;
             set
             {
-                if (!isAuthorized) return;
+                if (!IsAuthorized) return;
 
                 var prevValue = _syncedIndex;
                 TakeOwnership();
@@ -167,48 +167,60 @@ namespace nikkyai.control.interact
 
         private void SetupComponents()
         {
-            _syncedIndex = defaultIndex;
-            if (Utilities.IsValid(intSelectedDrivers))
+            // Log("SetupComponents");
+            if (Utilities.IsValid(intDrivers))
             {
-                _intDrivers = intSelectedDrivers.GetComponentsInChildren<IntDriver>();
-                            
+                Log("getting int drivers");
+                _intDrivers = intDrivers.GetComponentsInChildren<IntDriver>();
             }
-            _interactCallbacks = GetComponentsInChildren<SelectorCallback>();
-            Log($"Found {_interactCallbacks.Length} selector buttons");
+            if (Utilities.IsValid(gameObject))
+            {
+                Log("getting interact callbacks");
+                _interactCallbacks = gameObject.GetComponentsInChildren<SelectorCallback>();
+            }
+            if (Utilities.IsValid(_interactCallbacks))
+            {
+                Log($"Found {_interactCallbacks.Length} selector buttons");
+            }
+            else
+            {
+                LogWarning("found no interact callbacks");
+            }
             _boolDrivers = new BoolDriver[_interactCallbacks.Length][];
             
             for (var i = 0; i < _interactCallbacks.Length; i++)
             {
                 var callback = _interactCallbacks[i];
                 callback.selector = this;
-                callback.Index = i;
-                _boolDrivers[i] = callback.GetComponentsInChildren<BoolDriver>();
+                callback.index = i;
+                var boolToggleDriver = callback.boolToggleDriver;
+                if (boolToggleDriver == null)
+                {
+                    boolToggleDriver = callback.gameObject;
+                }
+                _boolDrivers[i] = boolToggleDriver.GetComponentsInChildren<BoolDriver>();
                 Log($"Found {_boolDrivers[i].Length} bool drivers for selector button {i}");
+                foreach (var boolDriver in _boolDrivers[i])
+                {
+                    boolDriver._EnsureInit();
+                    boolDriver.OnUpdateBool(i == defaultIndex);
+                }
             }
-            if (Utilities.IsValid(boolAuthorizedDrivers))
-            {
-                Log($"loading auth drivers");
-                _isAuthorizedBoolDrivers = boolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
-            }
+            SyncedIndex = defaultIndex;
         }
 
         protected override void AccessChanged()
         {
             for (var i = 0; i < _interactCallbacks.Length; i++)
             {
-                _interactCallbacks[i].DisableInteractive = !isAuthorized;
-            }
-
-            for (var i = 0; i < _isAuthorizedBoolDrivers.Length; i++)
-            {
-                _isAuthorizedBoolDrivers[i].OnUpdateBool(isAuthorized);
+                _interactCallbacks[i].DisableInteractive = !IsAuthorized;
             }
         }
 
         // [NonSerialized] private int _interactIndex;
         public void _OnInteract(int index)
         {
-            if (!isAuthorized) return;
+            if (!IsAuthorized) return;
 
             TakeOwnership();
             Log($"interact {index}");
@@ -235,12 +247,12 @@ namespace nikkyai.control.interact
         }
 
         // ReSharper disable InconsistentNaming
-        [NonSerialized] private int prevDefault = -1;
-        [NonSerialized] private int[] prevRemap = { };
-        [NonSerialized] private AccessControl prevAccessControl;
-        [NonSerialized] private bool prevEnforceACL;
-        [NonSerialized] private DebugLog prevDebugLog;
-        [NonSerialized] private bool childrenInitialized = false;
+        /*[NonSerialized]*/ private int prevDefault = -1;
+        /*[NonSerialized]*/ private int[] prevRemap = { };
+        /*[NonSerialized]*/ private AccessControl prevAccessControl;
+        /*[NonSerialized]*/ private bool prevEnforceACL;
+        /*[NonSerialized]*/ private DebugLog prevDebugLog;
+        /*[NonSerialized]*/ private bool childrenInitialized = false;
         // ReSharper restore InconsistentNaming
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
 
@@ -305,7 +317,7 @@ namespace nikkyai.control.interact
             for (var index = 0; index < children.Length; index++)
             {
                 var interactCallback = children[index];
-                interactCallback.Index = index;
+                interactCallback.index = index;
                 interactCallback.EditorACL = AccessControl;
                 interactCallback.EditorDebugLog = DebugLog;
                 interactCallback.EditorEnforceACL = EnforceACL;

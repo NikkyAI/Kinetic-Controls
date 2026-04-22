@@ -23,7 +23,7 @@ namespace nikkyai.common
 
         // defaults for Modern UI slider
         // ReSharper disable once InconsistentNaming
-        [NonSerialized, UsedImplicitly] public float sliderValue;
+        [HideInInspector, UsedImplicitly] public float sliderValue;
         [UsedImplicitly] 
         public void _SliderUpdated()
         {

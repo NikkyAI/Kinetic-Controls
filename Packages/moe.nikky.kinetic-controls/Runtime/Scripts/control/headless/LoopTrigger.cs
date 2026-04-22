@@ -13,7 +13,7 @@ namespace nikkyai.control.headless
         [SerializeField] [Min(5f)] private Vector2 delay = new Vector2(20.0f, 30.0f);
 
         [SerializeField] private bool onlyInstanceMaster = false;
-        [SerializeField] private Transform triggerDriverHolder;
+        [SerializeField] private GameObject triggerDrivers;
 
         private TriggerDriver[] _triggerDrivers = { };
 
@@ -37,17 +37,12 @@ namespace nikkyai.control.headless
                 _maxDelay = delay.x;
             }
 
-            if (triggerDriverHolder == null)
+            if (triggerDrivers == null)
             {
-                triggerDriverHolder = transform;
+                triggerDrivers = gameObject;
             }
 
-            if (triggerDriverHolder == null)
-            {
-                triggerDriverHolder = transform;
-            }
-
-            _triggerDrivers = triggerDriverHolder.GetComponentsInChildren<TriggerDriver>();
+            _triggerDrivers = triggerDrivers.GetComponentsInChildren<TriggerDriver>();
             Log($"found {_triggerDrivers.Length} trigger drivers");
         }
 

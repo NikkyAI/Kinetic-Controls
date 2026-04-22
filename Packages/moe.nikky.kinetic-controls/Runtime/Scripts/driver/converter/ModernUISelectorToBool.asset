@@ -20,7 +20,7 @@ MonoBehaviour:
   compiledVersion: 2
   behaviourSyncMode: 1
   hasInteractEvent: 0
-  scriptID: 738868044334060952
+  scriptID: 4948291733274709663
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -448,7 +448,7 @@ MonoBehaviour:
       Data: 25|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: UnityEngine.Transform, UnityEngine.CoreModule
+      Data: UnityEngine.GameObject, UnityEngine.CoreModule
     - Name: 
       Entry: 8
       Data: 
@@ -586,7 +586,7 @@ MonoBehaviour:
       Data: 
     - Name: <IsSerialized>k__BackingField
       Entry: 5
-      Data: false
+      Data: true
     - Name: _fieldAttributes
       Entry: 7
       Data: 34|System.Collections.Generic.List`1[[System.Attribute, mscorlib]], mscorlib
@@ -595,7 +595,7 @@ MonoBehaviour:
       Data: 2
     - Name: 
       Entry: 7
-      Data: 35|System.NonSerializedAttribute, mscorlib
+      Data: 35|UnityEngine.HideInInspector, UnityEngine.CoreModule
     - Name: 
       Entry: 8
       Data: 

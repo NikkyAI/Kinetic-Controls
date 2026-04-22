@@ -54,7 +54,6 @@ namespace nikkyai.driver.material
         public override void ApplyIntValue(int value)
         {
             base.ApplyIntValue(value);
-            InitProperties();
             OnUpdateInt(value);
         }
 #endif
