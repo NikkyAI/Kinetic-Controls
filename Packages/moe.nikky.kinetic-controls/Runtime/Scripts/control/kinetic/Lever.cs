@@ -1,7 +1,5 @@
 ﻿#define HIDE_INSPECTOR
 
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using nikkyai.Editor;
 using nikkyai.Kinetic_Controls;
 using UdonSharp;
@@ -9,12 +7,14 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using VRC;
 using VRC.SDKBase;
-using VRC.Udon.Serialization.OdinSerializer;
 
 // ReSharper disable ForCanBeConvertedToForeach
 
 namespace nikkyai.control.kinetic
 {
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+    [RequireComponent(typeof(LeverEditorHelper))]
+#endif
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class Lever : BaseKineticControl
     {
@@ -308,23 +308,24 @@ namespace nikkyai.control.kinetic
             valueIndicator.transform.MarkDirty();
 #endif
         }
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
-            [ContextMenu("Setup Editor Helper Script")]
-            private void SetupEditorHelper()
-            {
-                var editorHelper = GetComponent<LeverEditorHelper>();
-                if (editorHelper == null)
-                {
-                    editorHelper = gameObject.AddComponent<LeverEditorHelper>();
-                    editorHelper.lever = this;
-                    editorHelper.CopyFromLever();
-                }
-                else
-                {
-                    editorHelper.lever = this;
-                    editorHelper.CopyFromLever();
-                }
-            }
-#endif
+
+// #if UNITY_EDITOR && !COMPILER_UDONSHARP
+//             [ContextMenu("Setup Editor Helper Script")]
+//             private void SetupEditorHelper()
+//             {
+//                 var editorHelper = GetComponent<LeverEditorHelper>();
+//                 if (editorHelper == null)
+//                 {
+//                     editorHelper = gameObject.AddComponent<LeverEditorHelper>();
+//                     editorHelper.lever = this;
+//                     editorHelper.CopyFromLever();
+//                 }
+//                 else
+//                 {
+//                     editorHelper.lever = this;
+//                     editorHelper.CopyFromLever();
+//                 }
+//             }
+// #endif
     }
 }

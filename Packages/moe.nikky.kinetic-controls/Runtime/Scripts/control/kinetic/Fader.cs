@@ -1,6 +1,5 @@
 #define HIDE_INSPECTOR
 
-using System;
 using nikkyai.Editor;
 using nikkyai.Kinetic_Controls;
 using UdonSharp;
@@ -14,6 +13,10 @@ using VRC.SDKBase;
 
 namespace nikkyai.control.kinetic
 {
+    
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+    [RequireComponent(typeof(FaderEditorHelper))]
+#endif
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class Fader : BaseKineticControl
     {
@@ -228,23 +231,23 @@ namespace nikkyai.control.kinetic
         }
         
         
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
-        [ContextMenu("Setup Editor Helper Script")]
-        private void SetupEditorHelper()
-        {
-            var editorHelper = GetComponent<FaderEditorHelper>();
-            if (editorHelper == null)
-            {
-                editorHelper = gameObject.AddComponent<FaderEditorHelper>();
-                editorHelper.fader = this;
-                editorHelper.CopyFromFader();
-            }
-            else
-            {
-                editorHelper.fader = this;
-                editorHelper.CopyFromFader();
-            }
-        }
-#endif
+// #if UNITY_EDITOR && !COMPILER_UDONSHARP
+//         [ContextMenu("Setup Editor Helper Script")]
+//         private void SetupEditorHelper()
+//         {
+//             var editorHelper = GetComponent<FaderEditorHelper>();
+//             if (editorHelper == null)
+//             {
+//                 editorHelper = gameObject.AddComponent<FaderEditorHelper>();
+//                 editorHelper.fader = this;
+//                 editorHelper.CopyFromFader();
+//             }
+//             else
+//             {
+//                 editorHelper.fader = this;
+//                 editorHelper.CopyFromFader();
+//             }
+//         }
+// #endif
     }
 }
