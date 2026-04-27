@@ -21,7 +21,7 @@ namespace nikkyai.driver.text
         [SerializeField]
         private String valueDisplayFormat = "0.0";
 
-        protected override string LogPrefix => $"FloatTextDriver {name}";
+        protected override string LogPrefix => nameof(FloatTextDriver);
 
         void Start()
         {

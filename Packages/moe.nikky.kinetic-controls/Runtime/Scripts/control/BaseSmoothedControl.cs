@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using nikkyai.ArrayExtensions;
 using nikkyai.common;
 using nikkyai.Utils;
 using UdonSharp;
@@ -17,33 +16,21 @@ namespace nikkyai.control
         // eh just add a trigger on the button that triggered the reset ?
         // protected TriggerDriver[] ResetTriggerDriver = { };
 
-        protected abstract float MinPosOrRot
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get;
-        }
+        protected abstract float MinPosOrRot { get; }
 
-        protected abstract float MaxPosOrRot
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get;
-        }
+        protected abstract float MaxPosOrRot { get; }
 
         // protected abstract float MinValue { 
-        //     [MethodImpl(MethodImplOptions.AggressiveInlining)]
         //     get;
         // }
         //
         // protected abstract float MaxValue {  
-        //     [MethodImpl(MethodImplOptions.AggressiveInlining)]
         //     get;
         // }
 
         // protected abstract bool TargetIsBeingManipulated
         // {
-        //     [MethodImpl(MethodImplOptions.AggressiveInlining)]
         //     get;
-        //     [MethodImpl(MethodImplOptions.AggressiveInlining)]
         //     set;
         // }
 
@@ -58,16 +45,16 @@ namespace nikkyai.control
         [SerializeField, Range(0, 1)] internal float defaultValueNormalized = 0.25f;
         [SerializeField] internal float defaultValue = 0;
 
-        protected float MinValue => outputRange.x;
-        protected float MaxValue => outputRange.y;
+        private float MinValue => outputRange.x;
+        private float MaxValue => outputRange.y;
 
         #endregion
 
         #region drivers
 
         [Header("Base Smoothed Control - Drivers")] // header
-        
-        [SerializeField] //
+        [SerializeField]
+        //
         private GameObject floatTargetValueDrivers;
 
         [SerializeField] //
@@ -88,11 +75,7 @@ namespace nikkyai.control
         public bool ValueSmoothing
         {
             get => enableValueSmoothing;
-            set
-            {
-                enableValueSmoothing = value;
-                // UpdateSmoothing();
-            }
+            set => enableValueSmoothing = value;
         }
 
         [Tooltip("amount of frames to skip when approaching target value," +
@@ -106,25 +89,32 @@ namespace nikkyai.control
             set => smoothingUpdateInterval = value;
         }
 
-        [Tooltip("fraction of the distance covered within roughly 1s"),
-         SerializeField, Min(0.05f),]
-        private float smoothingRate = 0.5f;
+        // [Tooltip("fraction of the distance covered within roughly 1s"),
+        //  SerializeField, Min(0.05f),]
+        // private float smoothingRate = 0.5f;
+        //
+        // public float SmoothingRate
+        // {
+        //     get => smoothingRate;
+        //     set => smoothingRate = value;
+        // }
 
-        public float SmoothingRate
-        {
-            get => smoothingRate;
-            set => smoothingRate = value;
-        }
-
+        [SerializeField, Range(0f, 5f)]
+        [Description("Approximate time it will take for smoothing to reach the target value (see Unity Mathf.SmoothDamp smoothTime parameter)")]
+        public float smoothingTime = 0.1f;
+        [SerializeField, Range(0f, 1f)]
+        [Description("Maximim speed that smoothing can move at (see Unity Mathf.SmoothDamp maxSpeed parameter)")]
+        public float smoothingMaxSpeed = 0.25f;
+        
         protected float smoothingTargetNormalized;
         protected float smoothedCurrentNormalized;
 
-        protected bool isCyclic = false;
+        protected bool IsCyclic = false;
 
-        private const float epsilon = 0.005f;
-        private bool valueInitialized = false;
-        private bool isSmoothing = false;
-        private float lastFrameTime = 0;
+        private const float Epsilon = 0.005f;
+        private bool _valueInitialized = false;
+        private bool _isSmoothing = false;
+        private float _lastFrameTime = 0;
 
         #endregion
 
@@ -136,18 +126,8 @@ namespace nikkyai.control
         [UdonSynced] // IMPORTANT, DO NOT DELETE
         protected bool SyncedIsBeingManipulated;
 
-        protected bool TargetIsBeingManipulated
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => SyncedIsBeingManipulated;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set => SyncedIsBeingManipulated = value;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract void UpdateTargetIndicator(float clampedPosOrRotEuler);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract void UpdateValueIndicator(float clampedPosOrRotEuler);
 
         // protected void InitValueSmoothing()
@@ -157,8 +137,55 @@ namespace nikkyai.control
         //     // smoothingTargetNormalized = _normalizedDefault;
         //     enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
         // }
-        protected virtual void SetupValuesAndComponents()
+
+        private void SetupSmoothedControlValues()
         {
+            //TODO: move into running in editor ?
+            Log($"Searching for float value drivers in {floatSmoothedValueDrivers}");
+            if (Utilities.IsValid(floatSmoothedValueDrivers))
+            {
+                Log($"searching for drivers in {floatSmoothedValueDrivers.gameObject}");
+                _smoothedValueFloatDrivers =
+                    floatSmoothedValueDrivers.gameObject.GetComponentsInChildren<FloatDriver>();
+                Log($"found {_smoothedValueFloatDrivers.Length} drivers for value");
+            }
+            else
+            {
+                LogError("missing object for float value drivers");
+            }
+
+            Log($"Searching for float target drivers in {floatTargetValueDrivers}");
+            if (Utilities.IsValid(floatTargetValueDrivers))
+            {
+                _targetValueFloatDrivers = floatTargetValueDrivers.GetComponentsInChildren<FloatDriver>();
+                Log($"found {_targetValueFloatDrivers.Length} drivers for target");
+            }
+            else
+            {
+                LogError("missing object for float target drivers");
+            }
+
+            if (_smoothedValueFloatDrivers != null)
+            {
+                Log($"found {_smoothedValueFloatDrivers.Length} drivers for value");
+            }
+
+            if (_targetValueFloatDrivers != null)
+            {
+                Log($"found {_targetValueFloatDrivers.Length} drivers for target");
+            }
+
+            defaultValueNormalized = Mathf.Clamp01(defaultValueNormalized);
+            smoothedCurrentNormalized = defaultValueNormalized;
+            smoothingTargetNormalized = defaultValueNormalized;
+        }
+
+        protected override void _Init()
+        {
+            base._Init();
+
+            SetupSmoothedControlValues();
+
             //TODO: move into running in editor ?
             Log($"Searching for float value drivers in {floatSmoothedValueDrivers}");
             if (Utilities.IsValid(floatSmoothedValueDrivers))
@@ -197,12 +224,6 @@ namespace nikkyai.control
             smoothingTargetNormalized = defaultValueNormalized;
         }
 
-        protected override void _Init()
-        {
-            base._Init();
-            SetupValuesAndComponents();
-        }
-
         protected void _UpdateTargetValue(float normalizedTargetValue)
         {
             // Log($"update target value {normalizedTargetValue}");
@@ -232,21 +253,21 @@ namespace nikkyai.control
             }
 
             // value smoothing
-            if (!valueInitialized)
+            if (!_valueInitialized)
             {
                 smoothingTargetNormalized = normalizedTargetValue;
                 smoothedCurrentNormalized = normalizedTargetValue;
-                lastFrameTime = Time.time;
-                valueInitialized = true;
+                _lastFrameTime = Time.time;
+                _valueInitialized = true;
             }
             else
             {
                 smoothingTargetNormalized = normalizedTargetValue;
             }
 
-            if (!isSmoothing)
+            if (!_isSmoothing)
             {
-                isSmoothing = true;
+                _isSmoothing = true;
                 this.SendCustomEventDelayedFrames(
                     nameof(_OnValueSmoothedUpdate),
                     0
@@ -261,64 +282,78 @@ namespace nikkyai.control
             // Log($"UpdateLoop {smoothedCurrentNormalized} => {smoothingTargetNormalized}");
 
             var currentFrameTime = Time.time;
-            var deltaTime = currentFrameTime - lastFrameTime;
-            lastFrameTime = currentFrameTime;
+            var deltaTime = currentFrameTime - _lastFrameTime;
+            _lastFrameTime = currentFrameTime;
 
-            if (isCyclic)
+            if (IsCyclic)
             {
-                //TODO: implement delta for 0-1 range to adjust target
-                var delta = Mathf.Repeat(smoothingTargetNormalized - smoothedCurrentNormalized,
-                    1f); // (smoothingTargetNormalized - smoothedCurrentNormalized) % 1f;
-                if (delta > 0.5f)
-                {
-                    delta -= 1f;
-                }
+                // TODO: implement delta for 0-1 range to adjust target
+                // var delta = Mathf.Repeat(smoothingTargetNormalized - smoothedCurrentNormalized, 1f);
+                // if (delta > 0.5f)
+                // {
+                //     delta -= 1f;
+                // }
 
                 // Log($"cyclic smoothing current {smoothedCurrentNormalized}");
                 // Log($"cyclic smoothing target  {smoothingTargetNormalized} + {delta}");
 
-                smoothedCurrentNormalized = Mathf.Lerp(
-                    smoothedCurrentNormalized + delta,
-                    smoothedCurrentNormalized,
-                    Mathf.Exp(-smoothingRate * deltaTime)
+                // smoothedCurrentNormalized = Mathf.Lerp(
+                //     smoothedCurrentNormalized + delta,
+                //     smoothedCurrentNormalized,
+                //     Mathf.Exp(-smoothingRate * deltaTime)
+                // );
+                // if (smoothedCurrentNormalized < 0f)
+                // {
+                //     smoothedCurrentNormalized += 1f;
+                // }
+                //
+                // if (smoothedCurrentNormalized > 1f)
+                // {
+                //     smoothedCurrentNormalized -= 1f;
+                // }
+
+                var delta = Mathf.Repeat(smoothingTargetNormalized - smoothedCurrentNormalized, 1f);
+                if (delta > 0.5f)
+                {
+                    delta -= 1f;
+                }
+                var target = smoothedCurrentNormalized + delta;
+                
+                smoothedCurrentNormalized = SmoothDamp(
+                    current: smoothedCurrentNormalized,
+                    target: target,
+                    currentVelocity: ref _velocity,
+                    smoothTime: smoothingTime,
+                    maxSpeed: smoothingMaxSpeed,
+                    deltaTime: deltaTime
                 );
-                if (smoothedCurrentNormalized < 0f)
-                {
-                    smoothedCurrentNormalized += 1f;
-                }
 
-                if (smoothedCurrentNormalized > 1f)
-                {
-                    smoothedCurrentNormalized -= 1f;
-                }
-                //TODO: use modulo after to get value in expected range
-
-                // smoothedCurrentNormalized %= 1f;
-
-                // smoothedCurrentNormalized = Mathf.SmoothDampAngle(
-                //     current: smoothedCurrentNormalized * 360f,
-                //     target: smoothingTargetNormalized * 360f,
-                //     currentVelocity: ref _velocity,
-                //     smoothTime: 1f / smoothingRate, 
-                //     maxSpeed: 10f,
-                //     deltaTime: deltaTime
-                // ) / 360f;
+                smoothedCurrentNormalized = Mathf.Repeat(smoothedCurrentNormalized, 1f);
             }
             else
             {
-                smoothedCurrentNormalized = Mathf.Lerp(
-                    smoothingTargetNormalized,
-                    smoothedCurrentNormalized,
-                    Mathf.Exp(-smoothingRate * deltaTime)
+                // smoothedCurrentNormalized = Mathf.Lerp(
+                //     smoothingTargetNormalized,
+                //     smoothedCurrentNormalized,
+                //     Mathf.Exp(-smoothingRate * deltaTime)
+                // );
+
+                smoothedCurrentNormalized = SmoothDamp(
+                    current: smoothedCurrentNormalized,
+                    target: smoothingTargetNormalized,
+                    currentVelocity: ref _velocity,
+                    smoothTime: smoothingTime,
+                    maxSpeed: smoothingMaxSpeed,
+                    deltaTime: deltaTime
                 );
             }
 
-            if (!TargetIsBeingManipulated &&
-                Mathf.Abs(smoothingTargetNormalized - smoothedCurrentNormalized) <= epsilon)
+            if (!SyncedIsBeingManipulated &&
+                Mathf.Abs(smoothingTargetNormalized - smoothedCurrentNormalized) <= Epsilon)
             {
                 smoothedCurrentNormalized = smoothingTargetNormalized;
                 Log($"value reached target {smoothingTargetNormalized}");
-                isSmoothing = false;
+                _isSmoothing = false;
             }
             else
             {
@@ -365,27 +400,100 @@ namespace nikkyai.control
             OnDeserialization();
         }
 
-        private float prevDefaultNormalized, prevDefault;
+        // copied from https://github.com/Unity-Technologies/UnityCsReference/blob/2023.1/Runtime/Export/Math/Mathf.cs#L308
+        // because udonsharp cannot pass ref values to native code
+        static float SmoothDamp(
+            float current,
+            float target,
+            ref float currentVelocity,
+            float smoothTime,
+            [DefaultValue("Mathf.Infinity")] float maxSpeed,
+            [DefaultValue("Time.deltaTime")] float deltaTime
+        )
+        {
+            // Based on Game Programming Gems 4 Chapter 1.10
+            smoothTime = Mathf.Max(0.0001F, smoothTime);
+            float omega = 2F / smoothTime;
+
+            float x = omega * deltaTime;
+            float exp = 1F / (1F + x + 0.48F * x * x + 0.235F * x * x * x);
+            float change = current - target;
+            float originalTo = target;
+
+            // Clamp maximum speed
+            float maxChange = maxSpeed * smoothTime;
+            change = Mathf.Clamp(change, -maxChange, maxChange);
+            target = current - change;
+
+            float temp = (currentVelocity + omega * change) * deltaTime;
+            currentVelocity = (currentVelocity - omega * temp) * exp;
+            float output = target + (change + temp) * exp;
+
+            // Prevent overshooting
+            if (originalTo - current > 0.0F == output > originalTo)
+            {
+                output = originalTo;
+                currentVelocity = (output - originalTo) / deltaTime;
+            }
+
+            return output;
+        }
+
+        // // Gradually changes an angle given in degrees towards a desired goal angle over time.
+        // public static float SmoothDamp01(
+        //     float current,
+        //     float target,
+        //     ref float currentVelocity,
+        //     float smoothTime,
+        //     [DefaultValue("Mathf.Infinity")] float maxSpeed,
+        //     [DefaultValue("Time.deltaTime")] float deltaTime
+        // )
+        // {
+        //     target = current + Delta01(current, target);
+        //     return SmoothDamp(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
+        // }
+        //
+        // public static float Delta01(float current, float target)
+        // {
+        //     float delta = Mathf.Repeat(target - current, 1f);
+        //     if (delta > 0.5f)
+        //         delta -= 1f;
+        //     return delta;
+        // }
+        //
+        // // Gradually changes an angle given in degrees towards a desired goal angle over time.
+        // public static float SmoothDampAngle(
+        //     float current,
+        //     float target,
+        //     ref float currentVelocity,
+        //     float smoothTime,
+        //     [DefaultValue("Mathf.Infinity")] float maxSpeed,
+        //     [DefaultValue("Time.deltaTime")] float deltaTime
+        // )
+        // {
+        //     target = current + DeltaAngle(current, target);
+        //     return SmoothDamp(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
+        // }
+        //
+        // // Calculates the shortest difference between two given angles.
+        // public static float DeltaAngle(float current, float target)
+        // {
+        //     float delta = Mathf.Repeat((target - current), 360.0F);
+        //     if (delta > 180.0F)
+        //         delta -= 360.0F;
+        //     return delta;
+        // }
+
+        private float prevDefaultNormalized, prevDefault, prevMin, prevMax;
         private int lastHashSmoothedBase = 0;
         // ReSharper restore InconsistentNaming
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        
+
         protected override void OnValidate()
         {
             if (Application.isPlaying) return;
             base.OnValidate();
 
-            // if (floatTargetValueDrivers == null && Utilities.IsValid(floatTargetValueDriversTransform))
-            // {
-            //     floatTargetValueDrivers = floatTargetValueDriversTransform.gameObject;
-            //     this.MarkDirty();
-            // }
-            // if (floatSmoothedValueDrivers == null && Utilities.IsValid(floatSmoothedValueDriversTransform))
-            // {
-            //     floatSmoothedValueDrivers = floatSmoothedValueDriversTransform.gameObject;
-            //     this.MarkDirty();
-            // }
-            
             if (
                 ValidationCache.ShouldRunValidation(
                     this,
@@ -416,11 +524,21 @@ namespace nikkyai.control
                 prevDefault = defaultValue;
             }
 
-            if (prevDefault != defaultValue)
+            if (prevDefault != defaultValue )
             {
                 defaultValueNormalized = Mathf.InverseLerp(MinValue, MaxValue, defaultValue);
                 // _normalizedDefault = defaultValueNormalized;
                 prevDefaultNormalized = defaultValueNormalized;
+            }
+
+            if (prevMin != MinValue || prevMax != MaxValue)
+            {
+                defaultValueNormalized = Mathf.InverseLerp(MinValue, MaxValue, defaultValue);
+                // _normalizedDefault = defaultValueNormalized;
+                prevDefaultNormalized = defaultValueNormalized;
+                
+                prevMin = MinValue;
+                prevMax = MaxValue;
             }
 
             prevDefaultNormalized = defaultValueNormalized;
@@ -435,7 +553,7 @@ namespace nikkyai.control
 
             var minValue = Mathf.Min(MinValue, MaxValue);
             var maxValue = Mathf.Max(MinValue, MaxValue);
-            
+
             foreach (var valueFloatDriver in _smoothedValueFloatDrivers)
             {
                 valueFloatDriver.ApplyFloatValue(

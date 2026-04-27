@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
-using nikkyai.ArrayExtensions;
 using nikkyai.common;
+using nikkyai.extensions;
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -28,7 +28,7 @@ namespace nikkyai.control.interact
         [Description("default: self")]
         [SerializeField] private GameObject triggerDrivers;
 
-        protected override string LogPrefix => $"{nameof(TriggerButton)} {name}";
+        protected override string LogPrefix => nameof(TriggerButton);
     
         private TriggerDriver[] _triggerDrivers = { };
 
@@ -50,6 +50,7 @@ namespace nikkyai.control.interact
             );
             if (Utilities.IsValid(triggerDrivers))
             {
+                Log($"loading tigger drivers from {triggerDrivers}");
                 _triggerDrivers = _triggerDrivers.AddRange(
                         triggerDrivers.GetComponentsInChildren<TriggerDriver>()
                 );

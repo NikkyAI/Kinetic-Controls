@@ -128,14 +128,20 @@ namespace nikkyai.common
                 AccessChanged();
             }
         }
-        
+
+        private VRCPlayerApi _localPlayer;
+        protected VRCPlayerApi LocalPlayer => _localPlayer;
+        private bool _isInVR;
+        protected bool IsInVR => _isInVR;
         private string _localName = "???";
         public override void OnPlayerJoined(VRCPlayerApi player)
         {
             base.OnPlayerJoined(player);
             if (player == Networking.LocalPlayer)
             {
+                _localPlayer = player;
                 _localName = player.displayName;
+                _isInVR = player.IsUserInVR();
             }
         }
 
@@ -170,20 +176,11 @@ namespace nikkyai.common
         // }
 
 
-        public virtual AccessControl EditorACL
+        public AccessControl EditorACL
         {
             get => AccessControl;
             set
             {
-                // if (value != null)
-                // {
-                //     Log($"Setting AccessControl to {value} on {name}");
-                // }
-                // else
-                // {
-                //     Log($"Setting AccessControl to null on {name}");
-                // }
-
                 if (AccessControl != value)
                 {
                     EditorUtility.SetDirty(this);
@@ -193,7 +190,7 @@ namespace nikkyai.common
             }
         }
 
-        public virtual bool EditorEnforceACL
+        public bool EditorEnforceACL
         {
             get => EnforceACL;
             set

@@ -1,5 +1,5 @@
-﻿using nikkyai.ArrayExtensions;
-using nikkyai.common;
+﻿using nikkyai.common;
+using nikkyai.extensions;
 using UnityEngine;
 using UnityEngine.Serialization;
 using VRC;
@@ -43,7 +43,7 @@ namespace nikkyai.driver
             {
                 var c = findInChildren.GetChild(i);
                 string objectName = c.gameObject.name;
-                Log($"found {objectName}, comparing against {offTargetsPostfix} and {onTargetsPostfix}");
+                Log($"found '{objectName}', comparing against {offTargetsPostfix} and {onTargetsPostfix}");
                 if (objectName.EndsWith(offTargetsPostfix))
                 {
                     Log($"found off transform: {objectName}");

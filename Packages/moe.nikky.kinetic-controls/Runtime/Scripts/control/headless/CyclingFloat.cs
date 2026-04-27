@@ -18,8 +18,7 @@ namespace nikkyai.control.headless
 
         [FormerlySerializedAs("rate")] [Range(-1, 1)]
         public float speed = 0f;
-
-        [SerializeField, Range(0f, 1f)] public float maxSpeed = 10f;
+        [SerializeField, Range(0f, 1f)] public float minSpeed = 0.05f;
 
         // private float _targetValue = 0f;
         [SerializeField] private GameObject floatDrivers;
@@ -28,8 +27,9 @@ namespace nikkyai.control.headless
         private FloatDriver[] _floatDrivers = { };
 
         [Header("Smoothing")] // header
-        [SerializeField, Min(0f)]
-        public float smoothTime = 0.1f;
+        
+        // [SerializeField, Range(0f, 1f)] public float maxSpeed = 0.25f;
+        [SerializeField, Range(0f, 5f)] public float smoothTime = 0.1f;
         //
         // [Tooltip("fraction of the distance covered within roughly 1s"),
         //  SerializeField, Min(0.05f),]
@@ -133,6 +133,8 @@ namespace nikkyai.control.headless
                 Log($"before {_smoothedCurrent:0.00} => {target:0.00f}");
             }
 
+            var maxSpeed = Mathf.Max(speed, minSpeed);
+
             _smoothedCurrent = SmoothDamp(
                 current: _smoothedCurrent,
                 target: target,
@@ -214,46 +216,37 @@ namespace nikkyai.control.headless
 
         // private int validationhashCycling = 0;
 
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
-        protected override void OnValidate()
-        {
-            if (Application.isPlaying) return;
-            base.OnValidate();
-
-            if (
-                ValidationCache.ShouldRunValidation(
-                    this,
-                    HashCode.Combine(
-                        offset,
-                        speed,
-                        // maxSpeed,
-                        // smoothTime,
-                        // smoothingUpdateInterval,
-                        floatDrivers
-                    )
-                )
-            )
-            {
-                ApplyDefaultValues();
-            }
-            // var hash = HashCode.Combine(offset, floatDriverHolder);
-            // if (hash != validationhashCycling)
-            // {
-            //     
-            //     validationhashCycling =  hash;
-            // }
-        }
-
-        [ContextMenu("Reset Values")]
-        public void ApplyDefaultValues()
-        {
-            _floatDrivers = floatDrivers.GetComponentsInChildren<FloatDriver>();
-            Log($"applying default to {_floatDrivers.Length} float drivers");
-            for (var i = 0; i < _floatDrivers.Length; i++)
-            {
-                _floatDrivers[i].ApplyFloatValue(offset);
-            }
-        }
-#endif
+// #if UNITY_EDITOR && !COMPILER_UDONSHARP
+//         protected override void OnValidate()
+//         {
+//             if (Application.isPlaying) return;
+//             base.OnValidate();
+//
+//             if (
+//                 ValidationCache.ShouldRunValidation(
+//                     this,
+//                     HashCode.Combine(
+//                         offset,
+//                         speed,
+//                         floatDrivers
+//                     )
+//                 )
+//             )
+//             {
+//                 ApplyDefaultValues();
+//             }
+//         }
+//
+//         [ContextMenu("Reset Values")]
+//         public void ApplyDefaultValues()
+//         {
+//             _floatDrivers = floatDrivers.GetComponentsInChildren<FloatDriver>();
+//             Log($"applying default to {_floatDrivers.Length} float drivers");
+//             for (var i = 0; i < _floatDrivers.Length; i++)
+//             {
+//                 _floatDrivers[i].ApplyFloatValue(offset);
+//             }
+//         }
+// #endif
     }
 }

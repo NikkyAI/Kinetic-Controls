@@ -7,7 +7,7 @@ namespace nikkyai.driver.animator
     {
         [SerializeField] private Animator animator;
         [SerializeField] private string boolParameterName;
-        protected override string LogPrefix => $"{nameof(AnimatorBoolDriver)} {name}";
+        protected override string LogPrefix => nameof(AnimatorBoolDriver);
 
         public override void OnUpdateBool(bool value)
         {

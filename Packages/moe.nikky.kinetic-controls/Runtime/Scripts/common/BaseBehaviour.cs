@@ -56,43 +56,11 @@ namespace nikkyai.common
         // private int lastValidationHash = 0;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
 
-        // protected virtual int ValidationHash => 0;
-        //
         protected virtual void OnValidate()
         {
-            if (Application.isPlaying) return;
+            // if (Application.isPlaying) return;
+            // _EnsureInit();
         }
-        //     
-        //
-        //     int hash = ValidationHash;
-        //
-        //     if (
-        //         lastValidationHash != hash
-        //     )
-        //     {
-        //         UnityEditor.EditorUtility.SetDirty(this);
-        //         OnValidateApplyValues();
-        //
-        //         lastValidationHash = hash;
-        //     }
-        //
-        //     // if (prevAccessControl != AccessControl
-        //     //     || prevEnforceACL != EnforceACL
-        //     //     || prevDebugLog != DebugLog
-        //     //    )
-        //     // {
-        //     //     ApplyACLsAndLog();
-        //     //     prevAccessControl = AccessControl;
-        //     //     prevDebugLog = DebugLog;
-        //     //     prevEnforceACL = EnforceACL;
-        //     // }
-        // }
-        //
-        //
-        // public virtual void OnValidateApplyValues()
-        // {
-        //
-        // }
 #endif
     }
 }

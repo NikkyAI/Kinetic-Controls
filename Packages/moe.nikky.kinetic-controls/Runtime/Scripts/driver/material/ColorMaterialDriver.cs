@@ -56,7 +56,7 @@ namespace nikkyai.driver.material
                 {
                     if (_lastValue != value)
                     {
-                        Log($"Set {propertyNames[j]} to {value}");
+                        // Log($"Set {propertyNames[j]} to {value}");
                         mat.SetColor(_propertyIds[j], value);
                     }
                 }

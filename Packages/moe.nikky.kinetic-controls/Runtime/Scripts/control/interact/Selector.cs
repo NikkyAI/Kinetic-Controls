@@ -20,7 +20,6 @@ namespace nikkyai.control.interact
         [SerializeField, Min(0)] private int disabledIndex = 0;
         [SerializeField] private int[] remapValues = { };
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int RemapIndex(int index)
         {
             if (index >= 0 && index < remapValues.Length)
@@ -39,7 +38,7 @@ namespace nikkyai.control.interact
         [FormerlySerializedAs("intSelectedDrivers")]
         [SerializeField] private GameObject intDrivers;
         
-        protected override string LogPrefix => $"{nameof(Selector)} : {name}";
+        protected override string LogPrefix => nameof(Selector);
 
         //TODO: replace with Texel.InteractTrigger and handle ACL centrally
         private SelectorCallback[] _interactCallbacks = { };
@@ -256,9 +255,10 @@ namespace nikkyai.control.interact
         // ReSharper restore InconsistentNaming
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
 
-        private void OnValidate()
+        protected override void OnValidate()
         {
             if (Application.isPlaying) return;
+            base.OnValidate();
             UnityEditor.EditorUtility.SetDirty(this);
 
             if (!childrenInitialized

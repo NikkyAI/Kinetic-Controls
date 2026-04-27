@@ -9,7 +9,7 @@ namespace nikkyai.driver
     {
         [SerializeField] private Transform[] targetsOn = { };
         [SerializeField] private Transform[] targetsOff = { };
-        protected override string LogPrefix => $"{nameof(BoolTransformScaleDriver)} {name}";
+        protected override string LogPrefix => nameof(BoolTransformScaleDriver);
 
         private void Start()
         {

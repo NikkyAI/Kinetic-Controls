@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using nikkyai.Kinetic_Controls;
 using UdonSharp;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VRC;
 using VRC.SDKBase;
 
@@ -15,78 +17,52 @@ namespace nikkyai.control.kinetic
         [Header("Fader")] // header
         [SerializeField]
         private Axis axis = Axis.Y;
-
-        //[SerializeField, InspectorName("output range")]
-        // private Vector2 range = new Vector2(0, 1);
-        //
-        // [SerializeField, Range(0,1)] private float defaultValueNormalized = 0.25f;
-        // [SerializeField] private float defaultValue = 0;
+        private Vector3 _axisVector = Vector3.zero;
 
         [Header("Fader - VR")] // header
-        [SerializeField, Description("switches between finger contacts and pickup")]
+        [SerializeField]
+        [Description("switches between finger contacts and pickup")]
+        [FieldChangeCallback(nameof(HandleUseContactsInVR))]
         private bool useContactsInVR = true;
+
+        public override bool HandleUseContactsInVR
+        {
+            get => handle.useContactsInVR;
+            set => handle.UseContactsInVR = value;
+        }
 
         protected override bool UseContactsInVR => useContactsInVR;
 
-        [Header("Fader - Desktop")] // header
-        [SerializeField]
-        private Collider desktopRaycastCollider;
-        // [SerializeField, Range(5, 90)]
-        // private float minLookAngle = 30f;
-
-        // [SerializeField]
-        // private Handle handle;
-        //
-        // protected override Handle Handle => handle;
-
-        private Vector3 _axisVector = Vector3.zero;
-
         [Header("Fader - Components")] //
-        [InspectorName("minPosition"),
-         SerializeField]
-        private Transform minLimit;
-
-        [InspectorName("maxPosition"),
-         SerializeField]
-        private Transform maxLimit;
-
-        [SerializeField] private Transform valueIndicator;
-
-        [SerializeField] private Transform targetIndicator;
-
-        // [Header("VR")] // header
-        // [SerializeField, Description("switches between finger contacts and pickup")]
-        // private bool useContactsInVR = true;
-
-
-        // [Header("Drivers")] // header
-        // [SerializeField]
-        // private Transform floatValueDrivers;
-        //
-        // [SerializeField] private Transform floatTargetDrivers;
-
-        // [SerializeField] private Transform boolAuthorizedDrivers;
-        
-        // [SerializeField] private Transform triggerOnResetDrivers;
-
-
-        protected override string LogPrefix => $"{nameof(Fader)} @ {name}";
-
-        // private BoolDriver[] _isAuthorizedBoolDrivers = { };
-        
-        // private TriggerDriver[] _triggerOnResetDrivers = { };
-
-        // internal values
-
-        private bool _valueIndicatorValid = false;
-        private bool _targetIndicatorValid = false;
-        private float _minPos, _maxPos;
+        [FormerlySerializedAs("minLimit")]
+        [SerializeField]
+        [Description("move this on the configured axis to the minumum fader range")]
+        private Transform minLimitIndicator;
+        private float _minPos;
         protected override float MinPosOrRot => _minPos;
+
+        [FormerlySerializedAs("maxLimit")]
+        [SerializeField]
+        [Description("move this on the configured axis to the maximum fader range")]
+        private Transform maxLimitIndicator;
+        private float _maxPos;
         protected override float MaxPosOrRot => _maxPos;
 
-        private float _minValue, _maxValue;
-        // protected override float MinValue => _minValue;
-        // protected override float MaxValue => _maxValue;
+        [SerializeField]
+        [Description("will be moved to follow the smoothed value")]
+        private Transform valueIndicator;
+        private bool _valueIndicatorValid = false;
+
+        [SerializeField]
+        [Description("will be moved to follow the handle (target value)")]
+        private Transform targetIndicator;
+        private bool _targetIndicatorValid = false;
+
+        [Header("Fader - Debug")] // header
+        [SerializeField]
+        private Collider desktopRaycastCollider;
+
+        protected override string LogPrefix => nameof(Fader);
 
         private void Start()
         {
@@ -96,7 +72,8 @@ namespace nikkyai.control.kinetic
         protected override void _Init()
         {
             base._Init();
-            
+            SetupFaderValuesAndComponents();
+
             OnDeserialization();
             UpdateValueIndicator(
                 Mathf.Lerp(_minPos, _maxPos, smoothedCurrentNormalized)
@@ -104,62 +81,24 @@ namespace nikkyai.control.kinetic
             UpdateTargetIndicator(
                 Mathf.Lerp(_minPos, _maxPos, smoothingTargetNormalized)
             );
-            UpdateHandlePosition();
+            handle.ResetTransform();
+            // UpdateHandlePosition();
 
             // pickup.transform.SetPositionAndRotation(pickupReset.position, pickupReset.rotation);
         }
 
-        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override void SetupValuesAndComponents()
+        private void SetupFaderValuesAndComponents()
         {
-            base.SetupValuesAndComponents();
             Log("SetupValuesAndComponents");
-            
+
             _targetIndicatorValid = Utilities.IsValid(targetIndicator);
             _valueIndicatorValid = Utilities.IsValid(valueIndicator);
-// #if UNITY_EDITOR && !COMPILER_UDONSHARP
-//                 isUdon = false;
-// #endif
             _axisVector[(int)axis] = 1;
-            // _minValue = range.x;
-            // _maxValue = range.y;
 
-            var minLocalPos = transform.InverseTransformPoint(minLimit.position);
-            var maxLocalPos = transform.InverseTransformPoint(maxLimit.position);
+            var minLocalPos = transform.InverseTransformPoint(minLimitIndicator.position);
+            var maxLocalPos = transform.InverseTransformPoint(maxLimitIndicator.position);
             _minPos = minLocalPos[(int)axis];
             _maxPos = maxLocalPos[(int)axis];
-            // _normalizedDefault = Mathf.InverseLerp(_minValue, _maxValue, defaultValue);
-
-            // SyncedValueNormalized = defaultValueNormalized;
-
-// #if UNITY_EDITOR && !COMPILER_UDONSHARP
-//             minLimit.transform.MarkDirty();
-//             maxLimit.transform.MarkDirty();
-// #endif
-
-            // smoothedCurrentNormalized = defaultValueNormalized;
-            // smoothingTargetNormalized = defaultValueNormalized;
-            // enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
-
-            // if (Utilities.IsValid(boolAuthorizedDrivers))
-            // {
-            //     _isAuthorizedBoolDrivers = boolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
-            // }
-
-            // if (Utilities.IsValid(triggerOnResetDrivers))
-            // {
-            //     _triggerOnResetDrivers = triggerOnResetDrivers.GetComponentsInChildren<TriggerDriver>();
-            // }
-
-            // if (ValueFloatDrivers != null)
-            // {
-            //     Log($"found {ValueFloatDrivers.Length} drivers for value");
-            // }
-            //
-            // if (TargetFloatDrivers != null)
-            // {
-            //     Log($"found {TargetFloatDrivers.Length} drivers for target");
-            // }
         }
 
         protected override void AccessChanged()
@@ -169,24 +108,6 @@ namespace nikkyai.control.kinetic
             //     _isAuthorizedBoolDrivers[i].UpdateBool(isAuthorized);
             // }
         }
-
-        // implemented in BaseSyncedBehaviour
-        // public override void Reset()
-        // {
-        //     if (!isAuthorized) return;
-        //     Log("re-setting synced to default");
-        //
-        //     SetValue(defaultValueNormalized);
-        //     
-        //     // for (var i = 0; i < _triggerOnResetDrivers.Length; i++)
-        //     // {
-        //     //     var triggerDriver = _triggerOnResetDrivers[i];
-        //     //     if (Utilities.IsValid(triggerDriver) && triggerDriver.enabled)
-        //     //     {
-        //     //         triggerDriver.Trigger();
-        //     //     }
-        //     // }
-        // }
 
         public override void SetValue(float normalizedValue)
         {
@@ -203,8 +124,9 @@ namespace nikkyai.control.kinetic
             OnDeserialization();
         }
 
-        protected override float RelativePosToNormalized(Vector3 relativePos)
+        protected override float PosToNormalized(Vector3 absolutePos)
         {
+            var relativePos = transform.InverseTransformPoint(absolutePos);
             var clampedPos = Mathf.Clamp(
                 relativePos[(int)axis],
                 _minPos,
@@ -213,18 +135,22 @@ namespace nikkyai.control.kinetic
 
             // UpdateIndicatorPosition(clampedPos);
 
-            return Mathf.InverseLerp(
+            var normalizedValue = Mathf.InverseLerp(
                 _minPos,
                 _maxPos,
                 clampedPos
             );
+            Log($"calculating normalized value from {absolutePos} -> {clampedPos} -> {normalizedValue}");
+            return normalizedValue;
         }
 
-        protected override void FollowPickup()
+        public override void FollowPickup()
         {
             if (IsInVR)
             {
-                SyncedValueNormalized = RelativePosToNormalized(pickup.transform.localPosition);
+                Log("getting normalized value from pickup position");
+                // SyncedValueNormalized = PosToNormalized(Pickup.transform.position);
+                OnMoveHandle(handle.transform.position);
             }
             else
             {
@@ -233,26 +159,27 @@ namespace nikkyai.control.kinetic
                     LogError("desktop raycast collider is not valid");
                     return;
                 }
-                
+
                 var trackingData = LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Head);
                 var ray = new Ray(
                     trackingData.position,
                     trackingData.rotation * Vector3.forward
                 );
 
-                if(desktopRaycastCollider.Raycast(ray, out var hit, 5))
+                if (desktopRaycastCollider.Raycast(ray, out var hit, 5))
                 {
                     var hitPosition = ray.GetPoint(hit.distance);
                     Log($"raycast hit, distance: {hit.distance}, point: {hitPosition}");
-                    var localHit = transform.InverseTransformPoint(hitPosition);
+                    // var localHit = transform.InverseTransformPoint(hitPosition);
 
                     if (Utilities.IsValid(debugDesktopRaytrace))
                     {
                         debugDesktopRaytrace.gameObject.SetActive(true);
                         debugDesktopRaytrace.position = hitPosition;
                     }
-                        
-                    SyncedValueNormalized = RelativePosToNormalized(localHit);
+
+                    OnMoveHandle(hitPosition);
+                    // SyncedValueNormalized = PosToNormalized(hitPosition);
                 }
                 else
                 {
@@ -272,10 +199,7 @@ namespace nikkyai.control.kinetic
             newPos[(int)axis] = clampedPos;
             targetIndicator.transform.localPosition = newPos;
 
-            if (!PickupHasObjectSync && !IsHeldLocally)
-            {
-                UpdateHandlePosition();
-            }
+            handle.ResetTransformIfNotManipulated();
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             targetIndicator.transform.MarkDirty();
@@ -294,60 +218,5 @@ namespace nikkyai.control.kinetic
             valueIndicator.transform.MarkDirty();
 #endif
         }
-
-        // public override void OnDeserialization()
-        // {
-        //     if (SyncedValueNormalized != LastSyncedValueNormalized)
-        //     {
-        //         _UpdateTargetValue(SyncedValueNormalized);
-        //
-        //         LastSyncedValueNormalized = SyncedValueNormalized;
-        //     }
-        // }
-
-        // ReSharper disable InconsistentNaming
-        // private float prevDefaultNormalized, prevDefault;
-
-        // private int lastHashFader = 0;
-        // ReSharper restore InconsistentNaming
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
-        // protected override void OnValidate()
-        // {
-        //     base.OnValidate();
-        //     if (Application.isPlaying) return;
-        //
-        //     int hash = HashCode.Combine(
-        //         MinPosOrRot,
-        //         MinPosOrRot,
-        //         MinValue, 
-        //         MaxValue,
-        //         defaultValueNormalized,
-        //         defaultValue
-        //     );
-        //         
-        //     if (
-        //         lastHashFader != hash
-        //     )
-        //     {
-        //         UnityEditor.EditorUtility.SetDirty(this);
-        //         ApplyValues();
-        //
-        //         lastHashFader = hash;
-        //         // prevDefaultNormalized =  defaultValueNormalized;
-        //         // prevDefault =  defaultValue;
-        //     }
-        //
-        //     // if (prevAccessControl != AccessControl
-        //     //     || prevEnforceACL != EnforceACL
-        //     //     || prevDebugLog != DebugLog
-        //     //    )
-        //     // {
-        //     //     ApplyACLsAndLog();
-        //     //     prevAccessControl = AccessControl;
-        //     //     prevDebugLog = DebugLog;
-        //     //     prevEnforceACL = EnforceACL;
-        //     // }
-        // }
-#endif
     }
 }

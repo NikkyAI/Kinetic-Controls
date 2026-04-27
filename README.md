@@ -14,7 +14,7 @@ Integrates with AccessControls and logs from AccessTXL / CommonTXL
 
 Controls work with several forms of drivers, simple abstract classes that can be implemented.
 
-The control surfaces look for them inside specified game objects and their children (transforms in the hierarchy)
+The control surfaces look for them inside specified game objects and their children
 
 the types of drivers being available are
 
@@ -22,13 +22,16 @@ the types of drivers being available are
 - `IntDriver`
 - `BoolDriver`
 - `VectorDriver`
+- `ColorDriver`
 - `TriggerDriver`
 
 see which drivers are being used below
 
-Faders, Levers and such use `FloatDriver`  
-Selectors use `IntDriver`  
+(the list below is a incomplete overview)
+
+Faders, Levers and such use `FloatDriver` for the values  
 Toggles use `BoolDriver`  
+Selectors use `IntDriver` and `BoolDriver` in each selector item  
 Buttons use `TriggerDriver`  
 
 ## Access Control and authorization indicators
@@ -70,7 +73,7 @@ Existing drivers are implemented for:
 - Material Properties
   - Float, Int, Vector and more 
 - Property Blocks
-  - everything that Materials can do and more
+  - everything that Materials can do and more while only applying to a single renderer
 - UdonBehaviour Program Variables and Events
 - GameObject SetActive
 - Transforms

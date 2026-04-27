@@ -72,7 +72,10 @@ MonoBehaviour:
   enforceACL: 1
   accessControl: {fileID: 0}
   boolAuthorizedDrivers: {fileID: 0}
-  useContactsInVRLocal: 1
+  handleReset: {fileID: 0}
+  useContactsInVR: 1
+  _pickup: {fileID: 8163535867462609594}
+  _rigidBody: {fileID: 1166550276906223522}
 --- !u!114 &1033312794555895631
 MonoBehaviour:
   m_ObjectHideFlags: 0

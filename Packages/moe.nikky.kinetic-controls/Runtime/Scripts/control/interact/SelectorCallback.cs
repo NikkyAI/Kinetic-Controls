@@ -16,7 +16,7 @@ namespace nikkyai.control.interact
         public Selector selector;
         public int index = -1;
 
-        protected override string LogPrefix => $"{nameof(SelectorCallback)} : {name}";
+        protected override string LogPrefix => nameof(SelectorCallback);
 
         // public const int EVENT_INTERACT = 0;
         // public const int EVENT_RELEASE = 1;

@@ -7,15 +7,14 @@ using VRC.SDKBase;
 
 namespace nikkyai.driver.control.kinetic
 {
-    public class FloatSmoothingRateDriver : FloatDriver
+    public class FloatSmoothingMaxSpeedDriver: FloatDriver
     {
-        [Header("Deprecated, use FloatSmoothingTimeDriver and FloatSmoothingMaxSpeedDriver instead")]
         [Header("External Behaviours")] // header
         [FormerlySerializedAs("faders")]
         [SerializeField]
         private BaseSmoothedControl[] smoothedBehaviours;
 
-        protected override string LogPrefix => nameof(FloatSmoothingRateDriver);
+        protected override string LogPrefix => nameof(FloatSmoothingMaxSpeedDriver);
 
         void Start()
         {
@@ -35,8 +34,7 @@ namespace nikkyai.driver.control.kinetic
             {
                 if (Utilities.IsValid(behaviour))
                 {
-                    // commented to prevent breakage
-                    // behaviour.SmoothingRate = value;
+                    behaviour.smoothingMaxSpeed = value;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
                     behaviour.MarkDirty();
 #endif

@@ -1,4 +1,5 @@
 ﻿using System;
+using nikkyai.extensions;
 using Texel;
 using UnityEditor;
 using UnityEngine;
@@ -22,26 +23,68 @@ namespace nikkyai.common
 
         // protected string _logPrefix;
         private string logPrefix = "";
+        private bool _logPrefixInitialized = false;
         private string _colorPrefix = "";
         private string _colorPostfix = "";
+        private bool _colorsInitialized = false;
+
+        private string _path = "";
+        private bool _pathInitialized = false;
+
+        private void InitPath()
+        {
+            // Color _pathColor = new Color(.75f, .75f, .75f, 1f);
+            var _pathColor = RichTextColor.teal;
+
+            Transform t = transform;
+            // _path = name;
+            t = t.parent;
+            while (t != null)
+            {
+                _path = $"{t.name.Color(_pathColor)} / {_path}";
+                t = t.parent;
+            }
+            
+            _path = $"{_path}{name.Color(Color.cyan)}";
+
+            _pathInitialized = true;
+        }
+
+        private void InitColors()
+        {
+            var c = LogColor;
+            // _logPrefix = LogPrefix;
+            if (c != Color.white)
+            {
+                _colorPrefix = $"<color=#{c.ToHex()}>";
+                _colorPostfix = "</color>";
+            }
+
+            _colorsInitialized = true;
+        }
+
+        private void InitLogPrefix()
+        {
+            if (!_colorsInitialized)
+            {
+                InitColors();
+            }
+            if (!_pathInitialized)
+            {
+                InitPath();
+            }
+            logPrefix = $"{_colorPrefix}{LogPrefix}{_colorPostfix} @ {_path}";
+            _logPrefixInitialized = true;
+        }
 
         protected override void _PreInit()
         {
             base._PreInit();
 
-            var c = LogColor;
-            // _logPrefix = LogPrefix;
-            if (c != Color.white)
+            if (!_logPrefixInitialized)
             {
-                _colorPrefix = string.Format(
-                    "<color=#{0:X2}{1:X2}{2:X2}>",
-                    (byte)Mathf.Clamp01(c.r) * 255,
-                    (byte)Mathf.Clamp01(c.g) * 255,
-                    (byte)Mathf.Clamp01(c.b) * 255
-                );
-                _colorPostfix = "</color>";
+                InitLogPrefix();
             }
-            logPrefix = $"{_colorPrefix}{LogPrefix}{_colorPostfix}";
         }
 
         protected abstract string LogPrefix { get; }
@@ -50,8 +93,13 @@ namespace nikkyai.common
 
         protected override void LogError(string message)
         {
-            var logPrefix = $"{_colorPrefix}{LogPrefix}{_colorPostfix}";
-            Debug.LogError($"[{logPrefix}] {message}", this);
+            if (!_logPrefixInitialized)
+            {
+                InitLogPrefix();
+            }
+
+            // var logPrefix = $"{_colorPrefix}{LogPrefix}{_colorPostfix} @ {_path}";
+            Debug.LogError($"[{logPrefix}]{message}", this);
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             return;
 #endif
@@ -66,7 +114,12 @@ namespace nikkyai.common
 
         protected override void LogWarning(string message)
         {
-            var logPrefix = $"{_colorPrefix}{LogPrefix}{_colorPostfix}";
+            if (!_logPrefixInitialized)
+            {
+                InitLogPrefix();
+            }
+
+            // var logPrefix = $"{_colorPrefix}{LogPrefix}{_colorPostfix} @ {_path}";
             Debug.LogWarning($"[{logPrefix}] {message}", this);
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             return;
@@ -82,7 +135,12 @@ namespace nikkyai.common
 
         protected override void Log(string message)
         {
-            var logPrefix = $"{_colorPrefix}{LogPrefix}{_colorPostfix}";
+            if (!_logPrefixInitialized)
+            {
+                InitLogPrefix();
+            }
+
+            // var logPrefix = $"{_colorPrefix}{LogPrefix}{_colorPostfix} @ {_path}";
             Debug.Log($"[{logPrefix}] {message}", this);
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             return;
@@ -180,6 +238,7 @@ namespace nikkyai.common
                 {
                     EditorUtility.SetDirty(this);
                 }
+
                 DebugLog = value;
             }
         }

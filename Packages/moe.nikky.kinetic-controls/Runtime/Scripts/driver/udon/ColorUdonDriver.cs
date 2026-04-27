@@ -30,7 +30,7 @@ namespace nikkyai.driver.udon
                 var ext = externalBehaviours[i];
                 if (Utilities.IsValid(ext))
                 {
-                    Log($"Setting program variable {colorField} to {value} on {ext}");
+                    // Log($"Setting program variable {colorField} to {value} on {ext}");
                     ext.SetProgramVariable(colorField, value);
                 }
             }

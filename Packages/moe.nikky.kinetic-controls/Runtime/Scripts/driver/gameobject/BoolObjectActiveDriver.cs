@@ -9,7 +9,7 @@ namespace nikkyai.driver.gameobject
     {
         [SerializeField] public GameObject[] targetsOff = { };
         [SerializeField] public GameObject[] targetsOn = { };
-        protected override string LogPrefix => $"{nameof(BoolObjectActiveDriver)} {name}";
+        protected override string LogPrefix => nameof(BoolObjectActiveDriver);
 
         private void Start()
         {

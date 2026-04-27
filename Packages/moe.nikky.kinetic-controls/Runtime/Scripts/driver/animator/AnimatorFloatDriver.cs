@@ -8,7 +8,7 @@ namespace nikkyai.driver.animator
         [SerializeField] private Animator animator;
         [SerializeField] string floatParameterName;
 
-        protected override string LogPrefix => $"AnimatorFloatDriver {name}";
+        protected override string LogPrefix => nameof(AnimatorFloatDriver);
         protected override void OnUpdateFloat(float value)
         {
             if (!enabled) return;

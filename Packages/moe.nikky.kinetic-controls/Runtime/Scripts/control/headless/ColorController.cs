@@ -49,19 +49,20 @@ namespace nikkyai.control.headless
         public float hue = 0.5f;
         public float saturation = 0.5f;
         public float brightness = 0.5f;
-        private Color lastColor = Color.black;
+        private Color _lastColor = Color.black;
+        
         [UsedImplicitly]
         public void UpdateColor()
         {
             Color value = Color.HSVToRGB(hue, saturation, brightness);
-            if (value != lastColor)
+            if (value != _lastColor)
             {
-                Log($"applying color {value} to {_colorDrivers.Length} drivers");
+                // Log($"applying color {value} to {_colorDrivers.Length} drivers");
                 for (var i = 0; i < _colorDrivers.Length; i++)
                 {
                     _colorDrivers[i].OnUpdateColor(value);
                 }
-                lastColor = value;
+                _lastColor = value;
             }
         }
     

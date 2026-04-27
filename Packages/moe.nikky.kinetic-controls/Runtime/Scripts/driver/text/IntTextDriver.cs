@@ -22,7 +22,7 @@ namespace nikkyai.driver.text
         [SerializeField]
         private String valueDisplayFormat = "00";
 
-        protected override string LogPrefix => $"IntTextDriver {name}";
+        protected override string LogPrefix => nameof(IntTextDriver);
 
         void Start()
         {

@@ -1,5 +1,4 @@
-﻿using nikkyai.ArrayExtensions;
-using nikkyai.common;
+﻿using nikkyai.common;
 using UnityEngine;
 using UnityEngine.Rendering;
 using VRC.SDKBase;

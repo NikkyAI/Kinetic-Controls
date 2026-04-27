@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using JetBrains.Annotations;
-using nikkyai.ArrayExtensions;
 using nikkyai.common;
+using nikkyai.extensions;
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -40,7 +40,7 @@ namespace nikkyai.control.interact
         // [SerializeField]
         // private Transform boolAuthorizedDrivers;
 
-        protected override string LogPrefix => nameof(ToggleButton) + " " + name;
+        protected override string LogPrefix => nameof(ToggleButton);
 
         public override bool Synced
         {

@@ -46,9 +46,10 @@ namespace nikkyai.utils
         /*[NonSerialized]*/ private bool prevEnforceACL;
     
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        private void OnValidate()
+        protected override void OnValidate()
         {
             if (Application.isPlaying) return;
+            base.OnValidate();
             // UnityEditor.EditorUtility.SetDirty(this);
 
             if(prevAccessControl != AccessControl

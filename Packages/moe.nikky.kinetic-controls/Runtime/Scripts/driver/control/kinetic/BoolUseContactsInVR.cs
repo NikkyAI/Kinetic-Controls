@@ -6,9 +6,12 @@ namespace nikkyai.driver.control.kinetic
 {
     public class BoolUseContactsInVR : BoolDriver
     {
-        [Header("Faders and Levers")] // header
+        [Header("Faders and Levers - Deprecated, use Handle instead")] // header
         [SerializeField]
         private BaseKineticControl[] controls;
+        [Header("Handles")] // header
+        [SerializeField]
+        private Handle[] handles;
         void Start()
         {
             _EnsureInit();
@@ -27,7 +30,12 @@ namespace nikkyai.driver.control.kinetic
             for (var i = 0; i < controls.Length; i++)
             {
                 var control = controls[i];
-                control.UseContactsInVRLocal = value;
+                control.handle.UseContactsInVR = value;
+            }
+            for (var i = 0; i < handles.Length; i++)
+            {
+                var handle = handles[i];
+                handle.UseContactsInVR = value;
             }
         }
     
