@@ -17,6 +17,7 @@ Material:
   - GSAA
   - MOBILE_TONEMAP_ACES
   - SHADING_MODE_DEFAULT
+  - VRCLIGHTVOLUMES
   - _PARALLAXSTEPS_EIGHT
   m_InvalidKeywords:
   - BAKERY_NONE
@@ -171,7 +172,7 @@ Material:
     - UI_VRCHideCameraHeader: 0
     - UI_VRCHideInMirrorHeader: 0
     - UI_VRCHideMainViewHeader: 0
-    - UI_VRCLightVolumesHeader: 0
+    - UI_VRCLightVolumesHeader: 1
     - UI_VRCLightVolumesSurfacePushoffNote: 0
     - _AOChannel: 1
     - _AlbedoChannel: 0
@@ -236,7 +237,7 @@ Material:
     - _IgnoreRealtimeGI: 0
     - _MappingSpace: 0
     - _MetalChannel: 0
-    - _Metallic: 1
+    - _Metallic: 0.8
     - _Mode: 0
     - _NonlinearSH: 0
     - _OcclusionStrength: 1
@@ -272,7 +273,7 @@ Material:
     - _VRCHideInVR: 0
     - _VRCHideInVRCamera: 0
     - _VRCHideInVRMirror: 0
-    - _VRCLightVolumesEnabled: 0
+    - _VRCLightVolumesEnabled: 1
     - _VRCLightVolumesSurfacePushoff: 0.08
     - _ZTest: 4
     - _ZWrite: 1
