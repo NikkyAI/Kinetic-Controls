@@ -230,6 +230,13 @@ namespace nikkyai.Editor
             f.midiInputRangeStart = midiInputRangeStart;
             f.midiInputRangeEnd = midiInputRangeEnd;
 
+            f.minLimitIndicator = minLimitIndicator;
+            f.maxLimitIndicator = maxLimitIndicator;
+            f.targetIndicator = targetIndicator;
+            f.valueIndicator = valueIndicator;
+            f._EnsureInit();
+            f.UpdateIndicatorsInEditor();
+
             f.handle = handle;
             // f.SetupHandle();
             if (Utilities.IsValid(handle))
@@ -244,17 +251,13 @@ namespace nikkyai.Editor
                 handle.Register(f);
                 handle.SetupPickup();
                 handle.SetupPickupRigidbody();
+                handle.ResetTransform();
                 handle.MarkDirty();
             }
             else
             {
                 Debug.LogError($"missing handle in {name}", this);
             }
-
-            f.minLimitIndicator = minLimitIndicator;
-            f.maxLimitIndicator = maxLimitIndicator;
-            f.targetIndicator = targetIndicator;
-            f.valueIndicator = valueIndicator;
 
             f.floatTargetValueDrivers = floatTargetValueDrivers;
             f.floatSmoothedValueDrivers = floatSmoothedValueDrivers;
@@ -265,7 +268,6 @@ namespace nikkyai.Editor
 
             f.debugDesktopRaytrace = debugDesktopRaytrace;
             f.EditorDebugLog = debugLog;
-            f.UpdateIndicatorsInEditor();
 
             var minValue = Mathf.Min(f.MinValue, f.MaxValue);
             var maxValue = Mathf.Max(f.MinValue, f.MaxValue);
