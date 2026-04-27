@@ -1,52 +1,50 @@
-﻿using System;
+﻿#define HIDE_INSPECTOR
+
+using System;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using nikkyai.common;
-using nikkyai.Utils;
 using UdonSharp;
 using UnityEngine;
-using UnityEngine.Serialization;
-using VRC;
 using VRC.SDKBase;
 
 namespace nikkyai.control
 {
-    public abstract class BaseSmoothedControl : BaseSyncedControl
+    public abstract class BaseSmoothedControl : ACLBaseReadonly
     {
-        // eh just add a trigger on the button that triggered the reset ?
-        // protected TriggerDriver[] ResetTriggerDriver = { };
-
         protected abstract float MinPosOrRot { get; }
 
         protected abstract float MaxPosOrRot { get; }
 
-        // protected abstract float MinValue { 
-        //     get;
-        // }
-        //
-        // protected abstract float MaxValue {  
-        //     get;
-        // }
-
-        // protected abstract bool TargetIsBeingManipulated
-        // {
-        //     get;
-        //     set;
-        // }
-
         #region default value
 
         [Header("Base Smoothed Control")]
-        [FormerlySerializedAs("range")]
+        [SerializeField, UdonSynced] //
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal bool synced = true;
+
         [SerializeField]
-        [Description("The range of values that this behaviour will send to any attached float drivers")]
-        private Vector2 outputRange = new Vector2(0, 1);
+        [Tooltip("The range of values that this behaviour will send to any attached float drivers")]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal Vector2 outputRange = new Vector2(0, 1);
 
-        [SerializeField, Range(0, 1)] internal float defaultValueNormalized = 0.25f;
-        [SerializeField] internal float defaultValue = 0;
+        [SerializeField]
+        [Range(0, 1)]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal float defaultValueNormalized = 0.25f;
+        [SerializeField]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal float defaultValue = 0;
 
-        private float MinValue => outputRange.x;
-        private float MaxValue => outputRange.y;
+        internal float MinValue => outputRange.x;
+        internal float MaxValue => outputRange.y;
 
         #endregion
 
@@ -54,23 +52,32 @@ namespace nikkyai.control
 
         [Header("Base Smoothed Control - Drivers")] // header
         [SerializeField]
-        //
-        private GameObject floatTargetValueDrivers;
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal GameObject floatTargetValueDrivers;
 
-        [SerializeField] //
-        private GameObject floatSmoothedValueDrivers;
+        [SerializeField]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal GameObject floatSmoothedValueDrivers;
 
-        private FloatDriver[] _targetValueFloatDrivers = { };
-        private FloatDriver[] _smoothedValueFloatDrivers = { };
+        [SerializeField, ReadOnly] public FloatDriver[] _targetValueFloatDrivers = Array.Empty<FloatDriver>();
+        [SerializeField, ReadOnly] internal FloatDriver[] _smoothedValueFloatDrivers = Array.Empty<FloatDriver>();
 
         #endregion
 
         #region value smoothing
 
         [Header("Base Smoothed Control - Smoothing")] // header
-        [Tooltip("smoothes out value updates over time, may impact CPU frametimes"),
-         SerializeField]
-        private bool enableValueSmoothing = true;
+        [Tooltip(
+             "smoothes out value updates over time, may impact CPU frametimes AND cause more updates to FloatDrivers")]
+        [SerializeField]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal bool enableValueSmoothing = true;
 
         public bool ValueSmoothing
         {
@@ -79,9 +86,13 @@ namespace nikkyai.control
         }
 
         [Tooltip("amount of frames to skip when approaching target value," +
-                 "higher number == less load, but more choppy smoothing"),
-         SerializeField, Range(1, 10)]
-        private int smoothingUpdateInterval = 3;
+                 "higher number == less load, but more choppy smoothing")]
+        [SerializeField]
+        [Range(1, 10)]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal int smoothingUpdateInterval = 3;
 
         public int SmoothingFrames
         {
@@ -99,13 +110,22 @@ namespace nikkyai.control
         //     set => smoothingRate = value;
         // }
 
-        [SerializeField, Range(0f, 5f)]
-        [Description("Approximate time it will take for smoothing to reach the target value (see Unity Mathf.SmoothDamp smoothTime parameter)")]
+        [Tooltip("higher values -> faster synchronization with the target maxSpeed")]
+        [SerializeField]
+        [Range(0f, 2.5f)]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
         public float smoothingTime = 0.1f;
-        [SerializeField, Range(0f, 1f)]
-        [Description("Maximim speed that smoothing can move at (see Unity Mathf.SmoothDamp maxSpeed parameter)")]
+
+        [Tooltip("Maximum speed that smoothing can move at (see Unity Mathf.SmoothDamp maxSpeed parameter)")]
+        [SerializeField]
+        [Range(0f, 1f)]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
         public float smoothingMaxSpeed = 0.25f;
-        
+
         protected float smoothingTargetNormalized;
         protected float smoothedCurrentNormalized;
 
@@ -138,9 +158,8 @@ namespace nikkyai.control
         //     enableValueSmoothing = enableValueSmoothing && smoothingUpdateInterval > 0;
         // }
 
-        private void SetupSmoothedControlValues()
+        internal void FindDrivers()
         {
-            //TODO: move into running in editor ?
             Log($"Searching for float value drivers in {floatSmoothedValueDrivers}");
             if (Utilities.IsValid(floatSmoothedValueDrivers))
             {
@@ -174,40 +193,11 @@ namespace nikkyai.control
             {
                 Log($"found {_targetValueFloatDrivers.Length} drivers for target");
             }
-
-            defaultValueNormalized = Mathf.Clamp01(defaultValueNormalized);
-            smoothedCurrentNormalized = defaultValueNormalized;
-            smoothingTargetNormalized = defaultValueNormalized;
         }
 
-        protected override void _Init()
+        private void SetupSmoothedControlValues()
         {
-            base._Init();
-
-            SetupSmoothedControlValues();
-
             //TODO: move into running in editor ?
-            Log($"Searching for float value drivers in {floatSmoothedValueDrivers}");
-            if (Utilities.IsValid(floatSmoothedValueDrivers))
-            {
-                _smoothedValueFloatDrivers = floatSmoothedValueDrivers.GetComponentsInChildren<FloatDriver>();
-                Log($"found {_smoothedValueFloatDrivers.Length} drivers for value");
-            }
-            else
-            {
-                LogError("missing object for float value drivers");
-            }
-
-            Log($"Searching for float target drivers in {floatTargetValueDrivers}");
-            if (Utilities.IsValid(floatTargetValueDrivers))
-            {
-                _targetValueFloatDrivers = floatTargetValueDrivers.GetComponentsInChildren<FloatDriver>();
-                Log($"found {_targetValueFloatDrivers.Length} drivers for target");
-            }
-            else
-            {
-                LogError("missing object for float target drivers");
-            }
 
             if (_smoothedValueFloatDrivers != null)
             {
@@ -218,6 +208,18 @@ namespace nikkyai.control
             {
                 Log($"found {_targetValueFloatDrivers.Length} drivers for target");
             }
+
+            defaultValueNormalized = Mathf.Clamp01(defaultValueNormalized);
+            smoothedCurrentNormalized = defaultValueNormalized;
+            smoothingTargetNormalized = defaultValueNormalized;
+        }
+
+        protected override void _Init()
+        {
+            base._Init();
+
+            FindDrivers();
+            SetupSmoothedControlValues();
 
             defaultValueNormalized = Mathf.Clamp01(defaultValueNormalized);
             smoothedCurrentNormalized = defaultValueNormalized;
@@ -312,13 +314,17 @@ namespace nikkyai.control
                 //     smoothedCurrentNormalized -= 1f;
                 // }
 
-                var delta = Mathf.Repeat(smoothingTargetNormalized - smoothedCurrentNormalized, 1f);
+                var delta = Mathf.Repeat(
+                    smoothingTargetNormalized - smoothedCurrentNormalized, 
+                    1f
+                );
                 if (delta > 0.5f)
                 {
                     delta -= 1f;
                 }
+
                 var target = smoothedCurrentNormalized + delta;
-                
+
                 smoothedCurrentNormalized = SmoothDamp(
                     current: smoothedCurrentNormalized,
                     target: target,
@@ -383,15 +389,13 @@ namespace nikkyai.control
             SetValue(defaultValueNormalized);
         }
 
-        // public abstract void SetValue(float normalizedValue);
-
         public virtual void SetValue(float normalizedValue)
         {
             if (!IsAuthorized) return;
             SyncedValueNormalized = normalizedValue;
             // should already be done in OnDeserialization?
             _UpdateTargetValue(normalizedValue);
-            if (Synced)
+            if (synced)
             {
                 TakeOwnership();
                 RequestSerialization();
@@ -484,89 +488,106 @@ namespace nikkyai.control
         //     return delta;
         // }
 
-        private float prevDefaultNormalized, prevDefault, prevMin, prevMax;
-        private int lastHashSmoothedBase = 0;
+        // private float prevDefaultNormalized, prevDefault, prevMin, prevMax;
+        // private int lastHashSmoothedBase = 0;
         // ReSharper restore InconsistentNaming
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
 
-        protected override void OnValidate()
+        // public override bool OnPreprocess()
+        // {
+        //     FindDrivers();
+        //
+        //     return base.OnPreprocess();
+        // }
+        //
+        // protected override void OnValidate()
+        // {
+        //     if (Application.isPlaying) return;
+        //     base.OnValidate();
+        //
+        //     if (
+        //         ValidationCache.ShouldRunValidation(
+        //             this,
+        //             HashCode.Combine(
+        //                 MinPosOrRot,
+        //                 MinPosOrRot,
+        //                 MinValue,
+        //                 MaxValue,
+        //                 defaultValueNormalized,
+        //                 defaultValue
+        //             )
+        //         )
+        //     )
+        //     {
+        //         ApplyValues();
+        //     }
+        // }
+        //
+        // [ContextMenu("Apply Values")]
+        // public virtual void ApplyValues()
+        // {
+        //     _EnsureInit();
+        //
+        //     //TODO move to helper script ?
+        //     if (prevDefaultNormalized != defaultValueNormalized)
+        //     {
+        //         defaultValue = Mathf.Lerp(MinValue, MaxValue, defaultValueNormalized);
+        //         prevDefault = defaultValue;
+        //     }
+        //
+        //     if (prevDefault != defaultValue)
+        //     {
+        //         defaultValueNormalized = Mathf.InverseLerp(MinValue, MaxValue, defaultValue);
+        //         // _normalizedDefault = defaultValueNormalized;
+        //         prevDefaultNormalized = defaultValueNormalized;
+        //     }
+        //
+        //     if (prevMin != MinValue || prevMax != MaxValue)
+        //     {
+        //         defaultValueNormalized = Mathf.InverseLerp(MinValue, MaxValue, defaultValue);
+        //         // _normalizedDefault = defaultValueNormalized;
+        //         prevDefaultNormalized = defaultValueNormalized;
+        //
+        //         prevMin = MinValue;
+        //         prevMax = MaxValue;
+        //     }
+        //
+        //     prevDefaultNormalized = defaultValueNormalized;
+        //     prevDefault = defaultValue;
+        //
+        //     UpdateValueIndicator(
+        //         Mathf.Lerp(MinPosOrRot, MaxPosOrRot, defaultValueNormalized)
+        //     );
+        //     UpdateTargetIndicator(
+        //         Mathf.Lerp(MinPosOrRot, MaxPosOrRot, defaultValueNormalized)
+        //     );
+        //
+        //     var minValue = Mathf.Min(MinValue, MaxValue);
+        //     var maxValue = Mathf.Max(MinValue, MaxValue);
+        //
+        //     foreach (var valueFloatDriver in _smoothedValueFloatDrivers)
+        //     {
+        //         valueFloatDriver.ApplyFloatValue(
+        //             Math.Clamp(defaultValue, minValue, maxValue)
+        //         );
+        //     }
+        //
+        //     foreach (var targetFloatDriver in _targetValueFloatDrivers)
+        //     {
+        //         targetFloatDriver.ApplyFloatValue(
+        //             Math.Clamp(defaultValue, minValue, maxValue)
+        //         );
+        //     }
+        // }
+
+        internal void UpdateIndicatorsInEditor()
         {
-            if (Application.isPlaying) return;
-            base.OnValidate();
-
-            if (
-                ValidationCache.ShouldRunValidation(
-                    this,
-                    HashCode.Combine(
-                        MinPosOrRot,
-                        MinPosOrRot,
-                        MinValue,
-                        MaxValue,
-                        defaultValueNormalized,
-                        defaultValue
-                    )
-                )
-            )
-            {
-                ApplyValues();
-            }
-        }
-
-        [ContextMenu("Apply Values")]
-        public virtual void ApplyValues()
-        {
-            _EnsureInit();
-
-            //TODO move to helper script ?
-            if (prevDefaultNormalized != defaultValueNormalized)
-            {
-                defaultValue = Mathf.Lerp(MinValue, MaxValue, defaultValueNormalized);
-                prevDefault = defaultValue;
-            }
-
-            if (prevDefault != defaultValue )
-            {
-                defaultValueNormalized = Mathf.InverseLerp(MinValue, MaxValue, defaultValue);
-                // _normalizedDefault = defaultValueNormalized;
-                prevDefaultNormalized = defaultValueNormalized;
-            }
-
-            if (prevMin != MinValue || prevMax != MaxValue)
-            {
-                defaultValueNormalized = Mathf.InverseLerp(MinValue, MaxValue, defaultValue);
-                // _normalizedDefault = defaultValueNormalized;
-                prevDefaultNormalized = defaultValueNormalized;
-                
-                prevMin = MinValue;
-                prevMax = MaxValue;
-            }
-
-            prevDefaultNormalized = defaultValueNormalized;
-            prevDefault = defaultValue;
-
             UpdateValueIndicator(
                 Mathf.Lerp(MinPosOrRot, MaxPosOrRot, defaultValueNormalized)
             );
             UpdateTargetIndicator(
                 Mathf.Lerp(MinPosOrRot, MaxPosOrRot, defaultValueNormalized)
             );
-
-            var minValue = Mathf.Min(MinValue, MaxValue);
-            var maxValue = Mathf.Max(MinValue, MaxValue);
-
-            foreach (var valueFloatDriver in _smoothedValueFloatDrivers)
-            {
-                valueFloatDriver.ApplyFloatValue(
-                    Math.Clamp(defaultValue, minValue, maxValue)
-                );
-            }
-
-            foreach (var targetFloatDriver in _targetValueFloatDrivers)
-            {
-                targetFloatDriver.ApplyFloatValue(
-                    Math.Clamp(defaultValue, minValue, maxValue)
-                );
-            }
         }
 #endif
     }

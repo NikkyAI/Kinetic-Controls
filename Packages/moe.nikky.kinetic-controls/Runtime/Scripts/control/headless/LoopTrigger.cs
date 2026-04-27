@@ -6,7 +6,7 @@ using VRC.SDKBase;
 namespace nikkyai.control.headless
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class LoopTrigger : LoggerBase
+    public class LoopTrigger : LoggingSimple
     {
         protected override string LogPrefix => nameof(LoopTrigger);
 

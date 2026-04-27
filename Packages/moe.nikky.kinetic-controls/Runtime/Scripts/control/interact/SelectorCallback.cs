@@ -7,7 +7,7 @@ using UnityEngine.Serialization;
 namespace nikkyai.control.interact
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class SelectorCallback : ACLBase
+    public class SelectorCallback : ACLBaseSimple
     {
         [Header("Selector Callback")] [SerializeField]
         public GameObject boolToggleDriver;

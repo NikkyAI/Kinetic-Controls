@@ -1,5 +1,8 @@
-﻿using System.ComponentModel;
+﻿#define HIDE_INSPECTOR
+
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using nikkyai.Editor;
 using nikkyai.Kinetic_Controls;
 using UdonSharp;
 using UnityEngine;
@@ -17,6 +20,9 @@ namespace nikkyai.control.kinetic
     {
         [Header("Lever")] // header
         [SerializeField]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
         private Axis axis = Axis.Z;
         private Vector3 _axisVector = Vector3.zero;
 
@@ -28,54 +34,61 @@ namespace nikkyai.control.kinetic
         // [SerializeField, Range(0,1)] private float defaultValueNormalized = 0.25f;
         // [SerializeField] private float defaultValue = 0;
 
-        [Range(-180, 180), SerializeField, PreviouslySerializedAs("_minRot")]
-        private float minRot = -45;
+        [Range(-180, 180)]
+        [SerializeField]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal float minRot = -45;
         protected override float MinPosOrRot => minRot;
 
-        [Range(-180, 180), SerializeField, PreviouslySerializedAs("_maxRot")]
-        private float maxRot = 45;
-
-        protected override float MaxPosOrRot => maxRot;
-
-        [Header("Lever - VR")] // header
+        [Range(-180, 180)]
         [SerializeField]
-        [Description("switches between finger contacts and pickup (proxies to handle)")]
-        [FieldChangeCallback(nameof(HandleUseContactsInVR))]
-        private bool useContactsInVR = true;
-
-        public override bool HandleUseContactsInVR
-        {
-            get => handle.useContactsInVR;
-            set => handle.UseContactsInVR = value;
-        }
-
-        protected override bool UseContactsInVR => useContactsInVR;
-
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal float maxRot = 45;
+        protected override float MaxPosOrRot => maxRot;
 
         [Header("Lever - Components")] //
         [FormerlySerializedAs("minLimit")]
         [SerializeField]
-        [Description("will be rotated to indicate the minimum possible lever range")]
-        private Transform minLimitIndicator;
+        [Tooltip("will be rotated to indicate the minimum possible lever range")]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal Transform minLimitIndicator;
 
         [FormerlySerializedAs("maxLimit")] 
         [SerializeField]
-        [Description("will be rotated to indicate the maximum possible lever range")]
-        private Transform maxLimitIndicator;
+        [Tooltip("will be rotated to indicate the maximum possible lever range")]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal Transform maxLimitIndicator;
 
         [SerializeField]
-        [Description("will be rotated to follow the smoothed value")]
-        private Transform valueIndicator;
+        [Tooltip("will be rotated to follow the smoothed value")]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal Transform valueIndicator;
         private bool _valueIndicatorValid = false;
 
         [SerializeField]
-        [Description("will be rotated to follow the handle (target value)")]
-        private Transform targetIndicator;
+        [Tooltip("will be rotated to follow the handle (target value)")]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal Transform targetIndicator;
         private bool _targetIndicatorValid = false;
 
         [Header("Lever - Debug")] // header
         [SerializeField]
-        private Collider desktopRaycastCollider;
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal Collider desktopRaycastCollider;
 
         protected override string LogPrefix => nameof(Lever);
 
@@ -295,5 +308,23 @@ namespace nikkyai.control.kinetic
             valueIndicator.transform.MarkDirty();
 #endif
         }
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+            [ContextMenu("Setup Editor Helper Script")]
+            private void SetupEditorHelper()
+            {
+                var editorHelper = GetComponent<LeverEditorHelper>();
+                if (editorHelper == null)
+                {
+                    editorHelper = gameObject.AddComponent<LeverEditorHelper>();
+                    editorHelper.lever = this;
+                    editorHelper.CopyFromLever();
+                }
+                else
+                {
+                    editorHelper.lever = this;
+                    editorHelper.CopyFromLever();
+                }
+            }
+#endif
     }
 }

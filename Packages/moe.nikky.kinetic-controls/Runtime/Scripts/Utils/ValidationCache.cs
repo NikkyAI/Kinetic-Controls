@@ -23,8 +23,9 @@ namespace nikkyai.Utils
             }
             Cache[key] = hash;
             
-            Debug.Log($"[{nameof(ValidationCache)}] checking key: {key}, existing key, should run? {oldValue != hash}");
-            return oldValue != hash;
+            var shouldRun = oldValue != hash;
+            Debug.Log($"[{nameof(ValidationCache)}] checking key: {key}, existing key, should run? {shouldRun}");
+            return shouldRun;
         } 
     }
 }

@@ -4,13 +4,13 @@ using UnityEngine;
 using VRC;
 using VRC.SDKBase;
 
-namespace nikkyai.driver.controls
+namespace nikkyai.driver.control
 {
     public class BoolSyncedDriver : BoolDriver
     {
         [Header("External Behaviours")] // header
         [SerializeField]
-        private BaseSyncedControl[] syncedBehaviours;
+        private BaseBehaviour[] syncedBehaviours;
 
         protected override string LogPrefix => nameof(BoolSyncedDriver);
 

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace nikkyai.common
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public abstract class BoolDriver: LoggerBase
+    public abstract class BoolDriver: LoggingSimple
     {
         public abstract void OnUpdateBool(bool value);
 

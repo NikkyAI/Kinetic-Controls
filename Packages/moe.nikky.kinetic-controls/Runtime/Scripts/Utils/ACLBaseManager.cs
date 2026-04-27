@@ -10,7 +10,7 @@ using VRC.SDKBase;
 namespace nikkyai.utils
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class ACLBaseManager : ACLBase
+    public class ACLBaseManager : ACLBaseSimple
     {
 
         [SerializeField] private GameObject aclComponents;
@@ -65,7 +65,7 @@ namespace nikkyai.utils
             }
         }
 
-        [ContextMenu("Apply ACLs and Log")]
+        [ContextMenu("Apply ACLs")]
         private void ApplyACLs()
         {
             if (Utilities.IsValid(aclComponents))

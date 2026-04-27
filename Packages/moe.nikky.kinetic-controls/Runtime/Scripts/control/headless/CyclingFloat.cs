@@ -10,7 +10,7 @@ using UnityEngine.Serialization;
 namespace nikkyai.control.headless
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class CyclingFloat : LoggerBase
+    public class CyclingFloat : LoggingSimple
     {
         [Header("Cycling Float")] //
         [Range(0, 1)]

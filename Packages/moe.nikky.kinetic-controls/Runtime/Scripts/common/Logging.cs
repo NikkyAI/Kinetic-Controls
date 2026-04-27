@@ -7,16 +7,12 @@ using VRC.SDKBase;
 
 namespace nikkyai.common
 {
-    public abstract class LoggerBase : BaseBehaviour
+    public abstract class Logging : BaseBehaviour
     {
-        [Header("Logging")] // header
-        [SerializeField]
-        private DebugLog debugLog;
-
-        protected DebugLog DebugLog
+        protected abstract DebugLog DebugLog
         {
-            get => debugLog;
-            set => debugLog = value;
+            get;
+            set;
         }
 
         // [SerializeField] private LogLevel logLevel = LogLevel.INFO;
@@ -37,7 +33,7 @@ namespace nikkyai.common
             var _pathColor = RichTextColor.teal;
 
             Transform t = transform;
-            // _path = name;
+            _path = name.Color(Color.cyan);
             t = t.parent;
             while (t != null)
             {
@@ -45,7 +41,7 @@ namespace nikkyai.common
                 t = t.parent;
             }
             
-            _path = $"{_path}{name.Color(Color.cyan)}";
+            _path = $" / {_path}";
 
             _pathInitialized = true;
         }
@@ -91,7 +87,7 @@ namespace nikkyai.common
 
         protected virtual Color LogColor => Color.white;
 
-        protected override void LogError(string message)
+        protected void LogError(string message)
         {
             if (!_logPrefixInitialized)
             {
@@ -99,7 +95,7 @@ namespace nikkyai.common
             }
 
             // var logPrefix = $"{_colorPrefix}{LogPrefix}{_colorPostfix} @ {_path}";
-            Debug.LogError($"[{logPrefix}]{message}", this);
+            Debug.LogError($"[{logPrefix}] {message}", this);
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             return;
 #endif
@@ -112,7 +108,7 @@ namespace nikkyai.common
             }
         }
 
-        protected override void LogWarning(string message)
+        protected void LogWarning(string message)
         {
             if (!_logPrefixInitialized)
             {
@@ -133,7 +129,7 @@ namespace nikkyai.common
             }
         }
 
-        protected override void Log(string message)
+        protected void Log(string message)
         {
             if (!_logPrefixInitialized)
             {
@@ -205,7 +201,7 @@ namespace nikkyai.common
         }
         */
 
-        protected override void LogAssert(string message)
+        protected void LogAssert(string message)
         {
             var logPrefix = $"{_colorPrefix}{LogPrefix}{_colorPostfix}";
             Debug.LogAssertion($"[{logPrefix}] {message}", this);

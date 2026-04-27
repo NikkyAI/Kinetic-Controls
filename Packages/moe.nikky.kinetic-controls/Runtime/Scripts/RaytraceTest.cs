@@ -6,7 +6,7 @@ using VRC.SDKBase;
 namespace nikkyai
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class RaytraceTest : LoggerBase
+    public class RaytraceTest : LoggingSimple
     {
         [SerializeField] private Transform hitTracker;
         [SerializeField, Min(0)] private float maxRange = 5;

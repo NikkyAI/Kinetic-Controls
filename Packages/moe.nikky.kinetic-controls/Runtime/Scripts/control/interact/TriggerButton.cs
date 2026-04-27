@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using nikkyai.common;
+using nikkyai.Editor;
 using nikkyai.extensions;
 using UdonSharp;
 using UnityEngine;
@@ -10,8 +11,11 @@ using VRC.SDKBase;
 
 namespace nikkyai.control.interact
 {
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+    [RequireComponent(typeof(PreProcessEditorHelper))]
+#endif
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class TriggerButton : ACLBase
+    public class TriggerButton : ACLBaseSimple
     {
         [Header("Trigger - MIDI - Requires VRC_MidiListener Component")] //
         [SerializeField, Description("Requires a VRC MIDI Listened with NoteOn enabled")]
@@ -25,12 +29,14 @@ namespace nikkyai.control.interact
 
         [Header("Drivers")] // header
         [FormerlySerializedAs("triggerDriversObj")]
-        [Description("default: self")]
+        [Tooltip("default: self")]
         [SerializeField] private GameObject triggerDrivers;
 
         protected override string LogPrefix => nameof(TriggerButton);
     
-        private TriggerDriver[] _triggerDrivers = { };
+        [SerializeField] 
+        [ReadOnly]
+        private TriggerDriver[] triggerDriversReadonly = { };
 
         void Start()
         {
@@ -45,18 +51,8 @@ namespace nikkyai.control.interact
             //     triggerDrivers = this.gameObject;
             // }
 
-            _triggerDrivers = _triggerDrivers.AddRange(
-                gameObject.GetComponents<TriggerDriver>()
-            );
-            if (Utilities.IsValid(triggerDrivers))
-            {
-                Log($"loading tigger drivers from {triggerDrivers}");
-                _triggerDrivers = _triggerDrivers.AddRange(
-                        triggerDrivers.GetComponentsInChildren<TriggerDriver>()
-                );
-            }
-            Log($"Found {_triggerDrivers.Length} trigger drivers");
         }
+
 
         protected override void AccessChanged()
         {
@@ -68,9 +64,9 @@ namespace nikkyai.control.interact
         {
             if (!IsAuthorized) return;
             Log("Trigger executing");
-            for (var i = 0; i < _triggerDrivers.Length; i++)
+            for (var i = 0; i < triggerDriversReadonly.Length; i++)
             {
-                _triggerDrivers[i].OnTrigger();
+                triggerDriversReadonly[i].OnTrigger();
             }
         }
         //TODO: call network event on trigger ?
@@ -85,9 +81,9 @@ namespace nikkyai.control.interact
             if (channel == midiChannel && number == midiNumber && velocity >= midiMinVelocity)
             {
                 Log("midi triggered");
-                for (var i = 0; i < _triggerDrivers.Length; i++)
+                for (var i = 0; i < triggerDriversReadonly.Length; i++)
                 {
-                    _triggerDrivers[i].OnTrigger();
+                    triggerDriversReadonly[i].OnTrigger();
                 }
             }
         }
@@ -137,6 +133,33 @@ namespace nikkyai.control.interact
             UnityEditor.EditorUtility.SetDirty(this);
 
             this.MarkDirty();
+        }
+
+        private void FindTriggerDrivers()
+        {
+            
+            triggerDriversReadonly = triggerDriversReadonly.AddRange(
+                gameObject.GetComponents<TriggerDriver>()
+            );
+            if (Utilities.IsValid(triggerDrivers))
+            {
+                Log($"loading tigger drivers from {triggerDrivers}");
+                triggerDriversReadonly = triggerDriversReadonly.AddRange(
+                        triggerDrivers.GetComponentsInChildren<TriggerDriver>()
+                );
+            }
+            Log($"Found {triggerDriversReadonly.Length} trigger drivers");
+        }
+
+        public override bool OnPreprocess()
+        {
+            if (!base.OnPreprocess())
+            {
+                return false;
+            }
+            FindTriggerDrivers();
+
+            return true;
         }
 #endif
     }

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace nikkyai.common
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public abstract class IntDriver: LoggerBase
+    public abstract class IntDriver: LoggingSimple
     {
         public abstract void OnUpdateInt(int value);
         

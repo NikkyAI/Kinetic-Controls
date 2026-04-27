@@ -1,11 +1,14 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+#define HIDE_INSPECTOR
+
+using System;
+using nikkyai.Editor;
 using nikkyai.Kinetic_Controls;
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.Serialization;
 using VRC;
 using VRC.SDKBase;
+
 
 // ReSharper disable ForCanBeConvertedToForeach
 
@@ -16,51 +19,56 @@ namespace nikkyai.control.kinetic
     {
         [Header("Fader")] // header
         [SerializeField]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
         private Axis axis = Axis.Y;
         private Vector3 _axisVector = Vector3.zero;
 
-        [Header("Fader - VR")] // header
+        [Header("Fader - Desktop")] // header
         [SerializeField]
-        [Description("switches between finger contacts and pickup")]
-        [FieldChangeCallback(nameof(HandleUseContactsInVR))]
-        private bool useContactsInVR = true;
-
-        public override bool HandleUseContactsInVR
-        {
-            get => handle.useContactsInVR;
-            set => handle.UseContactsInVR = value;
-        }
-
-        protected override bool UseContactsInVR => useContactsInVR;
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal Collider desktopRaycastCollider;
 
         [Header("Fader - Components")] //
         [FormerlySerializedAs("minLimit")]
         [SerializeField]
-        [Description("move this on the configured axis to the minumum fader range")]
-        private Transform minLimitIndicator;
+        [Tooltip("move this on the configured axis to the minumum fader range")]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal Transform minLimitIndicator;
         private float _minPos;
         protected override float MinPosOrRot => _minPos;
 
         [FormerlySerializedAs("maxLimit")]
         [SerializeField]
-        [Description("move this on the configured axis to the maximum fader range")]
-        private Transform maxLimitIndicator;
+        [Tooltip("move this on the configured axis to the maximum fader range")]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        public Transform maxLimitIndicator;
         private float _maxPos;
         protected override float MaxPosOrRot => _maxPos;
 
         [SerializeField]
-        [Description("will be moved to follow the smoothed value")]
-        private Transform valueIndicator;
+        [Tooltip("will be moved to follow the smoothed value")]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal Transform valueIndicator;
         private bool _valueIndicatorValid = false;
 
         [SerializeField]
-        [Description("will be moved to follow the handle (target value)")]
-        private Transform targetIndicator;
+        [Tooltip("will be moved to follow the handle (target value)")]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal Transform targetIndicator;
         private bool _targetIndicatorValid = false;
 
-        [Header("Fader - Debug")] // header
-        [SerializeField]
-        private Collider desktopRaycastCollider;
 
         protected override string LogPrefix => nameof(Fader);
 
@@ -115,7 +123,7 @@ namespace nikkyai.control.kinetic
             SyncedValueNormalized = normalizedValue;
             // should already be done in OnDeserialization?
             _UpdateTargetValue(normalizedValue);
-            if (Synced)
+            if (synced)
             {
                 TakeOwnership();
                 RequestSerialization();
@@ -218,5 +226,25 @@ namespace nikkyai.control.kinetic
             valueIndicator.transform.MarkDirty();
 #endif
         }
+        
+        
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+        [ContextMenu("Setup Editor Helper Script")]
+        private void SetupEditorHelper()
+        {
+            var editorHelper = GetComponent<FaderEditorHelper>();
+            if (editorHelper == null)
+            {
+                editorHelper = gameObject.AddComponent<FaderEditorHelper>();
+                editorHelper.fader = this;
+                editorHelper.CopyFromFader();
+            }
+            else
+            {
+                editorHelper.fader = this;
+                editorHelper.CopyFromFader();
+            }
+        }
+#endif
     }
 }

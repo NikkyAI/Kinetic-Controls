@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using nikkyai.Editor;
 using Texel;
 using UnityEditor;
 using UnityEngine;
@@ -10,42 +11,43 @@ using VRC.Udon.Common.Enums;
 
 namespace nikkyai.common
 {
-    public abstract class ACLBase : LoggerBase
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+    // [RequireComponent(typeof(PreProcessEditorHelper))]
+#endif
+    public abstract class ACLBase : Logging
     {
-        protected BoolDriver[] IsAuthorizedBoolDrivers = { };
-
-        // protected AccessControl accessControl;
-        // protected virtual AccessControl AccessControl { get; set; }
-        // protected abstract bool EnforceACL { get; set; }
-
-        [Header("Access Control")] // header
-        [SerializeField]
-        private bool enforceACL = true;
-
-        protected bool EnforceACL
+        
+        protected abstract bool EnforceACL
         {
-            get => enforceACL;
-            private set => enforceACL = value;
+            get;
+            set;
         }
 
-        [Tooltip("ACL used to check who can use the toggle")] //
-        [SerializeField]
-        private AccessControl accessControl;
-
-        protected AccessControl AccessControl
+        protected abstract AccessControl AccessControl
         {
-            get => accessControl;
-            private set => accessControl = value;
+            get ;
+            set ;
         }
 
-        [SerializeField] //
-        [Description("object containing bool drivers, drivers will be updated with current auth status")]
-        //
-        [FormerlySerializedAs("boolAuthorizedDriversObj")] //
-        private GameObject boolAuthorizedDrivers;
+        protected abstract GameObject BoolAuthorizedDrivers
+        {
+            get;
+            set;
+        }
+        
+        // [Header("Access Control")]
+        // [SerializeField] 
+        // [ReadOnly]
+        // protected BoolDriver[] authorizedDrivers = { };
+
+        protected abstract BoolDriver[] AuthorizedDrivers
+        {
+            get;
+            set;
+        }
 
         // [SerializeField] //
-        // [Description("object containing bool drivers, will be updated with current auth status")]
+        // [Tooltip("object containing bool drivers, will be updated with current auth status")]
         // //
         // [FormerlySerializedAs("boolAuthorizedDrivers")] //
         // private Transform boolAuthorizedDriversTransform;
@@ -60,20 +62,10 @@ namespace nikkyai.common
         {
             base._Init();
 
-            FindBoolAuthDrivers();
+            // FindBoolAuthDrivers();
 
             // Log($"queueing up LateInitACL");
             SendCustomEventDelayedFrames(nameof(_PostInitACL), 1);
-        }
-
-        private void FindBoolAuthDrivers()
-        {
-            if (Utilities.IsValid(boolAuthorizedDrivers))
-            {
-                Log($"loading auth drivers");
-                IsAuthorizedBoolDrivers = boolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
-                Log($"found {IsAuthorizedBoolDrivers.Length} auth bool drivers");
-            }
         }
 
         public void _PostInitACL()
@@ -119,10 +111,10 @@ namespace nikkyai.common
 
                 Log($"setting isAuthorized to {IsAuthorized} for {_localName}");
 
-                Log($"updating {IsAuthorizedBoolDrivers.Length} drivers");
-                for (var i = 0; i < IsAuthorizedBoolDrivers.Length; i++)
+                Log($"updating {AuthorizedDrivers.Length} drivers");
+                for (var i = 0; i < AuthorizedDrivers.Length; i++)
                 {
-                    IsAuthorizedBoolDrivers[i].OnUpdateBool(IsAuthorized);
+                    AuthorizedDrivers[i].OnUpdateBool(IsAuthorized);
                 }
 
                 AccessChanged();
@@ -146,6 +138,18 @@ namespace nikkyai.common
         }
 
         protected abstract void AccessChanged();
+
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+        internal void FindBoolAuthDrivers()
+        {
+            if (Utilities.IsValid(BoolAuthorizedDrivers))
+            {
+                Log($"loading auth drivers");
+                AuthorizedDrivers = BoolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
+                Log($"found {AuthorizedDrivers.Length} auth bool drivers");
+            }
+        }
+#endif
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         // protected override int ValidationHash =>
@@ -183,7 +187,7 @@ namespace nikkyai.common
             {
                 if (AccessControl != value)
                 {
-                    EditorUtility.SetDirty(this);
+                    this.MarkDirty();
                 }
 
                 AccessControl = value;
@@ -195,13 +199,27 @@ namespace nikkyai.common
             get => EnforceACL;
             set
             {
+                if (EnforceACL != value)
+                {
+                    this.MarkDirty();
+                }
                 // Log($"Setting EnforceACL to {value} on {name}");
                 EnforceACL = value;
 
-                if (EnforceACL != value)
+            }
+        }
+
+        public GameObject EditorBoolAuthorizedDrivers
+        {
+            get => BoolAuthorizedDrivers;
+            set
+            {
+                if (BoolAuthorizedDrivers != value)
                 {
-                    EditorUtility.SetDirty(this);
+                    this.MarkDirty();
                 }
+                // Log($"Setting BoolAuthorizedDrivers to {value} on {name}");
+                BoolAuthorizedDrivers = value;
             }
         }
 

@@ -12,13 +12,24 @@ using VRC.SDKBase;
 namespace nikkyai.control.interact
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class Selector : BaseSyncedControl
+    public class Selector : ACLBaseSimple
     {
         [Header("Selector")] // header
-        [SerializeField, Min(0)] private int defaultIndex = 0;
-        [SerializeField] private bool clickOnActiveDisables = false;
-        [SerializeField, Min(0)] private int disabledIndex = 0;
-        [SerializeField] private int[] remapValues = { };
+        [SerializeField]
+        [Min(0)]
+        private int defaultIndex = 0;
+        
+        [SerializeField]
+        private bool clickOnActiveDisables = false;
+        
+        [SerializeField]
+        [Min(0)]
+        [Tooltip("index to select when deactivated by clickign on current active, requires clickOnActiveDisables")]
+        private int disabledIndex = 0;
+        
+        [SerializeField] 
+        [Tooltip("remaps index to value for indices that exist")]
+        private int[] remapValues = { };
         
         private int RemapIndex(int index)
         {
@@ -40,7 +51,7 @@ namespace nikkyai.control.interact
         
         protected override string LogPrefix => nameof(Selector);
 
-        //TODO: replace with Texel.InteractTrigger and handle ACL centrally
+        //TODO: replace with Texel.InteractTrigger and handle ACL centrally ???
         private SelectorCallback[] _interactCallbacks = { };
         private IntDriver[] _intDrivers = { };
         private BoolDriver[][] _boolDrivers = { };
@@ -53,7 +64,7 @@ namespace nikkyai.control.interact
         public override bool Synced
         {
             get => synced;
-            set
+            set 
             {
                 if (!IsAuthorized) return;
 

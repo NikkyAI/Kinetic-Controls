@@ -92,6 +92,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6407327650887759716}
+  - component: {fileID: 3728788448207521427}
   - component: {fileID: 2420608485615124300}
   - component: {fileID: 4521184542826410247}
   m_Layer: 0
@@ -127,6 +128,51 @@ Transform:
   - {fileID: 3079286835843900159}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3728788448207521427
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 663392412259414033}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c303de801ebee1f4bbb9aef77b834a36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lever: {fileID: 2420608485615124300}
+  axis: 1
+  outputRange: {x: 0, y: 1}
+  defaultValueNormalized: 0.25
+  defaultValue: 0.25
+  minRot: -45
+  maxRot: 45
+  enableValueSmoothing: 1
+  smoothingUpdateInterval: 2
+  smoothingTime: 0.1
+  smoothingMaxSpeed: 0.25
+  synced: 1
+  useContactsInVR: 1
+  desktopRaycastCollider: {fileID: 4734150448137629553}
+  addMidiListenerComponent: 0
+  midiEnabled: 0
+  midiChannel: 0
+  midiNumber: 0
+  midiInputRangeStart: 0
+  midiInputRangeEnd: 127
+  handle: {fileID: 4479377718471430192}
+  handleReset: {fileID: 1475837854308250703}
+  minLimitIndicator: {fileID: 6228676066904215457}
+  maxLimitIndicator: {fileID: 5188730784480289351}
+  targetIndicator: {fileID: 2920911935881990532}
+  valueIndicator: {fileID: 7760335545440514825}
+  floatTargetValueDrivers: {fileID: 6903509265478851976}
+  floatSmoothedValueDrivers: {fileID: 8079166119597443826}
+  boolAuthorizedDrivers: {fileID: 1256036725535158653}
+  enforceACL: 1
+  accessControl: {fileID: 0}
+  debugDesktopRaytrace: {fileID: 0}
+  debugLog: {fileID: 0}
 --- !u!114 &2420608485615124300
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -149,37 +195,41 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 4521184542826410247}
-  debugLog: {fileID: 0}
+  AuthorizedDrivers:
+  - {fileID: 2514329287037381643}
   enforceACL: 1
   accessControl: {fileID: 0}
   boolAuthorizedDrivers: {fileID: 1256036725535158653}
+  synced: 1
   outputRange: {x: 0, y: 1}
   defaultValueNormalized: 0.25
   defaultValue: 0.25
   floatTargetValueDrivers: {fileID: 6903509265478851976}
   floatSmoothedValueDrivers: {fileID: 8079166119597443826}
+  _targetValueFloatDrivers:
+  - {fileID: 1847705837685654843}
+  _smoothedValueFloatDrivers:
+  - {fileID: 1748331618915070403}
   enableValueSmoothing: 1
   smoothingUpdateInterval: 2
   smoothingTime: 0.1
   smoothingMaxSpeed: 0.25
-  synced: 1
-  midiEnabled: 1
+  midiEnabled: 0
   midiChannel: 0
   midiNumber: 0
   midiInputRangeStart: 0
   midiInputRangeEnd: 127
   handle: {fileID: 4479377718471430192}
-  handleReset: {fileID: 1475837854308250703}
+  handleResetDeprecated: {fileID: 1475837854308250703}
   debugDesktopRaytrace: {fileID: 0}
   axis: 2
-  minRot: -135
-  maxRot: 135
-  useContactsInVR: 1
-  desktopRaycastCollider: {fileID: 4734150448137629553}
-  minLimit: {fileID: 6228676066904215457}
-  maxLimit: {fileID: 5188730784480289351}
+  minRot: -45
+  maxRot: 45
+  minLimitIndicator: {fileID: 6228676066904215457}
+  maxLimitIndicator: {fileID: 5188730784480289351}
   valueIndicator: {fileID: 7760335545440514825}
   targetIndicator: {fileID: 2920911935881990532}
+  desktopRaycastCollider: {fileID: 4734150448137629553}
 --- !u!114 &4521184542826410247
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -293,6 +343,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 7595551255732140617}
   debugLog: {fileID: 0}
+  useRemapRange: 0
   remapRange: {x: 0, y: 1}
   sliderValue: 0
   textMeshPro: {fileID: 5587793819239269898}
@@ -737,6 +788,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 2790736900755569472}
   debugLog: {fileID: 0}
+  useRemapRange: 0
   remapRange: {x: 0, y: 1}
   sliderValue: 0
   textMeshPro: {fileID: 5636189378975253550}
@@ -1834,6 +1886,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 872149955391900921, guid: 2d6eaac507d15e74e9d0e3ee02dbd321, type: 3}
+      propertyPath: AuthorizedDrivers.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 872149955391900921, guid: 2d6eaac507d15e74e9d0e3ee02dbd321, type: 3}
+      propertyPath: AuthorizedDrivers.Array.data[0]
+      value: 
+      objectReference: {fileID: 8395752460530903376}
+    - target: {fileID: 872149955391900921, guid: 2d6eaac507d15e74e9d0e3ee02dbd321, type: 3}
       propertyPath: serializationData.SerializedFormat
       value: 2
       objectReference: {fileID: 0}
@@ -1878,6 +1938,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1426628406371371301, guid: 2d6eaac507d15e74e9d0e3ee02dbd321, type: 3}
   m_PrefabInstance: {fileID: 3132381639260622233}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8395752460530903376 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6916333722759046345, guid: 2d6eaac507d15e74e9d0e3ee02dbd321, type: 3}
+  m_PrefabInstance: {fileID: 3132381639260622233}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6574c7d4ef73a7a4c86c279bc7d86fdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &7304250507295358677
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1887,6 +1958,14 @@ PrefabInstance:
     m_TransformParent: {fileID: 6407327650887759716}
     m_Modifications:
     - target: {fileID: 6589922315512082149, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
+      propertyPath: pickup
+      value: 
+      objectReference: {fileID: 1447728873810334831}
+    - target: {fileID: 6589922315512082149, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
+      propertyPath: rigidBody
+      value: 
+      objectReference: {fileID: 8461562661684869495}
+    - target: {fileID: 6589922315512082149, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
       propertyPath: enforceACL
       value: 1
       objectReference: {fileID: 0}
@@ -1895,11 +1974,23 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1475837854308250703}
     - target: {fileID: 6589922315512082149, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
+      propertyPath: resetTransform
+      value: 
+      objectReference: {fileID: 1475837854308250703}
+    - target: {fileID: 6589922315512082149, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
       propertyPath: controlBehaviour.Array.size
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6589922315512082149, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
+      propertyPath: controlBehaviours.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6589922315512082149, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
       propertyPath: controlBehaviour.Array.data[0]
+      value: 
+      objectReference: {fileID: 2420608485615124300}
+    - target: {fileID: 6589922315512082149, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
+      propertyPath: controlBehaviours.Array.data[0]
       value: 
       objectReference: {fileID: 2420608485615124300}
     - target: {fileID: 7424952046004004672, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
@@ -1964,6 +2055,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8010311251155912900, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
   m_PrefabInstance: {fileID: 7304250507295358677}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1447728873810334831 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8163535867462609594, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
+  m_PrefabInstance: {fileID: 7304250507295358677}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1804438810, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &4479377718471430192 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6589922315512082149, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
@@ -1975,3 +2077,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a300161128295c4a99198c1728a3b56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!54 &8461562661684869495 stripped
+Rigidbody:
+  m_CorrespondingSourceObject: {fileID: 1166550276906223522, guid: b9fd20a3a21dde449bec04217433b14a, type: 3}
+  m_PrefabInstance: {fileID: 7304250507295358677}
+  m_PrefabAsset: {fileID: 0}

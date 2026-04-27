@@ -8,7 +8,7 @@ using VRC.SDKBase;
 namespace nikkyai.driver.converter
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class ModernUISelectorToBool : LoggerBase
+    public class ModernUISelectorToBool : LoggingSimple
     {
         [SerializeField] private Vector2Int selectedIdMatch = Vector2Int.up;
         [SerializeField] private GameObject boolDrivers;

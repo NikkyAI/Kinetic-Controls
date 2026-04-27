@@ -7,7 +7,7 @@ using UnityEngine.Serialization;
 namespace nikkyai.common
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public abstract class ColorDriver: LoggerBase
+    public abstract class ColorDriver: LoggingSimple
     {
         public abstract void OnUpdateColor(Color value);
 

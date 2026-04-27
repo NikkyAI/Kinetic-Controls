@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel;
 using JetBrains.Annotations;
 using nikkyai.common;
+using nikkyai.Editor;
 using nikkyai.extensions;
+using Texel;
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -10,8 +12,11 @@ using VRC.SDKBase;
 
 namespace nikkyai.control.interact
 {
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+    [RequireComponent(typeof(PreProcessEditorHelper))]
+#endif
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class ToggleButton : BaseSyncedControl
+    public class ToggleButton : ACLBaseSimple
     {
         [Header("Toggle")] // header
         [Tooltip(
@@ -35,10 +40,6 @@ namespace nikkyai.control.interact
         [Header("Drivers")] // header
         [SerializeField]
         private GameObject boolStateDrivers;
-
-        // [FormerlySerializedAs("isAuthorizedIndicator")] // 
-        // [SerializeField]
-        // private Transform boolAuthorizedDrivers;
 
         protected override string LogPrefix => nameof(ToggleButton);
 
@@ -72,21 +73,16 @@ namespace nikkyai.control.interact
 
                 Log($"SyncedState set to {_syncedState}");
 
-                for (var i = 0; i < _valueBoolDrivers.Length; i++)
+                for (var i = 0; i < valueBoolDrivers.Length; i++)
                 {
-                    _valueBoolDrivers[i].OnUpdateBool(_syncedState);
+                    valueBoolDrivers[i].OnUpdateBool(_syncedState);
                 }
             }
         }
 
-        // public const int EVENT_UPDATE = 0;
-        // public const int EVENT_COUNT = 1;
-        //
-        // protected override int EventCount => EVENT_COUNT;
-
-        // private BoolDriver[] _boolDrivers = { };
-
-        private BoolDriver[] _valueBoolDrivers = { };
+        [SerializeField]
+        [ReadOnly]
+        private BoolDriver[] valueBoolDrivers = { };
 
         void Start()
         {
@@ -99,23 +95,11 @@ namespace nikkyai.control.interact
             Log("Initializing");
             DisableInteractive = true;
 
-            // _valueBoolDrivers = _valueBoolDrivers.AddRange(gameObject.GetComponents<BoolDriver>());
-            if (Utilities.IsValid(boolStateDrivers))
-            {
-                Log($"loading bool drivers");
-                _valueBoolDrivers = _valueBoolDrivers.AddRange(
-                    boolStateDrivers.GetComponentsInChildren<BoolDriver>()
-                );
-            }
-            Log($"found {_valueBoolDrivers.Length} bool drivers");
-            
-
             Log($"setting default value {defaultValue}");
             SyncedState = defaultValue;
 
             OnDeserialization();
         }
-
         protected override void AccessChanged()
         {
             Log($"AccessChanged: {IsAuthorized}");
@@ -170,19 +154,9 @@ namespace nikkyai.control.interact
             // OnDeserialization();
         }
 
-        // private void _UpdateState()
-        // {
-        //     Log($"_UpdateState {_syncedState}");
-        //     
-        //     for (var i = 0; i < _valueBoolDrivers.Length; i++)
-        //     {
-        //         _valueBoolDrivers[i].OnUpdateBool(_syncedState);
-        //     }
-        // }
 
         public override void OnDeserialization()
         {
-            // _UpdateState();
         }
         
         public override void MidiNoteOn(int channel, int number, int velocity)
@@ -244,6 +218,30 @@ namespace nikkyai.control.interact
             // }
 
             this.MarkDirty();
+        }
+
+        private void FindBoolDrivers()
+        {
+            // _valueBoolDrivers = _valueBoolDrivers.AddRange(gameObject.GetComponents<BoolDriver>());
+            if (Utilities.IsValid(boolStateDrivers))
+            {
+                Log($"loading bool drivers");
+                valueBoolDrivers = valueBoolDrivers.AddRange(
+                    boolStateDrivers.GetComponentsInChildren<BoolDriver>()
+                );
+            }
+            Log($"found {valueBoolDrivers.Length} bool drivers");
+        }
+
+        public override bool OnPreprocess()
+        {
+            if (!base.OnPreprocess())
+            {
+                return false;
+            }
+            FindBoolDrivers();
+
+            return true;
         }
 #endif
     }

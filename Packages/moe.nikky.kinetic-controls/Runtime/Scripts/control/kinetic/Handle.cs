@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define HIDE_INSPECTOR
+
+using System;
 using System.Runtime.CompilerServices;
 using nikkyai.common;
 using nikkyai.extensions;
@@ -15,20 +17,41 @@ namespace nikkyai.control.kinetic
 {
     [RequireComponent(typeof(VRC_Pickup))]
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class Handle : ACLBase
+    public class Handle : ACLBaseReadonly
     {
-        // internal BaseKineticControl controlBehaviour;
-        private BaseKineticControl[] _controlBehaviour = { };
-        
-        [Header("Handle - Internals")]
-        [Tooltip("should be the same as targetIndicator or a child, handle will be reset to the given transform position / rotation on release")] //
-        // [SerializeField]
-        public Transform handleReset;
-        
-        protected override string LogPrefix => nameof(Handle);
+        [SerializeField]
+        [ReadOnly]
+        private BaseKineticControl[] controlBehaviours = { };
 
+        [FormerlySerializedAs("handleReset")]
+        [Header("Handle - Internals")]
+        [Tooltip(
+            "should be the same as targetIndicator or a child, " +
+            "handle will be reset to the given transform position / rotation on release")]
+        [SerializeField]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        public Transform resetTransform;
+
+        [SerializeField]
         [FieldChangeCallback(nameof(UseContactsInVR))]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
         public bool useContactsInVR = true;
+
+        [SerializeField]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        internal VRC_Pickup pickup;
+
+        [SerializeField]
+#if HIDE_INSPECTOR
+        [HideInInspector]
+#endif
+        private Rigidbody rigidBody;
 
         private ContactSenderProxy _leftSender, _rightSender;
 
@@ -36,6 +59,7 @@ namespace nikkyai.control.kinetic
         private bool _leftGrabbed = false, _rightGrabbed = false;
 
         private bool _pickupHasObjectSync = false;
+
         // public bool PickupHasObjectSync => _pickupHasObjectSync;
         private bool _inLeftTrigger = false, _inRightTrigger = false;
 
@@ -50,9 +74,9 @@ namespace nikkyai.control.kinetic
                 Log($"UseContactsInVR (vr: {IsInVR}) {useContactsInVR} -> {value}");
                 useContactsInVR = value;
 
-                if (!Utilities.IsValid(_pickup))
+                if (!Utilities.IsValid(pickup))
                 {
-                    _pickup = GetComponent<VRC_Pickup>();
+                    pickup = GetComponent<VRC_Pickup>();
                 }
 
                 if (IsInVR)
@@ -61,8 +85,8 @@ namespace nikkyai.control.kinetic
                     {
                         Log("disable pickup");
                         // _pickup.pickupable = false;
-                        _pickup.proximity = -1f;
-                        _pickup.InteractionText = "error";
+                        pickup.proximity = -1f;
+                        pickup.InteractionText = "error";
                         //todo: reference to contactsender to edit it
                         // _contactReceiver.contentTypes = DynamicsUsageFlags.Avatar;
                     }
@@ -70,8 +94,8 @@ namespace nikkyai.control.kinetic
                     {
                         Log("enable pickup");
                         //  _pickup.pickupable = true;
-                        _pickup.proximity = 1f;
-                        _pickup.InteractionText = "Grab to adjust";
+                        pickup.proximity = 1f;
+                        pickup.InteractionText = "Grab to adjust";
                         //todo: reference to contactsender to edit it
                         //_contactReceiver.contentTypes = DynamicsUsageFlags.Nothing;
                         OnLeftContactExit();
@@ -89,8 +113,8 @@ namespace nikkyai.control.kinetic
                 {
                     Log("enable pickup");
                     // _pickup.pickupable = true;
-                    _pickup.InteractionText = "Grab to adjust";
-                    _pickup.proximity = 5f; // add serialized field to configure range
+                    pickup.InteractionText = "Grab to adjust";
+                    pickup.proximity = 5f; // add serialized field to configure range
                     //todo: reference to contactsender to edit it
                     // _contactReceiver.contentTypes = DynamicsUsageFlags.Nothing;
                 }
@@ -98,16 +122,8 @@ namespace nikkyai.control.kinetic
                 AccessChanged();
             }
         }
-
-        // [FormerlySerializedAs("_pickup")] //
-        // [SerializeField]
-        private VRC_Pickup _pickup;
-        // [SerializeField]
-        private Rigidbody _rigidBody;
-        // private VRCContactReceiver _receiver;
-        // private VRC_Pickup _pickup;
-        // private VRCPlayerApi _localPlayer;
-        // private bool _isInVR;
+        
+        protected override string LogPrefix => nameof(Handle);
 
         void Start()
         {
@@ -118,32 +134,8 @@ namespace nikkyai.control.kinetic
         {
             base._Init();
 
-            Log("SetupPickup");
-            _pickup = GetComponent<VRC_Pickup>();
-            Log($"pickup is {_pickup}");
-            if (Utilities.IsValid(_pickup))
-            {
-                _pickupHasObjectSync = _pickup.GetComponent<VRCObjectSync>() != null ||
-                                       _pickup.GetComponent("MMMaellon.SmartObjectSync") != null;
-            }
-            else
-            {
-                LogError($"no pickup found");
-            }
-
-            Log("SetupPickupRigidbody");
-            if (Utilities.IsValid(_pickup))
-            {
-                _rigidBody = _pickup.GetComponent<Rigidbody>();
-                _rigidBody.useGravity = false;
-                _rigidBody.isKinematic = false;
-                _rigidBody.drag = 10f;
-                _rigidBody.angularDrag = 5f;
-            }
-            else
-            {
-                LogError($"no pickup found");
-            }
+            // SetupPickup();
+            // SetupPickupRigidbody();
 
             // _localPlayer = Networking.LocalPlayer;
             // if (Utilities.IsValid(Networking.LocalPlayer))
@@ -162,18 +154,12 @@ namespace nikkyai.control.kinetic
         protected override void AccessChanged()
         {
             // DisableInteractive = !isAuthorized || _isInVR;
-            if (!Utilities.IsValid(_pickup))
+            if (!Utilities.IsValid(pickup))
             {
-                _pickup = GetComponent<VRC_Pickup>();
+                pickup = GetComponent<VRC_Pickup>();
             }
 
-            _pickup.pickupable = IsAuthorized && (!IsInVR || useContactsInVR);
-        }
-
-        public void Register(BaseKineticControl baseKineticControl)
-        {
-            Log($"registering {baseKineticControl}");
-            _controlBehaviour = _controlBehaviour.AddUnique(baseKineticControl);
+            pickup.pickupable = IsAuthorized && (!IsInVR || useContactsInVR);
         }
 
         // private bool _isInteracting = false;
@@ -201,9 +187,9 @@ namespace nikkyai.control.kinetic
             Log("OnPickup");
             if (!IsAuthorized)
             {
-                _pickup.Drop();
+                pickup.Drop();
                 //resetting position
-                
+
                 ResetTransform();
                 // for (var i = 0; i < _controlBehaviour.Length; i++)
                 // {
@@ -225,7 +211,7 @@ namespace nikkyai.control.kinetic
             if (IsInVR && useContactsInVR)
             {
                 LogWarning("dropping pickup, using contacts instead");
-                _pickup.Drop();
+                pickup.Drop();
                 return;
             }
 
@@ -248,7 +234,7 @@ namespace nikkyai.control.kinetic
             //     return;
             // }
             _isHeldLocally = true;
-            foreach (var baseKineticControl in _controlBehaviour)
+            foreach (var baseKineticControl in controlBehaviours)
             {
                 baseKineticControl.OnMoveHandle(transform.position);
             }
@@ -272,13 +258,13 @@ namespace nikkyai.control.kinetic
 
             Log("_OnDrop");
 
-            foreach (var baseKineticControl in _controlBehaviour)
+            foreach (var baseKineticControl in controlBehaviours)
             {
                 baseKineticControl.TakeOwnership();
             }
 
             _isHeldLocally = false;
-            foreach (var baseKineticControl in _controlBehaviour)
+            foreach (var baseKineticControl in controlBehaviours)
             {
                 baseKineticControl.OnDropHandle();
                 // baseKineticControl.UpdateHandlePosition();
@@ -287,6 +273,7 @@ namespace nikkyai.control.kinetic
                     baseKineticControl.DebugDesktopRaytrace(false);
                 }
             }
+
             ResetTransform();
 
             // Log("handle released, resetting position");
@@ -296,7 +283,7 @@ namespace nikkyai.control.kinetic
         public void _OnFollowPickup()
         {
             if (!_isHeldLocally) return;
-            foreach (var baseKineticControl in _controlBehaviour)
+            foreach (var baseKineticControl in controlBehaviours)
             {
                 baseKineticControl.FollowPickup();
                 // if (baseKineticControl.Synced)
@@ -319,7 +306,7 @@ namespace nikkyai.control.kinetic
         {
             if (!IsInVR) return;
             if (!UseContactsInVR) return;
-            
+
             // Log($"InputGrab({value}, {args.handType})");
             if (value)
             {
@@ -402,11 +389,6 @@ namespace nikkyai.control.kinetic
             {
                 _leftSender = contactInfo.contactSender;
                 OnLeftContactEnter(contactInfo.contactSender);
-                // foreach (var cb in _controlBehaviour)
-                // {
-                //     // cb.LeftSender = contactInfo.contactSender;
-                //     cb.OnLeftContactEnter(contactInfo.contactSender);
-                // }
 
                 return;
             }
@@ -415,11 +397,6 @@ namespace nikkyai.control.kinetic
             {
                 _rightSender = contactInfo.contactSender;
                 OnRightContactEnter(contactInfo.contactSender);
-                // foreach (var cb in _controlBehaviour)
-                // {
-                //     // cb.RightSender = contactInfo.contactSender;
-                //     cb.OnRightContactEnter(contactInfo.contactSender);
-                // }
 
                 return;
             }
@@ -436,10 +413,6 @@ namespace nikkyai.control.kinetic
                 Log("Contact Exit Left");
                 _leftSender = null;
                 OnLeftContactExit();
-                // foreach (var cb in _controlBehaviour)
-                // {
-                //     cb.OnLeftContactExit();
-                // }
             }
 
 
@@ -448,10 +421,6 @@ namespace nikkyai.control.kinetic
                 Log("Contact Exit Right");
                 _rightSender = null;
                 OnRightContactExit();
-                // foreach (var cb in _controlBehaviour)
-                // {
-                //     cb.OnRightContactExit();
-                // }
             }
         }
 
@@ -553,7 +522,7 @@ namespace nikkyai.control.kinetic
                 Vector3 globalFingerPos = _inRightTrigger ? RightFingerPos() : LeftFingerPos();
                 // var localFingerPos = transform.InverseTransformPoint(globalFingerPos);
 
-                foreach (var baseKineticControl in _controlBehaviour)
+                foreach (var baseKineticControl in controlBehaviours)
                 {
                     baseKineticControl.OnMoveHandle(globalFingerPos);
                 }
@@ -603,7 +572,7 @@ namespace nikkyai.control.kinetic
                 }
             }
 
-            foreach (var baseKineticControl in _controlBehaviour)
+            foreach (var baseKineticControl in controlBehaviours)
             {
                 baseKineticControl.TakeOwnership();
             }
@@ -648,7 +617,7 @@ namespace nikkyai.control.kinetic
             }
 
             // TakeOwnership();
-            foreach (var baseKineticControl in _controlBehaviour)
+            foreach (var baseKineticControl in controlBehaviours)
             {
                 baseKineticControl.TakeOwnership();
             }
@@ -692,6 +661,7 @@ namespace nikkyai.control.kinetic
                 ResetTransform();
             }
         }
+
         public void ResetTransform()
         {
             FreezeRigidBody();
@@ -701,12 +671,12 @@ namespace nikkyai.control.kinetic
             //     RigidBody.velocity = Vector3.zero;
             // }
 
-            if (Utilities.IsValid(handleReset))
+            if (Utilities.IsValid(resetTransform))
             {
                 // parentConstraint.GlobalWeight = 1;
                 transform.SetPositionAndRotation(
-                    handleReset.position,
-                    handleReset.rotation
+                    resetTransform.position,
+                    resetTransform.rotation
                 );
             }
             else
@@ -726,14 +696,57 @@ namespace nikkyai.control.kinetic
 
         public void FreezeRigidBody()
         {
-            if (Utilities.IsValid(_rigidBody))
+            if (Utilities.IsValid(rigidBody))
             {
-                _rigidBody.velocity = Vector3.zero;
+                rigidBody.velocity = Vector3.zero;
             }
             else
             {
                 LogError($"Rigid body is not valid");
             }
         }
+
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+        public void Register(BaseKineticControl baseKineticControl)
+        {
+            Log($"registering {baseKineticControl}");
+            controlBehaviours = controlBehaviours.AddUnique(baseKineticControl);
+        }
+        
+
+        internal void SetupPickup()
+        {
+            Log("SetupPickup");
+            pickup = GetComponent<VRC_Pickup>();
+            Log($"pickup is {pickup}");
+            if (Utilities.IsValid(pickup))
+            {
+                _pickupHasObjectSync = pickup.GetComponent<VRCObjectSync>() != null ||
+                                       pickup.GetComponent("MMMaellon.SmartObjectSync") != null;
+            }
+            else
+            {
+                LogError($"no pickup found");
+            }
+        }
+
+        internal void SetupPickupRigidbody()
+        {
+            Log("SetupPickupRigidbody");
+            if (Utilities.IsValid(pickup))
+            {
+                rigidBody = pickup.GetComponent<Rigidbody>();
+                rigidBody.useGravity = false;
+                rigidBody.isKinematic = false;
+                rigidBody.drag = 10f;
+                rigidBody.angularDrag = 5f;
+                rigidBody.MarkDirty();
+            }
+            else
+            {
+                LogError("no pickup found");
+            }
+        }
+#endif
     }
 }

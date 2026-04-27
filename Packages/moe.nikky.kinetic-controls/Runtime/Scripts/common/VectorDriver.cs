@@ -7,7 +7,7 @@ using UnityEngine.Serialization;
 namespace nikkyai.common
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public abstract class VectorDriver: LoggerBase
+    public abstract class VectorDriver: LoggingSimple
     {
         // [FormerlySerializedAs("range")] // 
         // [SerializeField, InspectorName("remap range")]

@@ -7,7 +7,7 @@ using VRC.SDKBase;
 namespace nikkyai.control.headless
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class ColorController : LoggerBase
+    public class ColorController : LoggingSimple
     {
         // [SerializeField] private Material[] materials;
         // [FormerlySerializedAs("propertyNames")] //

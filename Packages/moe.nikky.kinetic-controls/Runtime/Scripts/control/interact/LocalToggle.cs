@@ -7,7 +7,7 @@ using VRC.SDKBase;
 namespace nikkyai.control.interact
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class LocalToggle : ACLBase
+    public class LocalToggle : ACLBaseSimple
     {
         [Tooltip(
             "The button will initialize into this value, toggle this for elements that should be enabled by default")]
