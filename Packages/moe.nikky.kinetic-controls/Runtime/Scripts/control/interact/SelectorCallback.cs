@@ -1,20 +1,27 @@
 ﻿using System;
 using nikkyai.common;
+using nikkyai.Editor;
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.Serialization;
+using VRC.SDKBase;
 
 namespace nikkyai.control.interact
 {
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+    [RequireComponent(typeof(PreProcessEditorHelper))]
+#endif
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class SelectorCallback : ACLBaseSimple
+    public class SelectorCallback : LoggingSimple
     {
         [Header("Selector Callback")] [SerializeField]
         public GameObject boolToggleDriver;
-        
-        [Header("Internals")]
-        public Selector selector;
-        public int index = -1;
+
+        [Header("Internals")] 
+        [SerializeField] [ReadOnly] public Selector selector;
+        [SerializeField] [ReadOnly] public int index = -1;
+
+        [SerializeField, ReadOnly] internal BoolDriver[] boolDrivers = { };
 
         protected override string LogPrefix => nameof(SelectorCallback);
 
@@ -29,9 +36,12 @@ namespace nikkyai.control.interact
             _EnsureInit();
         }
 
-        protected override void AccessChanged()
+        private bool IsAuthorized { get; set; } = false;
+
+        internal void OnAccessChanged(bool isAuthorized)
         {
-            DisableInteractive = !IsAuthorized;
+            IsAuthorized = isAuthorized;
+            DisableInteractive = !isAuthorized;
         }
 
         // private bool _isInteracting = false;
@@ -55,5 +65,16 @@ namespace nikkyai.control.interact
         //         // _UpdateHandlers(EVENT_RELEASE, index);
         //     }
         // }
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+        public override bool OnPreprocess()
+        {
+            if (Utilities.IsValid(boolToggleDriver))
+            {
+                boolDrivers = boolToggleDriver.GetComponentsInChildren<BoolDriver>();
+            }
+
+            return true;
+        }
+#endif
     }
 }

@@ -234,8 +234,8 @@ Material:
     - _EmissionEnabled: 0
     - _EnableGSAA: 1
     - _EnableParallax: 0
-    - _FlickerFrequency: 44
-    - _FlickerSpeed: 63
+    - _FlickerFrequency: 0
+    - _FlickerSpeed: 0
     - _FlickerStrengthMultiplier: 1.78
     - _FlipBumpY: 0
     - _ForceBoxProjection: 0

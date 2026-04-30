@@ -60,8 +60,8 @@ namespace nikkyai.Editor
             "whether network sync is enabled or not, this can be 'animated' at runtime to stage changes and apply them when syncing is enabled again")]
         public bool synced = true;
 
-        [Header("VR Support")] [Tooltip("switches between finger contacts and pickup")]
-        public bool useContactsInVR = true;
+        // [Header("VR Support")] [Tooltip("switches between finger contacts and pickup")]
+        // public bool useContactsInVR = true;
 
         [Header("Desktop Support")]
         [SerializeField]
@@ -85,7 +85,7 @@ namespace nikkyai.Editor
         [SerializeField, Range(0, 127)] public int midiInputRangeEnd = 127;
 
         [Header("Components - Handle")] [SerializeField]
-        public Handle handle;
+        public HandleAbstract handle;
 
         [SerializeField]
         [Tooltip("should be the same as targetIndicator or a child, " +
@@ -210,6 +210,7 @@ namespace nikkyai.Editor
             prevDefaultNormalized = defaultValueNormalized;
             prevDefault = defaultValue;
 
+            f.axis = axis;
             f.outputRange = outputRange;
             f.defaultValueNormalized = defaultValueNormalized;
             f.defaultValue = defaultValue;
@@ -230,27 +231,35 @@ namespace nikkyai.Editor
             f.midiInputRangeStart = midiInputRangeStart;
             f.midiInputRangeEnd = midiInputRangeEnd;
 
-            f.minLimitIndicator = minLimitIndicator;
-            f.maxLimitIndicator = maxLimitIndicator;
-            f.targetIndicator = targetIndicator;
-            f.valueIndicator = valueIndicator;
+            if (Utilities.IsValid(minLimitIndicator))
+                f.minLimitIndicator = minLimitIndicator;
+            if (Utilities.IsValid(maxLimitIndicator))
+                f.maxLimitIndicator = maxLimitIndicator;
+            if (Utilities.IsValid(targetIndicator))
+                f.targetIndicator = targetIndicator;
+            if (Utilities.IsValid(valueIndicator))
+                f.valueIndicator = valueIndicator;
             f._EnsureInit();
             f.UpdateIndicatorsInEditor();
 
-            f.handle = handle;
             // f.SetupHandle();
             if (Utilities.IsValid(handle))
             {
+                f.handle = handle;
                 handle.resetTransform = handleReset;
-                handle.UseContactsInVR = useContactsInVR;
+                // handle.UseContactsInVR = useContactsInVR;
                 handle.EditorACL = accessControl;
                 handle.EditorEnforceACL = enforceACL;
                 handle.EditorDebugLog = debugLog;
+                handle.EditorBoolAuthorizedDrivers = boolAuthorizedDrivers;
 
+                handle.RegisterRuntime(f);
+                handle.Setup();
                 handle._EnsureInit();
-                handle.Register(f);
-                handle.SetupPickup();
-                handle.SetupPickupRigidbody();
+                // handle.Register(f);
+                // handle.SetupPickup();
+
+                // handle.SetupPickupRigidbody();
                 handle.ResetTransform();
                 handle.MarkDirty();
             }
@@ -407,6 +416,7 @@ namespace nikkyai.Editor
         {
             var f = GetFader();
             fader = f;
+            axis = f.axis;
             outputRange = f.outputRange;
             defaultValueNormalized = f.defaultValueNormalized;
             defaultValue = f.defaultValue;
@@ -417,7 +427,7 @@ namespace nikkyai.Editor
             smoothingMaxSpeed = f.smoothingMaxSpeed;
 
             synced = f.synced;
-            useContactsInVR = f.handle.useContactsInVR;
+            // useContactsInVR = f.handle.useContactsInVR;
             desktopRaycastCollider = f.desktopRaycastCollider;
 
             midiEnabled = f.midiEnabled;
@@ -427,7 +437,11 @@ namespace nikkyai.Editor
             midiInputRangeEnd = f.midiInputRangeEnd;
 
             handle = f.handle;
-            handleReset = f.handle.resetTransform;
+            if (Utilities.IsValid(handle))
+            {
+                handleReset = handle.resetTransform;
+            }
+
             handleReset = f.handleResetDeprecated;
 
             minLimitIndicator = f.minLimitIndicator;
@@ -451,7 +465,13 @@ namespace nikkyai.Editor
 
         private void Awake()
         {
-            CopyFromFader();
+            var f = GetFader();
+            if (Utilities.IsValid(f))
+            {
+                fader = f;
+            }
+            initialized = true;
+
             ApplyValues(onValidate: true);
         }
 #endif

@@ -1,4 +1,4 @@
-﻿#define HIDE_INSPECTOR
+﻿//#define HIDE_INSPECTOR
 
 using nikkyai.Editor;
 using nikkyai.Kinetic_Controls;
@@ -23,7 +23,8 @@ namespace nikkyai.control.kinetic
 #if HIDE_INSPECTOR
         [HideInInspector]
 #endif
-        private Axis axis = Axis.Z;
+        internal Axis axis = Axis.Z;
+
         private Vector3 _axisVector = Vector3.zero;
 
         private Vector3 _forwardVector = Vector3.zero;
@@ -40,6 +41,7 @@ namespace nikkyai.control.kinetic
         [HideInInspector]
 #endif
         internal float minRot = -45;
+
         protected override float MinPosOrRot => minRot;
 
         [Range(-180, 180)]
@@ -48,6 +50,7 @@ namespace nikkyai.control.kinetic
         [HideInInspector]
 #endif
         internal float maxRot = 45;
+
         protected override float MaxPosOrRot => maxRot;
 
         [Header("Lever - Components")] //
@@ -59,7 +62,7 @@ namespace nikkyai.control.kinetic
 #endif
         internal Transform minLimitIndicator;
 
-        [FormerlySerializedAs("maxLimit")] 
+        [FormerlySerializedAs("maxLimit")]
         [SerializeField]
         [Tooltip("will be rotated to indicate the maximum possible lever range")]
 #if HIDE_INSPECTOR
@@ -73,6 +76,7 @@ namespace nikkyai.control.kinetic
         [HideInInspector]
 #endif
         internal Transform valueIndicator;
+
         private bool _valueIndicatorValid = false;
 
         [SerializeField]
@@ -81,6 +85,7 @@ namespace nikkyai.control.kinetic
         [HideInInspector]
 #endif
         internal Transform targetIndicator;
+
         private bool _targetIndicatorValid = false;
 
         [Header("Lever - Debug")] // header
@@ -143,7 +148,7 @@ namespace nikkyai.control.kinetic
             if (minLimitIndicator)
             {
                 minLimitIndicator.transform.localRotation = Quaternion.AngleAxis(minRot, _axisVector);
-                
+
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
                 minLimitIndicator.transform.MarkDirty();
 #endif
@@ -156,7 +161,7 @@ namespace nikkyai.control.kinetic
             if (maxLimitIndicator)
             {
                 maxLimitIndicator.transform.localRotation = Quaternion.AngleAxis(maxRot, _axisVector);
-                
+
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
                 maxLimitIndicator.transform.MarkDirty();
 #endif
@@ -235,48 +240,46 @@ namespace nikkyai.control.kinetic
 
         public override void FollowPickup()
         {
-            if (IsInVR)
+            Log("getting normalized value from pickup position");
+            // var relativePos = transform.InverseTransformPoint(Pickup.transform.position);
+            // SyncedValueNormalized = PosToNormalized(Pickup.transform.position);
+            OnMoveHandle(handle.transform.position);
+        }
+
+        public override void FollowDesktop()
+        {
+            if (!Utilities.IsValid(desktopRaycastCollider))
             {
-                Log("getting normalized value from pickup position");
-                // var relativePos = transform.InverseTransformPoint(Pickup.transform.position);
-                // SyncedValueNormalized = PosToNormalized(Pickup.transform.position);
-                OnMoveHandle(handle.transform.position);
+                LogError("desktop raycast collider is not valid");
+                return;
+            }
+
+            var trackingData = LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Head);
+            var ray = new Ray(
+                trackingData.position,
+                trackingData.rotation * Vector3.forward
+            );
+
+            if (desktopRaycastCollider.Raycast(ray, out var hit, 5))
+            {
+                var hitPosition = ray.GetPoint(hit.distance);
+                Log($"raycast hit, distance: {hit.distance}, point: {hitPosition}");
+                // var localHit = targetIndicator.parent.InverseTransformPoint(hitPosition);
+
+                if (Utilities.IsValid(debugDesktopRaytrace))
+                {
+                    debugDesktopRaytrace.gameObject.SetActive(true);
+                    debugDesktopRaytrace.position = hitPosition;
+                }
+
+                // SyncedValueNormalized = PosToNormalized(hitPosition);
+                OnMoveHandle(hitPosition);
             }
             else
             {
-                if (!Utilities.IsValid(desktopRaycastCollider))
+                if (Utilities.IsValid(debugDesktopRaytrace))
                 {
-                    LogError("desktop raycast collider is not valid");
-                    return;
-                }
-
-                var trackingData = LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Head);
-                var ray = new Ray(
-                    trackingData.position,
-                    trackingData.rotation * Vector3.forward
-                );
-
-                if (desktopRaycastCollider.Raycast(ray, out var hit, 5))
-                {
-                    var hitPosition = ray.GetPoint(hit.distance);
-                    Log($"raycast hit, distance: {hit.distance}, point: {hitPosition}");
-                    // var localHit = targetIndicator.parent.InverseTransformPoint(hitPosition);
-
-                    if (Utilities.IsValid(debugDesktopRaytrace))
-                    {
-                        debugDesktopRaytrace.gameObject.SetActive(true);
-                        debugDesktopRaytrace.position = hitPosition;
-                    }
-
-                    // SyncedValueNormalized = PosToNormalized(hitPosition);
-                    OnMoveHandle(hitPosition);
-                }
-                else
-                {
-                    if (Utilities.IsValid(debugDesktopRaytrace))
-                    {
-                        debugDesktopRaytrace.gameObject.SetActive(false);
-                    }
+                    debugDesktopRaytrace.gameObject.SetActive(false);
                 }
             }
         }
@@ -288,7 +291,14 @@ namespace nikkyai.control.kinetic
 
             targetIndicator.localRotation = Quaternion.AngleAxis(clampedRotEuler, _axisVector);
 
-            handle.ResetTransformIfNotManipulated();
+            if (Utilities.IsValid(handle))
+            {
+                handle.ResetTransformIfNotManipulated();
+            }
+            else
+            {
+                LogError("handle is not set");
+            }
             // if (!handle.PickupHasObjectSync && !handle.IsHeldLocally)
             // {
             //     handle.ResetTransform();

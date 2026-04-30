@@ -293,6 +293,7 @@ MonoBehaviour:
   midiNumber: 0
   midiMinVelocity: 127
   boolStateDrivers: {fileID: 5442873746603541337}
+  valueBoolDrivers: []
 --- !u!65 &7231121164485612933
 BoxCollider:
   m_ObjectHideFlags: 0

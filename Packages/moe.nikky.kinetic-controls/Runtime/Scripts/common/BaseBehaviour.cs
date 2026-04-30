@@ -72,6 +72,11 @@ namespace nikkyai.common
         
         private VRCPlayerApi _owner;
         private VRCPlayerApi _localPLayer;
+        protected VRCPlayerApi LocalPlayer => _localPLayer;
+        private bool _isInVR;
+        protected bool IsInVR => _isInVR;
+        private string _localName = "???";
+        protected string LocalPlayerName => _localName;
         
         public virtual void TakeOwnership()
         {
@@ -87,6 +92,10 @@ namespace nikkyai.common
             if (player == Networking.LocalPlayer)
             {
                 _localPLayer = player;
+                _localName = player.displayName;
+                _isInVR = player.IsUserInVR();
+                // _isInVR = true; // fakes being in VR during testing
+                
             }
         }
 

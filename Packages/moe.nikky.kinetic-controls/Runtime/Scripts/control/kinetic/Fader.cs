@@ -1,4 +1,4 @@
-#define HIDE_INSPECTOR
+//#define HIDE_INSPECTOR
 
 using nikkyai.Editor;
 using nikkyai.Kinetic_Controls;
@@ -13,7 +13,6 @@ using VRC.SDKBase;
 
 namespace nikkyai.control.kinetic
 {
-    
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
     [RequireComponent(typeof(FaderEditorHelper))]
 #endif
@@ -25,7 +24,8 @@ namespace nikkyai.control.kinetic
 #if HIDE_INSPECTOR
         [HideInInspector]
 #endif
-        private Axis axis = Axis.Y;
+        internal Axis axis = Axis.Y;
+
         private Vector3 _axisVector = Vector3.zero;
 
         [Header("Fader - Desktop")] // header
@@ -43,6 +43,7 @@ namespace nikkyai.control.kinetic
         [HideInInspector]
 #endif
         internal Transform minLimitIndicator;
+
         private float _minPos;
         protected override float MinPosOrRot => _minPos;
 
@@ -53,6 +54,7 @@ namespace nikkyai.control.kinetic
         [HideInInspector]
 #endif
         public Transform maxLimitIndicator;
+
         private float _maxPos;
         protected override float MaxPosOrRot => _maxPos;
 
@@ -62,6 +64,7 @@ namespace nikkyai.control.kinetic
         [HideInInspector]
 #endif
         internal Transform valueIndicator;
+
         private bool _valueIndicatorValid = false;
 
         [SerializeField]
@@ -70,6 +73,7 @@ namespace nikkyai.control.kinetic
         [HideInInspector]
 #endif
         internal Transform targetIndicator;
+
         private bool _targetIndicatorValid = false;
 
 
@@ -157,47 +161,45 @@ namespace nikkyai.control.kinetic
 
         public override void FollowPickup()
         {
-            if (IsInVR)
-            {
                 Log("getting normalized value from pickup position");
                 // SyncedValueNormalized = PosToNormalized(Pickup.transform.position);
                 OnMoveHandle(handle.transform.position);
+        }
+
+        public override void FollowDesktop()
+        {
+            if (!Utilities.IsValid(desktopRaycastCollider))
+            {
+                LogError("desktop raycast collider is not valid");
+                return;
+            }
+
+            var trackingData = LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Head);
+            var ray = new Ray(
+                trackingData.position,
+                trackingData.rotation * Vector3.forward
+            );
+
+            if (desktopRaycastCollider.Raycast(ray, out var hit, 5))
+            {
+                var hitPosition = ray.GetPoint(hit.distance);
+                Log($"raycast hit, distance: {hit.distance}, point: {hitPosition}");
+                // var localHit = transform.InverseTransformPoint(hitPosition);
+
+                if (Utilities.IsValid(debugDesktopRaytrace))
+                {
+                    debugDesktopRaytrace.gameObject.SetActive(true);
+                    debugDesktopRaytrace.position = hitPosition;
+                }
+
+                OnMoveHandle(hitPosition);
+                // SyncedValueNormalized = PosToNormalized(hitPosition);
             }
             else
             {
-                if (!Utilities.IsValid(desktopRaycastCollider))
+                if (Utilities.IsValid(debugDesktopRaytrace))
                 {
-                    LogError("desktop raycast collider is not valid");
-                    return;
-                }
-
-                var trackingData = LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Head);
-                var ray = new Ray(
-                    trackingData.position,
-                    trackingData.rotation * Vector3.forward
-                );
-
-                if (desktopRaycastCollider.Raycast(ray, out var hit, 5))
-                {
-                    var hitPosition = ray.GetPoint(hit.distance);
-                    Log($"raycast hit, distance: {hit.distance}, point: {hitPosition}");
-                    // var localHit = transform.InverseTransformPoint(hitPosition);
-
-                    if (Utilities.IsValid(debugDesktopRaytrace))
-                    {
-                        debugDesktopRaytrace.gameObject.SetActive(true);
-                        debugDesktopRaytrace.position = hitPosition;
-                    }
-
-                    OnMoveHandle(hitPosition);
-                    // SyncedValueNormalized = PosToNormalized(hitPosition);
-                }
-                else
-                {
-                    if (Utilities.IsValid(debugDesktopRaytrace))
-                    {
-                        debugDesktopRaytrace.gameObject.SetActive(false);
-                    }
+                    debugDesktopRaytrace.gameObject.SetActive(false);
                 }
             }
         }
@@ -210,7 +212,14 @@ namespace nikkyai.control.kinetic
             newPos[(int)axis] = clampedPos;
             targetIndicator.transform.localPosition = newPos;
 
-            handle.ResetTransformIfNotManipulated();
+            if (Utilities.IsValid(handle))
+            {
+                handle.ResetTransformIfNotManipulated();
+            }
+            else
+            {
+                LogError("handle is not set");
+            }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
             targetIndicator.transform.MarkDirty();
@@ -229,8 +238,8 @@ namespace nikkyai.control.kinetic
             valueIndicator.transform.MarkDirty();
 #endif
         }
-        
-        
+
+
 // #if UNITY_EDITOR && !COMPILER_UDONSHARP
 //         [ContextMenu("Setup Editor Helper Script")]
 //         private void SetupEditorHelper()

@@ -166,7 +166,7 @@ Material:
     - UI_IgnoreRealtimeGINote: 0
     - UI_InternalHeader: 0
     - UI_LightmappingDocs: 0
-    - UI_LightmappingHeader: 1
+    - UI_LightmappingHeader: 0
     - UI_MainHeader: 1
     - UI_MobileTweaks: 1
     - UI_NeonDocs: 0
@@ -177,7 +177,7 @@ Material:
     - UI_ParallaxScaleBasedOnAngleNote: 0
     - UI_RealtimeShadowSpecularOcclusionNote: 0
     - UI_ShadeVertexLightsNote: 0
-    - UI_ShadingModeHeader: 0
+    - UI_ShadingModeHeader: 1
     - UI_SpecOcclusionNote: 0
     - UI_VRCDocs: 0
     - UI_VRCFeaturesHeader: 0
@@ -256,7 +256,7 @@ Material:
     - _MetalChannel: 0
     - _Metallic: 0.8
     - _Mode: 0
-    - _NeonTubeCapDirection: 5
+    - _NeonTubeCapDirection: 2
     - _NeonTubeCapEnabled: 0
     - _NeonTubeCapOffset: 0
     - _NeonTubeCapSmoothness: 0.5

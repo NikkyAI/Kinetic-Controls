@@ -68,8 +68,8 @@ namespace nikkyai.Editor
             "whether network sync is enabled or not, this can be 'animated' at runtime to stage changes and apply them when syncing is enabled again")]
         public bool synced = true;
 
-        [Header("VR Support")] [Tooltip("switches between finger contacts and pickup")]
-        public bool useContactsInVR = true;
+        // [Header("VR Support")] [Tooltip("switches between finger contacts and pickup")]
+        // public bool useContactsInVR = true;
 
         [Header("Desktop Support")]
         [SerializeField]
@@ -93,7 +93,7 @@ namespace nikkyai.Editor
         [SerializeField, Range(0, 127)] public int midiInputRangeEnd = 127;
 
         [Header("Components - Handle")] [SerializeField]
-        public Handle handle;
+        public HandleAbstract handle;
 
         [SerializeField]
         [Tooltip("should be the same as targetIndicator or a child, " +
@@ -218,6 +218,7 @@ namespace nikkyai.Editor
             prevDefaultNormalized = defaultValueNormalized;
             prevDefault = defaultValue;
 
+            l.axis = axis;
             l.outputRange = outputRange;
             l.defaultValueNormalized = defaultValueNormalized;
             l.defaultValue = defaultValue;
@@ -240,33 +241,38 @@ namespace nikkyai.Editor
             l.midiInputRangeStart = midiInputRangeStart;
             l.midiInputRangeEnd = midiInputRangeEnd;
 
-            l.minLimitIndicator = minLimitIndicator;
-            l.maxLimitIndicator = maxLimitIndicator;
-            l.targetIndicator = targetIndicator;
-            l.valueIndicator = valueIndicator;
+            if(Utilities.IsValid(minLimitIndicator))
+                l.minLimitIndicator = minLimitIndicator;
+            if(Utilities.IsValid(maxLimitIndicator))
+                l.maxLimitIndicator = maxLimitIndicator;
+            if(Utilities.IsValid(targetIndicator))
+                l.targetIndicator = targetIndicator;
+            if(Utilities.IsValid(valueIndicator))
+                l.valueIndicator = valueIndicator;
             l._EnsureInit();
             l.UpdateIndicatorsInEditor();
             
-            l.handle = handle;
             // f.SetupHandle();
             if (Utilities.IsValid(handle))
             {
+                l.handle = handle;
                 handle.resetTransform = handleReset;
-                handle.UseContactsInVR = useContactsInVR;
+                // handle.UseContactsInVR = useContactsInVR;
                 handle.EditorACL = accessControl;
                 handle.EditorEnforceACL = enforceACL;
                 handle.EditorDebugLog = debugLog;
+                handle.EditorBoolAuthorizedDrivers = boolAuthorizedDrivers;
 
                 handle._EnsureInit();
-                handle.Register(l);
-                handle.SetupPickup();
-                handle.SetupPickupRigidbody();
+                handle.RegisterRuntime(l);
+                handle.Setup();
+                // handle.SetupPickupRigidbody();
                 handle.ResetTransform();
                 handle.MarkDirty();
             }
             else
             {
-                Debug.LogError($"missing handle in {name}", this);
+                Debug.LogError($"missing handle in {name} editor helper", gameObject);
             }
 
             l.floatTargetValueDrivers = floatTargetValueDrivers;
@@ -367,7 +373,8 @@ namespace nikkyai.Editor
         {
             if (!initialized)
             {
-                CopyFromLever();
+                Debug.LogWarning("not initalized yet");
+                return;
             }
             if (
                 initialized && ValidationCache.ShouldRunValidation(
@@ -423,6 +430,7 @@ namespace nikkyai.Editor
         {
             var l = GetLever();
             lever = l;
+            axis = l.axis;
             outputRange = l.outputRange;
             defaultValueNormalized = l.defaultValueNormalized;
             defaultValue = l.defaultValue;
@@ -435,7 +443,7 @@ namespace nikkyai.Editor
             smoothingMaxSpeed = l.smoothingMaxSpeed;
 
             synced = l.synced;
-            useContactsInVR = l.handle.useContactsInVR;
+            // useContactsInVR = l.handle.useContactsInVR;
             desktopRaycastCollider = l.desktopRaycastCollider;
 
             midiEnabled = l.midiEnabled;
@@ -445,7 +453,10 @@ namespace nikkyai.Editor
             midiInputRangeEnd = l.midiInputRangeEnd;
 
             handle = l.handle;
-            handleReset = l.handle.resetTransform;
+            if (Utilities.IsValid(handle))
+            {
+                handleReset = handle.resetTransform;
+            }
             handleReset = l.handleResetDeprecated;
 
             minLimitIndicator = l.minLimitIndicator;
@@ -472,7 +483,12 @@ namespace nikkyai.Editor
 
         private void Awake()
         {
-            CopyFromLever();
+            var l = GetLever();
+            if (Utilities.IsValid(l))
+            {
+                lever = l;
+            }
+            initialized = true;
             ApplyValues(onValidate: true);
         }
 #endif

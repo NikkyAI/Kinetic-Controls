@@ -1,12 +1,16 @@
 ﻿using nikkyai.common;
+using nikkyai.Editor;
 using nikkyai.extensions;
 using UnityEngine;
 using UnityEngine.Serialization;
 using VRC;
 using VRC.SDKBase;
 
-namespace nikkyai.driver
+namespace nikkyai.driver.transform
 {
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+    [RequireComponent(typeof(PreProcessEditorHelper))]
+#endif
     public class BoolScaleByPostfixDriver : BoolDriver
     {
         // [SerializeField] private Transform[] targetsOn = { };
@@ -17,8 +21,8 @@ namespace nikkyai.driver
         [SerializeField] private string onTargetsPostfix = "S2";
         // [SerializeField] private bool disableOtherChildren = true;
 
-        private Transform[] _targetsOn = { };
-        private Transform[] _targetsOff = { };
+        [SerializeField] [ReadOnly] private Transform[] targetsOn = { };
+        [SerializeField] [ReadOnly] private Transform[] targetsOff = { };
 
         protected override string LogPrefix => nameof(BoolScaleByPostfixDriver);
 
@@ -27,60 +31,15 @@ namespace nikkyai.driver
             _EnsureInit();
         }
 
-        protected override void _Init()
-        {
-            base._Init();
-
-            //TODO: find all 
-            if (!Utilities.IsValid(findInChildren))
-            {
-                findInChildren = transform;
-            }
-
-            // _targetsOff = new Transform[0] ;
-            // _targetsOn = new Transform[0] ;
-            for (int i = 0; i < findInChildren.childCount; i++)
-            {
-                var c = findInChildren.GetChild(i);
-                string objectName = c.gameObject.name;
-                Log($"found '{objectName}', comparing against {offTargetsPostfix} and {onTargetsPostfix}");
-                if (objectName.EndsWith(offTargetsPostfix))
-                {
-                    Log($"found off transform: {objectName}");
-                    _targetsOff = _targetsOff.Add(c);
-                }
-                else if (objectName.EndsWith(onTargetsPostfix))
-                {
-                    Log($"found on transform: {objectName}");
-                    _targetsOn = _targetsOn.Add(c);
-                } 
-            }
-            // var candidates = findInChildren.GetComponentsInChildren<Transform>();
-            // foreach (var candidate in candidates)
-            // {
-            //     string objectName = candidate.gameObject.name;
-            //     Log($"found {objectName}, comparing against {offTargetsPostfix} and {onTargetsPostfix}");
-            //     if (objectName.EndsWith(offTargetsPostfix))
-            //     {
-            //         Log($"found off transform: {objectName}");
-            //         _targetsOff.Add(candidate);
-            //     }
-            //     else if (objectName.EndsWith(onTargetsPostfix))
-            //     {
-            //         Log($"found on transform: {objectName}");
-            //         _targetsOn.Add(candidate);
-            //     } 
-            //     // else if (disableOtherChildren)
-            //     // {
-            //     //     candidate.localScale = Vector3.zero;
-            //     // }
-            // }
-        }
+        // protected override void _Init()
+        // {
+        //     base._Init();
+        // }
 
         public override void OnUpdateBool(bool value)
         {
             if (!enabled) return;
-            foreach (var obj in _targetsOn)
+            foreach (var obj in targetsOn)
             {
                 if (Utilities.IsValid(obj))
                 {
@@ -89,7 +48,7 @@ namespace nikkyai.driver
                 }
             }
 
-            foreach (var obj in _targetsOff)
+            foreach (var obj in targetsOff)
             {
                 if (Utilities.IsValid(obj))
                 {
@@ -107,6 +66,34 @@ namespace nikkyai.driver
             this.MarkDirty();
         }
 
+        public override bool OnPreprocess()
+        {
+            if (!Utilities.IsValid(findInChildren))
+            {
+                findInChildren = transform;
+            }
+
+            // _targetsOff = new Transform[0] ;
+            // _targetsOn = new Transform[0] ;
+            for (int i = 0; i < findInChildren.childCount; i++)
+            {
+                var c = findInChildren.GetChild(i);
+                string objectName = c.gameObject.name;
+                // Log($"found '{objectName}', comparing against {offTargetsPostfix} and {onTargetsPostfix}");
+                if (objectName.EndsWith(offTargetsPostfix))
+                {
+                    // Log($"found off transform: {objectName}");
+                    targetsOff = targetsOff.Add(c);
+                }
+                else if (objectName.EndsWith(onTargetsPostfix))
+                {
+                    // Log($"found on transform: {objectName}");
+                    targetsOn = targetsOn.Add(c);
+                }
+            }
+
+            return true;
+        }
 #endif
     }
 }

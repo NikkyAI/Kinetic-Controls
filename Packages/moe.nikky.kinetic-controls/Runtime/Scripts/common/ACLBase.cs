@@ -109,7 +109,7 @@ namespace nikkyai.common
                 //     localName = localPlayer.displayName;
                 // }
 
-                Log($"setting isAuthorized to {IsAuthorized} for {_localName}");
+                Log($"setting isAuthorized to {IsAuthorized} for {LocalPlayerName}");
 
                 Log($"updating {AuthorizedDrivers.Length} drivers");
                 for (var i = 0; i < AuthorizedDrivers.Length; i++)
@@ -120,22 +120,22 @@ namespace nikkyai.common
                 AccessChanged();
             }
         }
-
-        private VRCPlayerApi _localPlayer;
-        protected VRCPlayerApi LocalPlayer => _localPlayer;
-        private bool _isInVR;
-        protected bool IsInVR => _isInVR;
-        private string _localName = "???";
-        public override void OnPlayerJoined(VRCPlayerApi player)
-        {
-            base.OnPlayerJoined(player);
-            if (player == Networking.LocalPlayer)
-            {
-                _localPlayer = player;
-                _localName = player.displayName;
-                _isInVR = player.IsUserInVR();
-            }
-        }
+        //
+        // private VRCPlayerApi _localPlayer;
+        // protected VRCPlayerApi LocalPlayer => _localPlayer;
+        // private bool _isInVR;
+        // protected bool IsInVR => _isInVR;
+        // private string _localName = "???";
+        // public override void OnPlayerJoined(VRCPlayerApi player)
+        // {
+        //     base.OnPlayerJoined(player);
+        //     if (player == Networking.LocalPlayer)
+        //     {
+        //         _localPlayer = player;
+        //         _localName = player.displayName;
+        //         _isInVR = player.IsUserInVR();
+        //     }
+        // }
 
         protected abstract void AccessChanged();
 
@@ -144,9 +144,9 @@ namespace nikkyai.common
         {
             if (Utilities.IsValid(BoolAuthorizedDrivers))
             {
-                Log($"loading auth drivers");
+                // Log($"loading auth drivers");
                 AuthorizedDrivers = BoolAuthorizedDrivers.GetComponentsInChildren<BoolDriver>();
-                Log($"found {AuthorizedDrivers.Length} auth bool drivers");
+                // Log($"found {AuthorizedDrivers.Length} auth bool drivers");
             }
         }
 #endif

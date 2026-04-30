@@ -234,8 +234,8 @@ Material:
     - _EmissionEnabled: 0
     - _EnableGSAA: 1
     - _EnableParallax: 0
-    - _FlickerFrequency: 44
-    - _FlickerSpeed: 63
+    - _FlickerFrequency: 0
+    - _FlickerSpeed: 0
     - _FlickerStrengthMultiplier: 1.78
     - _FlipBumpY: 0
     - _ForceBoxProjection: 0
@@ -310,7 +310,7 @@ Material:
     - _GlassRimSmoothing: {r: 0.05, g: 0.7, b: 0, a: 0}
     - _GlassRimTint: {r: 1, g: 1, b: 1, a: 1}
     - _MetallicRemap: {r: 0, g: 1, b: 0, a: 1}
-    - _NeonColor: {r: 0, g: 0.15, b: 0.5, a: 1}
+    - _NeonColor: {r: 0, g: 0.14901961, b: 0.5019608, a: 1}
     - _NeonTubeCapColor: {r: 0.29999998, g: 0.29999998, b: 0.29999998, a: 1}
     - _NeonTubeColor: {r: 1, g: 1, b: 1, a: 1}
     - _SmoothnessRemap: {r: 0, g: 1, b: 0, a: 1}

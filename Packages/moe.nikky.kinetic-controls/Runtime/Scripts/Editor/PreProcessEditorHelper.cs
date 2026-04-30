@@ -10,7 +10,7 @@ namespace nikkyai.Editor
     public class PreProcessEditorHelper: MonoBehaviour, IEditorOnly, IPreprocessCallbackBehaviour {
         public bool OnPreprocess()
         {
-            Debug.Log($"Preprocess: is editor: {Application.isEditor}");
+            Debug.Log($"Starting Preprocess on {name} (is editor: {Application.isEditor})", this);
             var behaviours = GetComponents<BaseBehaviour>();
             foreach (var behaviour in behaviours)
             {

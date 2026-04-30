@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Runtime.CompilerServices;
 using nikkyai.common;
+using nikkyai.Editor;
 using Texel;
 using UdonSharp;
 using UnityEngine;
@@ -11,6 +12,9 @@ using VRC.SDKBase;
 
 namespace nikkyai.control.interact
 {
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+    [RequireComponent(typeof(PreProcessEditorHelper))]
+#endif
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class Selector : ACLBaseSimple
     {
@@ -18,19 +22,17 @@ namespace nikkyai.control.interact
         [SerializeField]
         [Min(0)]
         private int defaultIndex = 0;
-        
-        [SerializeField]
-        private bool clickOnActiveDisables = false;
-        
+
+        [SerializeField] private bool clickOnActiveDisables = false;
+
         [SerializeField]
         [Min(0)]
         [Tooltip("index to select when deactivated by clickign on current active, requires clickOnActiveDisables")]
         private int disabledIndex = 0;
-        
-        [SerializeField] 
-        [Tooltip("remaps index to value for indices that exist")]
+
+        [SerializeField] [Tooltip("remaps index to value for indices that exist")]
         private int[] remapValues = { };
-        
+
         private int RemapIndex(int index)
         {
             if (index >= 0 && index < remapValues.Length)
@@ -47,13 +49,17 @@ namespace nikkyai.control.interact
 
         [Header("Drivers")] // header
         [FormerlySerializedAs("intSelectedDrivers")]
-        [SerializeField] private GameObject intDrivers;
-        
+        [SerializeField]
+        private GameObject intDrivers;
+
         protected override string LogPrefix => nameof(Selector);
 
         //TODO: replace with Texel.InteractTrigger and handle ACL centrally ???
-        private SelectorCallback[] _interactCallbacks = { };
-        private IntDriver[] _intDrivers = { };
+
+        [SerializeField] [ReadOnly] private SelectorCallback[] interactCallbacks = { };
+
+        [SerializeField] [ReadOnly] private IntDriver[] intDriversReadonly = { };
+
         private BoolDriver[][] _boolDrivers = { };
         // private BoolDriver[] _isAuthorizedBoolDrivers = { };
 
@@ -64,7 +70,7 @@ namespace nikkyai.control.interact
         public override bool Synced
         {
             get => synced;
-            set 
+            set
             {
                 if (!IsAuthorized) return;
 
@@ -74,7 +80,7 @@ namespace nikkyai.control.interact
                 synced = value;
                 Log($"set index to {_syncedIndex} => {prevValue}");
                 _syncedIndex = prevValue;
-                
+
                 RequestSerialization();
             }
         }
@@ -99,15 +105,15 @@ namespace nikkyai.control.interact
                     //     remappedValue = remapValues[_syncedIndex];
                     // }
 
-                    
-                    for (var i = 0; i < _intDrivers.Length; i++)
+
+                    for (var i = 0; i < intDriversReadonly.Length; i++)
                     {
-                        _intDrivers[i].OnUpdateInt(remappedValue);
+                        intDriversReadonly[i].OnUpdateInt(remappedValue);
                     }
 
-                    if (_syncedIndex >= 0 && _syncedIndex < _boolDrivers.Length)
+                    if (_syncedIndex >= 0 && _syncedIndex < interactCallbacks.Length)
                     {
-                        var newDrivers = _boolDrivers[_syncedIndex];
+                        var newDrivers = interactCallbacks[_syncedIndex].boolDrivers;
                         if (newDrivers != null)
                         {
                             for (var i = 0; i < newDrivers.Length; i++)
@@ -116,10 +122,21 @@ namespace nikkyai.control.interact
                             }
                         }
                     }
+                    // if (_syncedIndex >= 0 && _syncedIndex < _boolDrivers.Length)
+                    // {
+                    //     var newDrivers = _boolDrivers[_syncedIndex];
+                    //     if (newDrivers != null)
+                    //     {
+                    //         for (var i = 0; i < newDrivers.Length; i++)
+                    //         {
+                    //             newDrivers[i].OnUpdateBool(true);
+                    //         }
+                    //     }
+                    // }
 
-                    if (oldIndex >= 0 && oldIndex < _boolDrivers.Length)
+                    if (oldIndex >= 0 && oldIndex < interactCallbacks.Length)
                     {
-                        var oldDrivers = _boolDrivers[oldIndex];
+                        var oldDrivers = interactCallbacks[oldIndex].boolDrivers;
                         if (oldDrivers != null)
                         {
                             for (var i = 0; i < oldDrivers.Length; i++)
@@ -128,6 +145,17 @@ namespace nikkyai.control.interact
                             }
                         }
                     }
+                    // if (oldIndex >= 0 && oldIndex < _boolDrivers.Length)
+                    // {
+                    //     var oldDrivers = _boolDrivers[oldIndex];
+                    //     if (oldDrivers != null)
+                    //     {
+                    //         for (var i = 0; i < oldDrivers.Length; i++)
+                    //         {
+                    //             oldDrivers[i].OnUpdateBool(false);
+                    //         }
+                    //     }
+                    // }
                 }
                 // if (synced)
                 // {
@@ -150,6 +178,7 @@ namespace nikkyai.control.interact
                 {
                     Networking.SetOwner(Networking.LocalPlayer, gameObject);
                 }
+
                 RequestSerialization();
             }
         }
@@ -178,52 +207,58 @@ namespace nikkyai.control.interact
         private void SetupComponents()
         {
             // Log("SetupComponents");
-            if (Utilities.IsValid(intDrivers))
+            // if (Utilities.IsValid(intDrivers))
+            // {
+            //     // Log("getting int drivers");
+            //     _intDrivers = intDrivers.GetComponentsInChildren<IntDriver>();
+            // }
+            // if (Utilities.IsValid(gameObject))
+            // {
+            //     // Log("getting interact callbacks");
+            //     _interactCallbacks = gameObject.GetComponentsInChildren<SelectorCallback>();
+            // }
+            // if (Utilities.IsValid(_interactCallbacks))
+            // {
+            //     Log($"Found {_interactCallbacks.Length} selector buttons");
+            // }
+            // else
+            // {
+            //     LogWarning("found no interact callbacks");
+            // }
+            _boolDrivers = new BoolDriver[interactCallbacks.Length][];
+
+            for (var i = 0; i < interactCallbacks.Length; i++)
             {
-                Log("getting int drivers");
-                _intDrivers = intDrivers.GetComponentsInChildren<IntDriver>();
-            }
-            if (Utilities.IsValid(gameObject))
-            {
-                Log("getting interact callbacks");
-                _interactCallbacks = gameObject.GetComponentsInChildren<SelectorCallback>();
-            }
-            if (Utilities.IsValid(_interactCallbacks))
-            {
-                Log($"Found {_interactCallbacks.Length} selector buttons");
-            }
-            else
-            {
-                LogWarning("found no interact callbacks");
-            }
-            _boolDrivers = new BoolDriver[_interactCallbacks.Length][];
-            
-            for (var i = 0; i < _interactCallbacks.Length; i++)
-            {
-                var callback = _interactCallbacks[i];
-                callback.selector = this;
-                callback.index = i;
-                var boolToggleDriver = callback.boolToggleDriver;
-                if (boolToggleDriver == null)
-                {
-                    boolToggleDriver = callback.gameObject;
-                }
-                _boolDrivers[i] = boolToggleDriver.GetComponentsInChildren<BoolDriver>();
-                Log($"Found {_boolDrivers[i].Length} bool drivers for selector button {i}");
-                foreach (var boolDriver in _boolDrivers[i])
+                var callback = interactCallbacks[i];
+                // callback.selector = this;
+                // callback.index = i;
+                // var boolToggleDriver = callback.boolToggleDriver;
+                // if (boolToggleDriver == null)
+                // {
+                //     boolToggleDriver = callback.gameObject;
+                // }
+
+                var boolDrivers = callback.boolDrivers;
+                _boolDrivers[i] = callback.boolDrivers;
+                // _boolDrivers[i] = boolToggleDriver.GetComponentsInChildren<BoolDriver>();
+                // Log($"Found {boolDrivers.Length} bool drivers for selector button {i}");
+                foreach (var boolDriver in boolDrivers)
                 {
                     boolDriver._EnsureInit();
                     boolDriver.OnUpdateBool(i == defaultIndex);
                 }
             }
+
             SyncedIndex = defaultIndex;
         }
 
+
         protected override void AccessChanged()
         {
-            for (var i = 0; i < _interactCallbacks.Length; i++)
+            for (var i = 0; i < interactCallbacks.Length; i++)
             {
-                _interactCallbacks[i].DisableInteractive = !IsAuthorized;
+                interactCallbacks[i].OnAccessChanged(IsAuthorized);
+                // interactCallbacks[i].DisableInteractive = !IsAuthorized;
             }
         }
 
@@ -234,7 +269,7 @@ namespace nikkyai.control.interact
 
             TakeOwnership();
             Log($"interact {index}");
-            if(clickOnActiveDisables && SyncedIndex == index)
+            if (clickOnActiveDisables && SyncedIndex == index)
             {
                 SyncedIndex = disabledIndex;
             }
@@ -257,13 +292,71 @@ namespace nikkyai.control.interact
         }
 
         // ReSharper disable InconsistentNaming
-        /*[NonSerialized]*/ private int prevDefault = -1;
-        /*[NonSerialized]*/ private int[] prevRemap = { };
-        /*[NonSerialized]*/ private AccessControl prevAccessControl;
-        /*[NonSerialized]*/ private bool prevEnforceACL;
-        /*[NonSerialized]*/ private DebugLog prevDebugLog;
-        /*[NonSerialized]*/ private bool childrenInitialized = false;
+        /*[NonSerialized]*/
+        private int prevDefault = -1;
+
+        /*[NonSerialized]*/
+        private int[] prevRemap = { };
+
+        /*[NonSerialized]*/
+        private AccessControl prevAccessControl;
+
+        /*[NonSerialized]*/
+        private bool prevEnforceACL;
+
+        /*[NonSerialized]*/
+        private DebugLog prevDebugLog;
+
+        /*[NonSerialized]*/
+        private bool childrenInitialized = false;
         // ReSharper restore InconsistentNaming
+
+
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+
+        private void FindDrivers()
+        {
+            if (Utilities.IsValid(intDrivers))
+            {
+                // Log("getting int drivers");
+                intDriversReadonly = intDrivers.GetComponentsInChildren<IntDriver>();
+            }
+        }
+
+        private void FindCallbacks()
+        {
+            if (Utilities.IsValid(gameObject))
+            {
+                // Log("getting interact callbacks");
+                interactCallbacks = gameObject.GetComponentsInChildren<SelectorCallback>();
+            }
+
+            if (Utilities.IsValid(interactCallbacks))
+            {
+                Log($"Found {interactCallbacks.Length} selector callbacks");
+            }
+            else
+            {
+                LogWarning("found no selector callbacks");
+            }
+
+            for (var i = 0; i < interactCallbacks.Length; i++)
+            {
+                var callback = interactCallbacks[i];
+                callback.selector = this;
+                callback.index = i;
+                callback.MarkDirty();
+            }
+        }
+
+        public override bool OnPreprocess()
+        {
+            FindDrivers();
+            FindCallbacks();
+            return true;
+        }
+#endif
+
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
 
         protected override void OnValidate()
@@ -298,8 +391,10 @@ namespace nikkyai.control.interact
         [ContextMenu("Apply Values")]
         public void ApplyValues()
         {
+            FindDrivers();
+            FindCallbacks();
             SetupComponents();
-            foreach (var intDriver in _intDrivers)
+            foreach (var intDriver in intDriversReadonly)
             {
                 // var remappedValue = defaultIndex;
                 // if (remapValues.Length - 1 >= defaultIndex)
@@ -329,9 +424,9 @@ namespace nikkyai.control.interact
             {
                 var interactCallback = children[index];
                 interactCallback.index = index;
-                interactCallback.EditorACL = AccessControl;
+                // interactCallback.EditorACL = AccessControl;
                 interactCallback.EditorDebugLog = DebugLog;
-                interactCallback.EditorEnforceACL = EnforceACL;
+                // interactCallback.EditorEnforceACL = EnforceACL;
                 interactCallback.MarkDirty();
             }
         }

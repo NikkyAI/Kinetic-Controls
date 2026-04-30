@@ -1,8 +1,9 @@
-﻿#define HIDE_INSPECTOR
+﻿// #define HIDE_INSPECTOR
 
 using System;
 using System.Runtime.CompilerServices;
 using nikkyai.common;
+using nikkyai.Editor;
 using nikkyai.extensions;
 using UdonSharp;
 using UnityEngine;
@@ -10,18 +11,17 @@ using UnityEngine.Serialization;
 using VRC;
 using VRC.Dynamics;
 using VRC.SDK3.Components;
+using VRC.SDK3.Dynamics.Contact.Components;
 using VRC.SDKBase;
 using VRC.Udon.Common;
 
 namespace nikkyai.control.kinetic
 {
-    [RequireComponent(typeof(VRC_Pickup))]
+    // [RequireComponent(typeof(VRC_Pickup))]
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class Handle : ACLBaseReadonly
     {
-        [SerializeField]
-        [ReadOnly]
-        private BaseKineticControl[] controlBehaviours = { };
+        [SerializeField] [ReadOnly] private BaseKineticControl[] controlBehaviours = { };
 
         [FormerlySerializedAs("handleReset")]
         [Header("Handle - Internals")]
@@ -122,7 +122,7 @@ namespace nikkyai.control.kinetic
                 AccessChanged();
             }
         }
-        
+
         protected override string LogPrefix => nameof(Handle);
 
         void Start()
@@ -159,7 +159,7 @@ namespace nikkyai.control.kinetic
                 pickup = GetComponent<VRC_Pickup>();
             }
 
-            pickup.pickupable = IsAuthorized && (!IsInVR || useContactsInVR);
+            pickup.pickupable = IsAuthorized && (!IsInVR || (useContactsInVR && IsInVR));
         }
 
         // private bool _isInteracting = false;
@@ -712,7 +712,7 @@ namespace nikkyai.control.kinetic
             Log($"registering {baseKineticControl}");
             controlBehaviours = controlBehaviours.AddUnique(baseKineticControl);
         }
-        
+
 
         internal void SetupPickup()
         {
@@ -746,6 +746,60 @@ namespace nikkyai.control.kinetic
             {
                 LogError("no pickup found");
             }
+        }
+
+        [ContextMenu("migrate to contact only")]
+        private void ReplaceWithContactHandle()
+        {
+            var handle = gameObject.AddComponent<HandleContact>();
+
+            ReplaceWith(handle);
+            
+            var pickup = GetComponent<VRC_Pickup>();
+            DestroyImmediate(pickup);
+            DestroyImmediate(this);
+        }
+
+        [ContextMenu("migrate to pickup only")]
+        private void ReplaceWithPickupHandle()
+        {
+            var handle = gameObject.AddComponent<HandlePickup>();
+
+            ReplaceWith(handle);
+            
+            
+            
+            var receiver = GetComponent<VRCContactReceiver>();
+            DestroyImmediate(receiver);
+
+            DestroyImmediate(this);
+        }
+
+        private void ReplaceWith(HandleAbstract handle)
+        {
+            handle.resetTransform = resetTransform;
+            handle.EditorACL = EditorACL;
+            handle.EditorDebugLog = EditorDebugLog;
+            handle.EditorBoolAuthorizedDrivers = EditorBoolAuthorizedDrivers;
+            
+            foreach (var baseKineticControl in controlBehaviours)
+            {
+                handle.RegisterRuntime(baseKineticControl);
+                baseKineticControl.handle = handle;
+                var helperFader = baseKineticControl.GetComponent<FaderEditorHelper>();
+                if (Utilities.IsValid(helperFader))
+                {
+                    helperFader.handle = handle;
+                }
+
+                var helperLever = baseKineticControl.GetComponent<LeverEditorHelper>();
+                if (Utilities.IsValid(helperLever))
+                {
+                    helperLever.handle = handle;
+                }
+            }
+
+            handle.Setup();
         }
 #endif
     }

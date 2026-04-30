@@ -80,7 +80,7 @@ namespace nikkyai.control.kinetic
 #if HIDE_INSPECTOR
         [HideInInspector]
 #endif
-        internal Handle handle;
+        internal HandleAbstract handle;
 
         [FormerlySerializedAs("handleReset")]
         [SerializeField]
@@ -124,6 +124,10 @@ namespace nikkyai.control.kinetic
         {
             base._Init();
             Log("Base KineticControl Init");
+            if (Utilities.IsValid(handle))
+            {
+                handle.RegisterRuntime(this);
+            }
             // SetupHandle();
             // SetupPickup();
             // SetupPickupRigidBody();
@@ -141,6 +145,7 @@ namespace nikkyai.control.kinetic
         }
 
         public abstract void FollowPickup();
+        public abstract void FollowDesktop();
 
         protected abstract float PosToNormalized(Vector3 relativePos);
 

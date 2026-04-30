@@ -160,39 +160,36 @@ namespace nikkyai.control
 
         internal void FindDrivers()
         {
-            Log($"Searching for float value drivers in {floatSmoothedValueDrivers}");
             if (Utilities.IsValid(floatSmoothedValueDrivers))
             {
-                Log($"searching for drivers in {floatSmoothedValueDrivers.gameObject}");
                 _smoothedValueFloatDrivers =
                     floatSmoothedValueDrivers.gameObject.GetComponentsInChildren<FloatDriver>();
-                Log($"found {_smoothedValueFloatDrivers.Length} drivers for value");
+                // Log($"found {_smoothedValueFloatDrivers.Length} drivers for value");
             }
             else
             {
                 LogError("missing object for float value drivers");
             }
 
-            Log($"Searching for float target drivers in {floatTargetValueDrivers}");
             if (Utilities.IsValid(floatTargetValueDrivers))
             {
                 _targetValueFloatDrivers = floatTargetValueDrivers.GetComponentsInChildren<FloatDriver>();
-                Log($"found {_targetValueFloatDrivers.Length} drivers for target");
+                // Log($"found {_targetValueFloatDrivers.Length} drivers for target");
             }
             else
             {
                 LogError("missing object for float target drivers");
             }
 
-            if (_smoothedValueFloatDrivers != null)
-            {
-                Log($"found {_smoothedValueFloatDrivers.Length} drivers for value");
-            }
-
-            if (_targetValueFloatDrivers != null)
-            {
-                Log($"found {_targetValueFloatDrivers.Length} drivers for target");
-            }
+            // if (_smoothedValueFloatDrivers != null)
+            // {
+            //     Log($"found {_smoothedValueFloatDrivers.Length} drivers for value");
+            // }
+            //
+            // if (_targetValueFloatDrivers != null)
+            // {
+            //     Log($"found {_targetValueFloatDrivers.Length} drivers for target");
+            // }
         }
 
         private void SetupSmoothedControlValues()
