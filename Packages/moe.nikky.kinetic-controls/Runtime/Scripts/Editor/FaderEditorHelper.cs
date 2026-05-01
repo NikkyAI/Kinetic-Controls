@@ -1,4 +1,5 @@
 using System;
+using nikkyai.attribute;
 using nikkyai.common;
 using nikkyai.control.kinetic;
 using nikkyai.Kinetic_Controls;

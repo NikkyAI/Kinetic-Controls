@@ -56,6 +56,8 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 1804218991238802435}
   debugLog: {fileID: 0}
+  useRemap: 0
+  remapValues: []
   selectionId: 0
   textMeshPro: {fileID: 349550839313980267}
   valueDisplayFormat: 00

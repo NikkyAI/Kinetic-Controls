@@ -30,8 +30,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 179969457077047469}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.000000014901159, w: 1}
-  m_LocalPosition: {x: 0.000000059604645, y: -0.000000014901161, z: 0.00000011920929}
+  m_LocalRotation: {x: 0.5, y: -0.5, z: 0.5, w: 0.5}
+  m_LocalPosition: {x: 0, y: -0.0625, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -69,10 +69,11 @@ MonoBehaviour:
   _udonSharpBackingUdonBehaviour: {fileID: 4641261429574173403}
   enforceACL: 1
   accessControl: {fileID: 0}
-  boolAuthorizedDrivers: {fileID: 0}
-  authorizedDrivers: []
+  boolAuthorizedDrivers: {fileID: 3911515958639126656, guid: d36e8c2d2dc016248982e35a3dff93a2, type: 3}
+  authorizedDrivers:
+  - {fileID: 4831246925588940862, guid: d36e8c2d2dc016248982e35a3dff93a2, type: 3}
   controlBehaviours: []
-  resetTransform: {fileID: 0}
+  resetTransform: {fileID: 8217836330374362317, guid: d36e8c2d2dc016248982e35a3dff93a2, type: 3}
   rigidBody: {fileID: 209400070687717721}
   receiver: {fileID: 3262406880628841506}
 --- !u!65 &8449925299379823053

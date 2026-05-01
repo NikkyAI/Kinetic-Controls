@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using nikkyai.common;
+using nikkyai.attribute;
 using nikkyai.Editor;
 using nikkyai.extensions;
 using UdonSharp;
@@ -35,7 +36,7 @@ namespace nikkyai.control.interact
         protected override string LogPrefix => nameof(TriggerButton);
     
         [SerializeField] 
-        [ReadOnly]
+        [attribute.ReadOnly]
         private TriggerDriver[] triggerDriversReadonly = { };
 
         void Start()

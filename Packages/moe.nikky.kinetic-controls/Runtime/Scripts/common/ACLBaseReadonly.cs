@@ -2,7 +2,7 @@
 
 using System;
 using System.ComponentModel;
-using nikkyai.Editor;
+using nikkyai.attribute;
 using Texel;
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +16,7 @@ namespace nikkyai.common
     public abstract class ACLBaseReadonly : ACLBase
     {
         [Header("Logging")] // header
-        [ReadOnly]
+        [attribute.ReadOnly]
         private DebugLog debugLog;
 
         protected override DebugLog DebugLog
@@ -27,7 +27,7 @@ namespace nikkyai.common
 
         [Header("Access Control")] // header
         [SerializeField]
-        [ReadOnly]
+        [attribute.ReadOnly]
         private bool enforceACL = true;
 
         protected override bool EnforceACL
@@ -38,7 +38,7 @@ namespace nikkyai.common
 
         [Tooltip("ACL used to check who can use the toggle")] //
         [SerializeField]
-        [ReadOnly]
+        [attribute.ReadOnly]
         private AccessControl accessControl;
 
         protected override AccessControl AccessControl
@@ -49,7 +49,7 @@ namespace nikkyai.common
 
         [SerializeField] //
         [Tooltip("object containing bool drivers, drivers will be updated with current auth status")]
-        [ReadOnly]
+        [attribute.ReadOnly]
         private GameObject boolAuthorizedDrivers;
 
         protected override GameObject BoolAuthorizedDrivers
@@ -59,7 +59,7 @@ namespace nikkyai.common
         }
         
         [SerializeField] 
-        [ReadOnly]
+        [attribute.ReadOnly]
         [NonReorderable]
         protected BoolDriver[] authorizedDrivers = { };
 

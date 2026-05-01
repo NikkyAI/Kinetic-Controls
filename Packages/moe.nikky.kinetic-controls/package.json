@@ -1,7 +1,7 @@
 {
   "name": "moe.nikky.kinetic-controls",
   "displayName": "Kinetic Controls",
-  "version": "0.1.0-dev.5",
+  "version": "0.1.0-dev.6",
   "description": "Faders, Levers and other controls that can be moved with your hands",
   "changelogUrl": "https://github.com/NikkyAI/Kinetic-Controls/releases",
   "gitDependencies": {},

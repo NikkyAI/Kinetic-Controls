@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using nikkyai.attribute;
 using nikkyai.common;
 using nikkyai.Editor;
 using Texel;

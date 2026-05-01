@@ -21,26 +21,26 @@ namespace nikkyai.control
         [Header("Base Smoothed Control")]
         [SerializeField, UdonSynced] //
 #if READONLY
-        [ReadOnly]
+        [attribute.ReadOnly]
 #endif
         internal bool synced = true;
 
         [SerializeField]
         [Tooltip("The range of values that this behaviour will send to any attached float drivers")]
 #if READONLY
-        [ReadOnly]
+        [attribute.ReadOnly]
 #endif
         internal Vector2 outputRange = new Vector2(0, 1);
 
         [SerializeField]
 #if READONLY
-        [ReadOnly]
+        [attribute.ReadOnly]
 #endif
         [Range(0, 1)]
         internal float defaultValueNormalized = 0.25f;
         [SerializeField]
 #if READONLY
-        [ReadOnly]
+        [attribute.ReadOnly]
 #endif
         internal float defaultValue = 0;
 
@@ -54,20 +54,20 @@ namespace nikkyai.control
         [Header("Base Smoothed Control - Drivers")] // header
         [SerializeField]
 #if READONLY
-        [ReadOnly]
+        [attribute.ReadOnly]
 #endif
         [Obsolete]
         internal GameObject floatTargetValueDrivers;
 
         [SerializeField]
 #if READONLY
-        [ReadOnly]
+        [attribute.ReadOnly]
 #endif
         [Obsolete]
         internal GameObject floatSmoothedValueDrivers;
 
-        [SerializeField, ReadOnly, NonReorderable] public FloatDriver[] targetValueFloatDrivers = Array.Empty<FloatDriver>();
-        [SerializeField, ReadOnly, NonReorderable] internal FloatDriver[] smoothedValueFloatDrivers = Array.Empty<FloatDriver>();
+        [SerializeField, attribute.ReadOnly, NonReorderable] public FloatDriver[] targetValueFloatDrivers = Array.Empty<FloatDriver>();
+        [SerializeField, attribute.ReadOnly, NonReorderable] internal FloatDriver[] smoothedValueFloatDrivers = Array.Empty<FloatDriver>();
 
         #endregion
 
@@ -78,7 +78,7 @@ namespace nikkyai.control
              "smoothes out value updates over time, may impact CPU frametimes AND cause more updates to FloatDrivers")]
         [SerializeField]
 #if READONLY
-        [ReadOnly]
+        [attribute.ReadOnly]
 #endif
         internal bool enableValueSmoothing = true;
 
@@ -92,7 +92,7 @@ namespace nikkyai.control
                  "higher number == less load, but more choppy smoothing")]
         [SerializeField]
 #if READONLY
-        [ReadOnly]
+        [attribute.ReadOnly]
 #endif
         [Range(1, 10)]
         internal int smoothingUpdateInterval = 3;
@@ -116,7 +116,7 @@ namespace nikkyai.control
         [Tooltip("higher values -> faster synchronization with the target maxSpeed")]
         [SerializeField]
 #if READONLY
-        [ReadOnly]
+        [attribute.ReadOnly]
 #endif
         [Range(0f, 2.5f)]
         public float smoothingTime = 0.1f;
@@ -124,7 +124,7 @@ namespace nikkyai.control
         [Tooltip("Maximum speed that smoothing can move at (see Unity Mathf.SmoothDamp maxSpeed parameter)")]
         [SerializeField]
 #if READONLY
-        [ReadOnly]
+        [attribute.ReadOnly]
 #endif
         [Range(0f, 1f)]
         public float smoothingMaxSpeed = 0.25f;
@@ -133,7 +133,7 @@ namespace nikkyai.control
         protected float smoothedCurrentNormalized;
 
         [SerializeField]
-        [ReadOnly]
+        [attribute.ReadOnly]
         internal bool isCyclic = false;
 
         private const float Epsilon = 0.005f;

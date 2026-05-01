@@ -1,4 +1,5 @@
-﻿using nikkyai.common;
+﻿using nikkyai.attribute;
+using nikkyai.common;
 using nikkyai.Editor;
 using nikkyai.extensions;
 using UnityEngine;

@@ -550,6 +550,8 @@ namespace nikkyai.Editor
 
         private void Awake()
         {
+            // var status = PrefabUtility.GetPrefabAssetType(gameObject);
+            
             // var l = GetLever();
             // if (Utilities.IsValid(l))
             // {

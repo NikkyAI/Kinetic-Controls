@@ -1,8 +1,10 @@
 #define READONLY
 
+using nikkyai.attribute;
 using nikkyai.Editor;
 using nikkyai.Kinetic_Controls;
 using UdonSharp;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 using VRC;

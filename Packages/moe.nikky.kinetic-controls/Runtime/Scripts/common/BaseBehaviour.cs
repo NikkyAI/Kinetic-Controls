@@ -95,7 +95,6 @@ namespace nikkyai.common
                 _localName = player.displayName;
                 _isInVR = player.IsUserInVR();
                 // _isInVR = true; // fakes being in VR during testing
-                
             }
         }
 

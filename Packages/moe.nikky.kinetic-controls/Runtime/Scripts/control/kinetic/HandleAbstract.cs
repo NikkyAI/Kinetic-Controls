@@ -1,4 +1,5 @@
-﻿using nikkyai.common;
+﻿using nikkyai.attribute;
+using nikkyai.common;
 using nikkyai.extensions;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -173,6 +174,7 @@ namespace nikkyai.control.kinetic
         {
             if (Utilities.IsValid(rigidBody))
             {
+                if (rigidBody.isKinematic) return;
                 rigidBody.velocity = Vector3.zero;
                 rigidBody.maxAngularVelocity = 0;
                 rigidBody.angularVelocity = Vector3.zero;

@@ -1,6 +1,7 @@
 ﻿#define READONLY
 
 using System;
+using nikkyai.attribute;
 using nikkyai.extensions;
 using Texel;
 using UnityEditor;

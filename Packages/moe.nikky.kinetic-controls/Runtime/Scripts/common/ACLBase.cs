@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using nikkyai.Editor;
 using Texel;
 using UnityEditor;
 using UnityEngine;

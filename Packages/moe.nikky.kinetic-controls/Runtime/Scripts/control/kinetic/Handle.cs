@@ -2,6 +2,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using nikkyai.attribute;
 using nikkyai.common;
 using nikkyai.Editor;
 using nikkyai.extensions;

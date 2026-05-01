@@ -10,7 +10,6 @@
     "com.texelsaur.misc",
     "Unity.TextMeshPro",
     "Unity.Postprocessing.Runtime",
-    "VRC.Udon.Serialization.OdinSerializer",
     "AudioLink"
   ],
   "includePlatforms": [],

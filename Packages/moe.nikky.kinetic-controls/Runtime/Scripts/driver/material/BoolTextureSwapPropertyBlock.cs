@@ -8,9 +8,9 @@ namespace nikkyai.driver.material
 {
     public class BoolTextureSwapPropertyBlock : BoolDriver
     {
+        [Header("Property Block")] // 
         [SerializeField] private Renderer materialSource;
-        // [SerializeField] private Material[] materials = { };
-        // [SerializeField] private MeshRenderer[] renderers = { };
+        [SerializeField] private int materialIndex = 0;
         [FormerlySerializedAs("property")] [SerializeField] private string propertyName;
         [SerializeField] private RenderTexture disabledTexture;
         [SerializeField] private RenderTexture enabledTexture;
@@ -41,28 +41,29 @@ namespace nikkyai.driver.material
             if (_propertyBlock == null) _propertyBlock = new MaterialPropertyBlock();
             if (_propertyId == 0) _propertyId = VRCShader.PropertyToID(propertyName);
 
-            materialSource.GetPropertyBlock(_propertyBlock);
+            materialSource.GetPropertyBlock(_propertyBlock, materialIndex);
             if (value)
             {
                 Log($"applying texture {enabledTexture}");
-                // for (var i = 0; i < _materials.Length; i++)
-                // {
-                //     _materials[i].SetTexture(_propertyId, enabledTexture);
-                // }
                 _propertyBlock.SetTexture(_propertyId, enabledTexture, RenderTextureSubElement.Color);
                 // _propertyBlock.SetTexture(_propertyId, enabledTexture);
             }
             else
             {
                 Log($"applying texture {disabledTexture}");
-                // for (var i = 0; i < _materials.Length; i++)
-                // {
-                //     _materials[i].SetTexture(_propertyId, disabledTexture);
-                // }
                 _propertyBlock.SetTexture(_propertyId, disabledTexture, RenderTextureSubElement.Color);
             }
-            materialSource.SetPropertyBlock(_propertyBlock);
+            materialSource.SetPropertyBlock(_propertyBlock, materialIndex);
         
         }
+
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+        public override void ApplyBoolValue(bool value)
+        {
+            base.ApplyBoolValue(value);
+            Log($"applying new value: {value}");
+            OnUpdateBool(value);
+        }
+#endif
     }
 }

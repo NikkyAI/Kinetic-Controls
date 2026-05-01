@@ -7,7 +7,11 @@ namespace nikkyai.driver.material
 {
     public class ColorPropertyBlockDriver : ColorDriver
     {
-        [SerializeField] private Renderer materialSource;
+        [Header("Property Block")] //
+        [SerializeField]
+        private Renderer materialSource;
+
+        [SerializeField] private int materialIndex = 0;
         [SerializeField] private string propertyName = "";
 
         private int _propertyId;
@@ -23,7 +27,7 @@ namespace nikkyai.driver.material
         protected override void _Init()
         {
             base._Init();
-            
+
             InitProperties();
         }
 
@@ -31,24 +35,18 @@ namespace nikkyai.driver.material
         {
             if (_propertyBlock == null) _propertyBlock = new MaterialPropertyBlock();
             if (_propertyId == 0) _propertyId = VRCShader.PropertyToID(propertyName);
-        //     _propertyIds = new int[propertyNames.Length];
-        //     for (var i = 0; i < propertyNames.Length; i++)
-        //     {
-        //         _propertyIds[i] = VRCShader.PropertyToID(propertyNames[i]);
-        //         Log($"property {propertyNames[i]} => {_propertyIds[i]}");
-        //     }
         }
 
         public override void OnUpdateColor(Color value)
         {
             if (!enabled) return;
-            
+
             if (_propertyBlock == null) _propertyBlock = new MaterialPropertyBlock();
             if (_propertyId == 0) _propertyId = VRCShader.PropertyToID(propertyName);
-            
-            materialSource.GetPropertyBlock(_propertyBlock);
+
+            materialSource.GetPropertyBlock(_propertyBlock, materialIndex);
             _propertyBlock.SetColor(_propertyId, value);
-            materialSource.SetPropertyBlock(_propertyBlock);
+            materialSource.SetPropertyBlock(_propertyBlock, materialIndex);
         }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP

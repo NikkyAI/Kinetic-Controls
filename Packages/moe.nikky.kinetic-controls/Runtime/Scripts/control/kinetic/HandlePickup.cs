@@ -1,4 +1,5 @@
-﻿using UdonSharp;
+﻿using nikkyai.attribute;
+using UdonSharp;
 using UnityEngine;
 using UnityEngine.Serialization;
 using VRC.SDK3.Components;
@@ -22,14 +23,14 @@ namespace nikkyai.control.kinetic
 #endif
         [ReadOnly]
         private bool pickupHasObjectSync = false;
-        
+
         protected override string LogPrefix => nameof(HandleContact);
-    
+
         void Start()
         {
             _EnsureInit();
         }
-        
+
         protected override void AccessChanged()
         {
             base.AccessChanged();
@@ -40,18 +41,36 @@ namespace nikkyai.control.kinetic
                 pickup.pickupable = false;
                 return;
             }
-            
+
             pickup.pickupable = IsAuthorized;
         }
 
         public override void ResetTransformIfNotManipulated()
         {
-            if (!pickupHasObjectSync && !IsHeldLocally)
+            
+            if (pickupHasObjectSync)
             {
-                ResetTransform();
+                if (!IsInVR && IsHeldLocally)
+                {
+                    ResetTransform();
+                }
+                return;
             }
+
+            if (IsHeldLocally)
+            {
+                return;
+            }
+
+            ResetTransform();
+
+            // if (!pickupHasObjectSync && !IsHeldLocally)
+            // {
+            //     ResetTransform();
+            //     
+            // }
         }
-        
+
         public override void OnPickup()
         {
             Log("OnPickup");
@@ -143,8 +162,8 @@ namespace nikkyai.control.kinetic
             // Log("handle released, resetting position");
             // SendCustomNetworkEvent(NetworkEventTarget.All, nameof(UpdatePickupPosition));
         }
-        
-        
+
+
         public void _OnFollowPickup()
         {
             if (!IsHeldLocally) return;
@@ -167,7 +186,7 @@ namespace nikkyai.control.kinetic
             }
         }
 
-        
+
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         internal override void Setup()
         {
@@ -183,7 +202,7 @@ namespace nikkyai.control.kinetic
             if (Utilities.IsValid(pickup))
             {
                 pickupHasObjectSync = pickup.GetComponent<VRCObjectSync>() != null ||
-                                       pickup.GetComponent("MMMaellon.SmartObjectSync") != null;
+                                      pickup.GetComponent("MMMaellon.SmartObjectSync") != null;
             }
             else
             {

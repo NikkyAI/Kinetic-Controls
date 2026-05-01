@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using nikkyai.attribute;
 using nikkyai.Editor;
 using Texel;
 using UnityEditor;
@@ -61,7 +62,7 @@ namespace nikkyai.common
         }
 
         [SerializeField] 
-        [ReadOnly]
+        [attribute.ReadOnly]
         [NonReorderable]
         protected BoolDriver[] authorizedDrivers = { };
 

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using JetBrains.Annotations;
 using nikkyai.common;
+using nikkyai.attribute;
 using nikkyai.Editor;
 using nikkyai.extensions;
 using Texel;
@@ -81,7 +82,7 @@ namespace nikkyai.control.interact
         }
 
         [SerializeField]
-        [ReadOnly]
+        [attribute.ReadOnly]
         private BoolDriver[] valueBoolDrivers = { };
 
         void Start()
