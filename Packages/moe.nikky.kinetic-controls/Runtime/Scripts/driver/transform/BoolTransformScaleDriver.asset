@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: BoolTransformScaleDriver
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 0}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: d296d9e7e98596441b2dc1ca832d7483, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 44f31d0b3909e2f469a5eca7d0d96672, type: 3}

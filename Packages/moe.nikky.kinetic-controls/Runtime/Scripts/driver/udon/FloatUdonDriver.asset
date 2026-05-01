@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: FloatUdonDriver
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 0}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 52b37ace94b399347814a250fbf9e64a, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: fa0a39884770f834f958cf1e952ac03f, type: 3}

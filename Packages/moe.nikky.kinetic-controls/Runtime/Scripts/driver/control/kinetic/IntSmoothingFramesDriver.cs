@@ -19,7 +19,7 @@ namespace nikkyai.driver.control.kinetic
             _EnsureInit();
         }
 
-        public override void OnUpdateInt(int value)
+        protected override void OnUpdateInt(int value)
         {
             if (!enabled) return;
             if (value <= 0)

@@ -1,4 +1,4 @@
-﻿//#define HIDE_INSPECTOR
+﻿#define READONLY
 
 using nikkyai.Editor;
 using nikkyai.Kinetic_Controls;
@@ -20,8 +20,8 @@ namespace nikkyai.control.kinetic
     {
         [Header("Lever")] // header
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Axis axis = Axis.Z;
 
@@ -35,45 +35,43 @@ namespace nikkyai.control.kinetic
         // [SerializeField, Range(0,1)] private float defaultValueNormalized = 0.25f;
         // [SerializeField] private float defaultValue = 0;
 
-        [Range(-180, 180)]
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Range(-180, 180)]
         internal float minRot = -45;
 
         protected override float MinPosOrRot => minRot;
 
-        [Range(-180, 180)]
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Range(-180, 180)]
         internal float maxRot = 45;
 
         protected override float MaxPosOrRot => maxRot;
 
         [Header("Lever - Components")] //
-        [FormerlySerializedAs("minLimit")]
         [SerializeField]
         [Tooltip("will be rotated to indicate the minimum possible lever range")]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Transform minLimitIndicator;
 
-        [FormerlySerializedAs("maxLimit")]
         [SerializeField]
         [Tooltip("will be rotated to indicate the maximum possible lever range")]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Transform maxLimitIndicator;
 
         [SerializeField]
         [Tooltip("will be rotated to follow the smoothed value")]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Transform valueIndicator;
 
@@ -81,8 +79,8 @@ namespace nikkyai.control.kinetic
 
         [SerializeField]
         [Tooltip("will be rotated to follow the handle (target value)")]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Transform targetIndicator;
 
@@ -90,8 +88,8 @@ namespace nikkyai.control.kinetic
 
         [Header("Lever - Debug")] // header
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Collider desktopRaycastCollider;
 
@@ -189,7 +187,16 @@ namespace nikkyai.control.kinetic
                 }
             }
 
-            IsCyclic = Mathf.Approximately(minRot, -180f) && Mathf.Approximately(maxRot, 180f);
+            // isCyclic = Mathf.Approximately(minRot, -180f) && Mathf.Approximately(maxRot, 180f);
+            // if (Utilities.IsValid(minLimitIndicator))
+            // {
+            //     minLimitIndicator.gameObject.SetActive(!isCyclic);
+            // }
+            //
+            // if (Utilities.IsValid(maxLimitIndicator))
+            // {
+            //     maxLimitIndicator.gameObject.SetActive(!isCyclic);
+            // }
         }
 
         protected override void AccessChanged()

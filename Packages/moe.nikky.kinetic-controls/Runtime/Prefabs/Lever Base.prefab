@@ -279,7 +279,8 @@ MonoBehaviour:
   _udonSharpBackingUdonBehaviour: {fileID: 8421014336191516220}
   debugLog: {fileID: 0}
   useRemapRange: 0
-  remapRange: {x: 0, y: 1}
+  remapFrom: {x: 0, y: 1}
+  remapTo: {x: 0, y: 1}
   sliderValue: 0
   textMeshPro: {fileID: 5782189454104212095}
   valueDisplayFormat: P2
@@ -363,36 +364,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c303de801ebee1f4bbb9aef77b834a36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lever: {fileID: 4333053160750304057}
   axis: 2
-  outputRange: {x: 0, y: 1}
+  networkSynced: 1
+  remapTo: {x: 0, y: 1}
   defaultValueNormalized: 0.25
-  defaultValue: 0.25
-  minRot: -45
-  maxRot: 45
+  defaultValueRemapped: 0.25
+  handleReference: {fileID: 0}
+  handlePosition: {fileID: 706670169159319610}
+  minRotation: -45
+  maxRotation: 45
+  desktopRaycastCollider: {fileID: 6631188489251232516}
+  floatTargetDriverSource: {fileID: 4790584712558635517}
+  floatSmoothedDriverSource: {fileID: 7902503103591579271}
+  boolAuthorizedDriverSource: {fileID: 926603307921392904}
+  targetIndicator: {fileID: 3836094492469143025}
+  smoothedIndicator: {fileID: 8505015339796711292}
+  minLimitIndicator: {fileID: 5459789442535979988}
+  maxLimitIndicator: {fileID: 6176600420879799858}
   enableValueSmoothing: 1
-  smoothingUpdateInterval: 2
+  smoothingUpdateInterval: 3
   smoothingTime: 0.1
   smoothingMaxSpeed: 0.25
-  synced: 1
-  desktopRaycastCollider: {fileID: 6631188489251232516}
+  enforceACL: 1
+  accessControl: {fileID: 0}
   addMidiListenerComponent: 0
   midiEnabled: 0
   midiChannel: 0
   midiNumber: 0
   midiInputRangeStart: 0
   midiInputRangeEnd: 127
-  handle: {fileID: 0}
-  handleReset: {fileID: 706670169159319610}
-  minLimitIndicator: {fileID: 5459789442535979988}
-  maxLimitIndicator: {fileID: 6176600420879799858}
-  targetIndicator: {fileID: 3836094492469143025}
-  valueIndicator: {fileID: 8505015339796711292}
-  floatTargetValueDrivers: {fileID: 4790584712558635517}
-  floatSmoothedValueDrivers: {fileID: 7902503103591579271}
-  boolAuthorizedDrivers: {fileID: 926603307921392904}
-  enforceACL: 1
-  accessControl: {fileID: 0}
   debugDesktopRaytrace: {fileID: 0}
   debugLog: {fileID: 0}
 --- !u!114 &4333053160750304057
@@ -428,21 +428,19 @@ MonoBehaviour:
   defaultValue: 0.25
   floatTargetValueDrivers: {fileID: 4790584712558635517}
   floatSmoothedValueDrivers: {fileID: 7902503103591579271}
-  _targetValueFloatDrivers:
-  - {fileID: 293293458128253262}
-  _smoothedValueFloatDrivers:
-  - {fileID: 429794886179440054}
+  targetValueFloatDrivers: []
+  smoothedValueFloatDrivers: []
   enableValueSmoothing: 1
   smoothingUpdateInterval: 2
   smoothingTime: 0.1
   smoothingMaxSpeed: 0.25
+  isCyclic: 0
   midiEnabled: 0
   midiChannel: 0
   midiNumber: 0
   midiInputRangeStart: 0
   midiInputRangeEnd: 127
   handle: {fileID: 0}
-  handleResetDeprecated: {fileID: 706670169159319610}
   debugDesktopRaytrace: {fileID: 0}
   axis: 2
   minRot: -45
@@ -911,7 +909,8 @@ MonoBehaviour:
   _udonSharpBackingUdonBehaviour: {fileID: 4255640097327238965}
   debugLog: {fileID: 0}
   useRemapRange: 0
-  remapRange: {x: 0, y: 1}
+  remapFrom: {x: 0, y: 1}
+  remapTo: {x: 0, y: 1}
   sliderValue: 0
   textMeshPro: {fileID: 6017484284022173787}
   valueDisplayFormat: P2

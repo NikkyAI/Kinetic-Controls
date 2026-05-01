@@ -9,23 +9,29 @@ namespace nikkyai.common
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public abstract class FloatDriver: LoggingSimple
     {
-        [FormerlySerializedAs("range")] // 
+        [FormerlySerializedAs("useRemapRange")]
+        [Header("Value Remapping")]
         [SerializeField]
-        protected bool useRemapRange = false;
+        protected bool enableValueRemapping = false;
         [SerializeField]
-        [Tooltip("remaps nroamlized (0-1) values to the provided range, values are NOT clamped")]
-        protected Vector2 remapRange = new Vector2(0, 1);
+        // [Tooltip("remaps nroamlized (0-1) values to the provided range, values are NOT clamped")]
+        protected Vector2 remapFrom = new Vector2(0, 1);
+        [SerializeField]
+        [FormerlySerializedAs("remapRange")]
+        // [Tooltip("remaps normalized (0-1) values to the provided range, values are NOT clamped")]
+        protected Vector2 remapTo = new Vector2(0, 1);
         
         protected abstract void OnUpdateFloat(float value);
 
-        public void UpdateFloatRescale(float normalizedValue)
+        public void UpdateFloatRescale(float inputValue)
         {
-            var floatValue = normalizedValue;
-            if (useRemapRange)
+            // var inputValue = inputValue;
+            if (enableValueRemapping)
             {
-                floatValue = Mathf.LerpUnclamped(remapRange.x, remapRange.y, floatValue);
+                inputValue = Mathf.InverseLerp(remapFrom.x, remapFrom.y, inputValue);
+                inputValue = Mathf.LerpUnclamped(remapTo.x, remapTo.y, inputValue);
             }
-            OnUpdateFloat(floatValue);
+            OnUpdateFloat(inputValue);
         }
 
         // defaults for Modern UI slider
@@ -35,9 +41,9 @@ namespace nikkyai.common
         public void _SliderUpdated()
         {
             var floatValue = sliderValue;
-            if (useRemapRange)
+            if (enableValueRemapping)
             {
-                floatValue = Mathf.LerpUnclamped(remapRange.x, remapRange.y, floatValue);
+                floatValue = Mathf.LerpUnclamped(remapTo.x, remapTo.y, floatValue);
             }
             OnUpdateFloat(floatValue);
         }

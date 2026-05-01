@@ -11,14 +11,14 @@ namespace nikkyai.control.kinetic
     public class HandlePickup : HandleAbstract
     {
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal VRC_Pickup pickup;
 
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         [ReadOnly]
         private bool pickupHasObjectSync = false;

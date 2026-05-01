@@ -30,7 +30,8 @@ namespace nikkyai.control.interact
         [Tooltip("index to select when deactivated by clickign on current active, requires clickOnActiveDisables")]
         private int disabledIndex = 0;
 
-        [SerializeField] [Tooltip("remaps index to value for indices that exist")]
+        [SerializeField] //
+        [Tooltip("remaps index to value for indices that exist")]
         private int[] remapValues = { };
 
         private int RemapIndex(int index)
@@ -108,7 +109,7 @@ namespace nikkyai.control.interact
 
                     for (var i = 0; i < intDriversReadonly.Length; i++)
                     {
-                        intDriversReadonly[i].OnUpdateInt(remappedValue);
+                        intDriversReadonly[i].UpdateIntRemap(remappedValue);
                     }
 
                     if (_syncedIndex >= 0 && _syncedIndex < interactCallbacks.Length)

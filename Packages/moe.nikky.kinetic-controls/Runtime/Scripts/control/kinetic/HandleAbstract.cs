@@ -22,15 +22,15 @@ namespace nikkyai.control.kinetic
             "should be the same as targetIndicator or a child, " +
             "handle will be reset to the given transform position / rotation on release")]
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         [ReadOnly]
         public Transform resetTransform;
 
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         [ReadOnly]
         private Rigidbody rigidBody;

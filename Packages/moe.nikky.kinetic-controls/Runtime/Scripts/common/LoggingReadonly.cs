@@ -1,4 +1,4 @@
-﻿#define HIDE_INSPECTOR
+﻿#define READONLY
 
 using System;
 using nikkyai.extensions;

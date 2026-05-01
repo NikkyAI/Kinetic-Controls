@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using nikkyai.common;
 using nikkyai.control.kinetic;
 using nikkyai.Kinetic_Controls;
@@ -11,6 +11,7 @@ using UnityEngine.Serialization;
 using VRC;
 using VRC.SDK3.Midi;
 using VRC.SDKBase;
+using VRC.SDKBase.Editor.Attributes;
 using VRC.Udon;
 using Object = UnityEngine.Object;
 
@@ -20,22 +21,133 @@ namespace nikkyai.Editor
     [RequireComponent(typeof(Fader))]
     public class FaderEditorHelper : MonoBehaviour, IEditorOnly, IPreprocessCallbackBehaviour
     {
-        public Fader fader;
-
-        [Header("Fader Settings")] [SerializeField]
+        [Header("Hover over fields for details and setup instructions")]
+        // [HelpBox("Hover over fields for details and setup instructions")]
+        // [Space(1f)]
+        [Header("Fader Settings")] //
+        [SerializeField]
         private Axis axis = Axis.Y;
 
-        [Header("Fader Settings - Default Value")] [SerializeField]
-        public Vector2 outputRange = new Vector2(0, 1);
-
-        [SerializeField] [Range(0, 1)] public float defaultValueNormalized = 0.25f;
-
-        [SerializeField] public float defaultValue = 0;
-
-        [Header("Fader Settings - Smoothing")]
+        [FormerlySerializedAs("synced")] //
+        [SerializeField]
         [Tooltip(
-             "smoothes out value updates over time, may impact CPU frametimes AND cause more updates to FloatDrivers"),
-         SerializeField]
+            "whether network sync is enabled or not, this can be 'animated' at runtime to stage changes and apply them when syncing is enabled again")]
+        public bool networkSynced = true;
+
+        [Header("Value Remapping")] //
+        // [SerializeField]
+        // public bool useRemapRange = false;
+        [FormerlySerializedAs("outputRange")]
+        [SerializeField]
+        public Vector2 remapTo = new Vector2(0, 1);
+
+        [Header("Default Value")] //
+        [SerializeField] //
+        [Range(0, 1)]
+        public float defaultValueNormalized = 0.25f;
+
+        [FormerlySerializedAs("defaultValue")] //
+        [SerializeField]
+        public float defaultValueRemapped = 0;
+
+        #region Handle
+
+        [Header("Handle (required)")] //
+        //[HelpBox("required for basic functionality")]
+        [FormerlySerializedAs("handle")] //
+        [SerializeField]
+        public HandleAbstract handleReference;
+
+        [FormerlySerializedAs("handleReset")]
+        [SerializeField]
+        [Tooltip("has to match the position of the handle mesh inside targetIndicator\n" +
+                 "the handle pickup / contact receiver will be updated to this position")]
+        public Transform handlePosition;
+
+        [SerializeField] private Transform minPositionSource;
+
+        [SerializeField] private Transform maxPositionSource;
+
+        [FormerlySerializedAs("minPos")]
+        [SerializeField] //
+        [ReadOnly]
+        private float minPosition = -1;
+
+        [FormerlySerializedAs("maxPos")] //
+        [SerializeField] //
+        [ReadOnly]
+        private float maxPosition = 1;
+
+        [Header("Handle - Desktop Support (required)")]
+        [Tooltip("required for desktop support - " +
+                 "this needs to be a thin, flat box collider, " +
+                 "it will be used for getting where the center of the screen is facing in desktop mode, " +
+                 "if it is too thick then facing it even from a slight angle will provide the wrong values, " +
+                 "leading to the the controls 'jumping' upon pickup in desktop mode")]
+        [SerializeField]
+        public Collider desktopRaycastCollider;
+
+        #endregion
+
+
+        #region Driver Sources
+
+        [Header("Driver Sources (required)")] //
+        //[HelpBox("object containing Driver Components, will be collected at build time")]
+        [FormerlySerializedAs("floatTargetValueDrivers")] //
+        [SerializeField] //
+        [Tooltip("object containing FloatDrivers, will update to the current target/preview value")]
+        public GameObject floatTargetDriverSource;
+
+        [FormerlySerializedAs("floatSmoothedValueDrivers")] //
+        [SerializeField] //
+        [Tooltip("object containing FloatDrivers, will update to the current smoothed value")]
+        public GameObject floatSmoothedDriverSource;
+
+        [FormerlySerializedAs("boolAuthorizedDrivers")] //
+        [SerializeField] //
+        [Tooltip("object containing BoolDrivers, will update to the current auth status")]
+        public GameObject boolAuthorizedDriverSource;
+
+        #endregion
+
+        // [Header("Drivers - Readonly")] [ReadOnly]
+        // public FloatDriver[] targetValueDrivers;
+        //
+        // [ReadOnly] public FloatDriver[] smoothedValueDrivers;
+        // [ReadOnly] public BoolDriver[] authDrivers;
+
+        #region Indicators
+
+        [Header("Indicators (optional)")]
+        //[HelpBox("transforms that will be updated to indicate state as well as range limits")]
+        [SerializeField] //
+        [Tooltip("will be moved to follow the handle (target value)")]
+        public Transform targetIndicator;
+
+        [FormerlySerializedAs("valueIndicator")]
+        [SerializeField] //
+        [Tooltip("will be moved to follow the smoothed value")]
+        public Transform smoothedIndicator;
+
+        [SerializeField] //
+        [Tooltip("this transform will move to indicate the lower bound of the fader handle movement range")]
+        public Transform minLimitIndicator;
+
+        [SerializeField] //
+        [Tooltip("this transform will move to indicate the upper bound of the fader handle movement range")]
+        public Transform maxLimitIndicator;
+
+        #endregion
+
+
+        #region Value Smoothing
+
+        [Header("Value Smoothing")]
+        //[HelpBox("smoothes out value updates over time, may impact CPU frame times AND cause more updates sent to FloatDrivers")]
+        [Tooltip(
+            "smoothes out value updates over time, may impact CPU frametimes AND cause more updates to FloatDrivers")]
+        [SerializeField]
         public bool enableValueSmoothing = true;
 
         [Tooltip("amount of frames to skip when approaching target value," +
@@ -54,23 +166,22 @@ namespace nikkyai.Editor
         [Range(0f, 1f)]
         public float smoothingMaxSpeed = 0.25f;
 
-        [Header("Network Syncing")]
+        #endregion
+
+        #region Access Control
+
+        [Header("Access Control")] //  
+        //[HelpBox("You either need to assign AccessControl here or disable enforceACL, otherwise the Fader WILL NOT work")]
         [SerializeField]
-        [Tooltip(
-            "whether network sync is enabled or not, this can be 'animated' at runtime to stage changes and apply them when syncing is enabled again")]
-        public bool synced = true;
+        public bool enforceACL = true;
 
-        // [Header("VR Support")] [Tooltip("switches between finger contacts and pickup")]
-        // public bool useContactsInVR = true;
-
-        [Header("Desktop Support")]
+        [Tooltip("ACL used to check who can use the toggle")] //
         [SerializeField]
-        [Tooltip("this needs to be a thin, flat box collider, " +
-                 "it will be used for getting where the center of the screen is facing in desktop mode, " +
-                 "if it is too thick then facing it even from a slight angle will provide the wrong values, " +
-                 "leading to the the controls 'jumping' upon pickup in desktop mode")]
-        public Collider desktopRaycastCollider;
+        public AccessControl accessControl;
 
+        #endregion
+
+        #region MIDI
 
         [Header("MIDI")] //
         [SerializeField, Tooltip("Sets up the required VRC MIDI Listener")]
@@ -84,59 +195,9 @@ namespace nikkyai.Editor
         [SerializeField, Range(0, 127)] public int midiInputRangeStart = 0;
         [SerializeField, Range(0, 127)] public int midiInputRangeEnd = 127;
 
-        [Header("Components - Handle")] [SerializeField]
-        public HandleAbstract handle;
+        #endregion
 
-        [SerializeField]
-        [Tooltip("should be the same as targetIndicator or a child, " +
-                 "handle will be reset to the given transform position / rotation on release" +
-                 " (proxied to handle)")]
-        public Transform handleReset;
-
-        [Header("Components - Indicators")]
-        [SerializeField] //
-        [Tooltip("move this on the configured axis to the minumum fader range")]
-        public Transform minLimitIndicator;
-
-        [SerializeField] //
-        [Tooltip("move this on the configured axis to the maximum fader range")]
-        public Transform maxLimitIndicator;
-
-        [SerializeField] //
-        [Tooltip("will be moved to follow the handle (target value)")]
-        public Transform targetIndicator;
-
-        [SerializeField] //
-        [Tooltip("will be moved to follow the smoothed value")]
-        public Transform valueIndicator;
-
-        [Header("Drivers")]
-        [SerializeField] //
-        [Tooltip("object containing FloatDrivers, will update to the current target/preview value")]
-        public GameObject floatTargetValueDrivers;
-
-
-        [SerializeField] //
-        [Tooltip("object containing FloatDrivers, will update to the current smoothed value")]
-        public GameObject floatSmoothedValueDrivers;
-
-        [SerializeField] //
-        [Tooltip("object containing BoolDrivers, will update to the current auth status")]
-        public GameObject boolAuthorizedDrivers;
-
-        // [Header("Drivers - Readonly")] [ReadOnly]
-        // public FloatDriver[] targetValueDrivers;
-        //
-        // [ReadOnly] public FloatDriver[] smoothedValueDrivers;
-        // [ReadOnly] public BoolDriver[] authDrivers;
-
-        [Header("Access Control")] //  
-        [SerializeField]
-        public bool enforceACL = true;
-
-        [Tooltip("ACL used to check who can use the toggle")] //
-        [SerializeField]
-        public AccessControl accessControl;
+        #region Debug
 
         [Header("Debug")] //
         [SerializeField]
@@ -145,20 +206,27 @@ namespace nikkyai.Editor
 
         [SerializeField] public DebugLog debugLog;
 
-        private bool initialized = false;
-        private float outputRangeMin => outputRange.x;
-        private float outputRangeMax => outputRange.y;
+        #endregion
 
-        private float prevDefaultNormalized, prevDefault, prevMin, prevMax;
+        private bool _initialized = false;
+        private float outputRangeMin => remapTo.x;
+        private float outputRangeMax => remapTo.y;
+
+        private float prevDefaultNormalized = 0.25f;
+        private float prevDefault = 0.25f;
+        private float prevMin = 0;
+        private float prevMax = 1;
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        private Fader GetFader()
-        {
-            if (Utilities.IsValid(fader)) return fader;
-            Debug.Log("getting fader component", this);
-            fader = gameObject.GetComponent<Fader>();
-            return fader;
-        }
+        // private Fader GetFader()
+        // {
+        //     if (Utilities.IsValid(fader)) return fader;
+        //     Debug.Log("getting fader component", this);
+        //     fader = gameObject.GetComponent<Fader>();
+        //     return fader;
+        // }
+
+        private Fader GetFader() => gameObject.GetComponent<Fader>();
 
         [ContextMenu("ApplyValues")]
         private void ApplyValues()
@@ -168,7 +236,7 @@ namespace nikkyai.Editor
 
         private void ApplyValues(bool onValidate = false)
         {
-            if (!initialized)
+            if (!_initialized)
             {
                 Debug.LogWarning("not initalized yet");
                 return;
@@ -185,15 +253,15 @@ namespace nikkyai.Editor
 
             if (!Mathf.Approximately(prevDefaultNormalized, defaultValueNormalized))
             {
-                defaultValue = Mathf.Lerp(outputRangeMin, outputRangeMax, defaultValueNormalized);
-                prevDefault = defaultValue;
+                defaultValueRemapped = Mathf.Lerp(outputRangeMin, outputRangeMax, defaultValueNormalized);
+                prevDefault = defaultValueRemapped;
                 prevMin = outputRangeMin;
                 prevMax = outputRangeMax;
             }
 
-            if (!Mathf.Approximately(prevDefault, defaultValue))
+            if (!Mathf.Approximately(prevDefault, defaultValueRemapped))
             {
-                defaultValueNormalized = Mathf.InverseLerp(outputRangeMin, outputRangeMax, defaultValue);
+                defaultValueNormalized = Mathf.InverseLerp(outputRangeMin, outputRangeMax, defaultValueRemapped);
                 prevDefaultNormalized = defaultValueNormalized;
                 prevMin = outputRangeMin;
                 prevMax = outputRangeMax;
@@ -201,35 +269,43 @@ namespace nikkyai.Editor
 
             if (!Mathf.Approximately(prevMin, outputRangeMin) || !Mathf.Approximately(prevMax, outputRangeMax))
             {
-                defaultValueNormalized = Mathf.InverseLerp(outputRangeMin, outputRangeMax, defaultValue);
+                defaultValueNormalized = Mathf.InverseLerp(outputRangeMin, outputRangeMax, defaultValueRemapped);
                 prevDefaultNormalized = defaultValueNormalized;
                 prevMin = outputRangeMin;
                 prevMax = outputRangeMax;
             }
 
             prevDefaultNormalized = defaultValueNormalized;
-            prevDefault = defaultValue;
+            prevDefault = defaultValueRemapped;
 
             f.axis = axis;
-            f.outputRange = outputRange;
+            f.outputRange = new Vector2(outputRangeMin, outputRangeMax);
             f.defaultValueNormalized = defaultValueNormalized;
-            f.defaultValue = defaultValue;
+            f.defaultValue = defaultValueRemapped;
+
+            if (Utilities.IsValid(minPositionSource))
+            {
+                var minLocalPos = transform.InverseTransformPoint(minPositionSource.position);
+                minPosition = minLocalPos[(int)axis];
+            }
+
+            if (Utilities.IsValid(maxPositionSource))
+            {
+                var maxLocalPos = transform.InverseTransformPoint(maxPositionSource.position);
+                maxPosition = maxLocalPos[(int)axis];
+            }
+
+            f.minPos = minPosition;
+            f.maxPos = maxPosition;
 
             f.enableValueSmoothing = enableValueSmoothing;
             f.smoothingUpdateInterval = smoothingUpdateInterval;
             f.smoothingTime = smoothingTime;
             f.smoothingMaxSpeed = smoothingMaxSpeed;
 
-            f.synced = synced;
+            f.synced = networkSynced;
 
             f.desktopRaycastCollider = desktopRaycastCollider;
-
-            SetupMidiListener(onValidate: onValidate);
-            f.midiEnabled = midiEnabled;
-            f.midiChannel = midiChannel;
-            f.midiNumber = midiNumber;
-            f.midiInputRangeStart = midiInputRangeStart;
-            f.midiInputRangeEnd = midiInputRangeEnd;
 
             if (Utilities.IsValid(minLimitIndicator))
                 f.minLimitIndicator = minLimitIndicator;
@@ -237,46 +313,64 @@ namespace nikkyai.Editor
                 f.maxLimitIndicator = maxLimitIndicator;
             if (Utilities.IsValid(targetIndicator))
                 f.targetIndicator = targetIndicator;
-            if (Utilities.IsValid(valueIndicator))
-                f.valueIndicator = valueIndicator;
+            if (Utilities.IsValid(smoothedIndicator))
+                f.valueIndicator = smoothedIndicator;
             f._EnsureInit();
             f.UpdateIndicatorsInEditor();
 
             // f.SetupHandle();
-            if (Utilities.IsValid(handle))
+            if (Utilities.IsValid(handleReference))
             {
-                f.handle = handle;
-                handle.resetTransform = handleReset;
-                // handle.UseContactsInVR = useContactsInVR;
-                handle.EditorACL = accessControl;
-                handle.EditorEnforceACL = enforceACL;
-                handle.EditorDebugLog = debugLog;
-                handle.EditorBoolAuthorizedDrivers = boolAuthorizedDrivers;
+                f.handle = handleReference;
+                // handle.resetTransform = targetIndicator;
+                if (Utilities.IsValid(handlePosition))
+                {
+                    //TODO: validate that handlePosition is a child of targetIndicator
 
-                handle.RegisterRuntime(f);
-                handle.Setup();
-                handle._EnsureInit();
+                    handleReference.resetTransform = handlePosition;
+                }
+                else
+                {
+                    handleReference.resetTransform = targetIndicator;
+                }
+
+                // handle.UseContactsInVR = useContactsInVR;
+                handleReference.EditorACL = accessControl;
+                handleReference.EditorEnforceACL = enforceACL;
+                handleReference.EditorDebugLog = debugLog;
+                handleReference.EditorBoolAuthorizedDrivers = boolAuthorizedDriverSource;
+
+                handleReference.RegisterRuntime(f);
+                handleReference.Setup();
+                handleReference._EnsureInit();
                 // handle.Register(f);
                 // handle.SetupPickup();
 
                 // handle.SetupPickupRigidbody();
-                handle.ResetTransform();
-                handle.MarkDirty();
+                handleReference.ResetTransform();
+                handleReference.MarkDirty();
             }
             else
             {
                 Debug.LogError($"missing handle in {name}", this);
             }
 
-            f.floatTargetValueDrivers = floatTargetValueDrivers;
-            f.floatSmoothedValueDrivers = floatSmoothedValueDrivers;
-            f.EditorBoolAuthorizedDrivers = boolAuthorizedDrivers;
+            f.floatTargetValueDrivers = floatTargetDriverSource;
+            f.floatSmoothedValueDrivers = floatSmoothedDriverSource;
+            f.EditorBoolAuthorizedDrivers = boolAuthorizedDriverSource;
 
             f.EditorEnforceACL = enforceACL;
             f.EditorACL = accessControl;
 
             f.debugDesktopRaytrace = debugDesktopRaytrace;
             f.EditorDebugLog = debugLog;
+
+            SetupMidiListener(onValidate: onValidate);
+            f.midiEnabled = midiEnabled;
+            f.midiChannel = midiChannel;
+            f.midiNumber = midiNumber;
+            f.midiInputRangeStart = midiInputRangeStart;
+            f.midiInputRangeEnd = midiInputRangeEnd;
 
             var minValue = Mathf.Min(f.MinValue, f.MaxValue);
             var maxValue = Mathf.Max(f.MinValue, f.MaxValue);
@@ -287,17 +381,17 @@ namespace nikkyai.Editor
             f.FindBoolAuthDrivers();
             // authDrivers = f.IsAuthorizedBoolDrivers;
 
-            foreach (var valueFloatDriver in f._smoothedValueFloatDrivers)
+            foreach (var valueFloatDriver in f.smoothedValueFloatDrivers)
             {
                 valueFloatDriver.ApplyFloatValue(
-                    Math.Clamp(defaultValue, minValue, maxValue)
+                    Math.Clamp(defaultValueRemapped, minValue, maxValue)
                 );
             }
 
-            foreach (var targetFloatDriver in f._targetValueFloatDrivers)
+            foreach (var targetFloatDriver in f.targetValueFloatDrivers)
             {
                 targetFloatDriver.ApplyFloatValue(
-                    Math.Clamp(defaultValue, minValue, maxValue)
+                    Math.Clamp(defaultValueRemapped, minValue, maxValue)
                 );
             }
 
@@ -318,6 +412,7 @@ namespace nikkyai.Editor
                 {
                     SerializedObject listenerSerialized = new SerializedObject(listener);
                     var behaviourProperty = listenerSerialized.FindProperty("behaviour");
+                    var fader = GetFader();
                     if (Utilities.IsValid(fader))
                     {
                         behaviourProperty.objectReferenceValue = new SerializedObject(fader)
@@ -359,19 +454,27 @@ namespace nikkyai.Editor
 
         void OnValidate()
         {
-            if (!initialized)
+            if (!_initialized)
             {
                 CopyFromFader();
             }
 
             if (
-                initialized && ValidationCache.ShouldRunValidation(
+                _initialized && ValidationCache.ShouldRunValidation(
                     this,
                     HashCode.Combine(
                         HashCode.Combine(
-                            outputRange,
+                            axis,
+                            networkSynced,
+                            remapTo,
                             defaultValueNormalized,
-                            defaultValue
+                            defaultValueRemapped
+                        ),
+                        HashCode.Combine(
+                            minPositionSource,
+                            maxPositionSource,
+                            minPosition,
+                            maxPosition
                         ),
                         HashCode.Combine(
                             enableValueSmoothing,
@@ -380,7 +483,6 @@ namespace nikkyai.Editor
                             smoothingMaxSpeed
                         ),
                         HashCode.Combine(
-                            synced,
                             addMidiListenerComponent,
                             midiEnabled,
                             midiChannel,
@@ -389,16 +491,16 @@ namespace nikkyai.Editor
                             midiInputRangeEnd
                         ),
                         HashCode.Combine(
-                            handle,
-                            handleReset,
+                            handleReference,
+                            handlePosition,
                             minLimitIndicator,
                             maxLimitIndicator,
                             targetIndicator,
-                            valueIndicator),
+                            smoothedIndicator),
                         HashCode.Combine(
-                            floatTargetValueDrivers,
-                            floatSmoothedValueDrivers,
-                            boolAuthorizedDrivers,
+                            floatTargetDriverSource,
+                            floatSmoothedDriverSource,
+                            boolAuthorizedDriverSource,
                             enforceACL,
                             accessControl,
                             debugLog
@@ -415,43 +517,48 @@ namespace nikkyai.Editor
         internal void CopyFromFader()
         {
             var f = GetFader();
-            fader = f;
+            // fader = f;
             axis = f.axis;
-            outputRange = f.outputRange;
+            // valueOutputMin = f.outputRange.x;
+            // valueOutputMax = f.outputRange.y;
+            remapTo = f.outputRange;
+
             defaultValueNormalized = f.defaultValueNormalized;
-            defaultValue = f.defaultValue;
+            defaultValueRemapped = f.defaultValue;
+
+            if (!Utilities.IsValid(minPositionSource))
+            {
+                minPositionSource = f.minLimitIndicator;
+            }
+
+            if (!Utilities.IsValid(maxPositionSource))
+            {
+                maxPositionSource = f.maxLimitIndicator;
+            }
 
             enableValueSmoothing = f.enableValueSmoothing;
             smoothingUpdateInterval = f.smoothingUpdateInterval;
             smoothingTime = f.smoothingTime;
             smoothingMaxSpeed = f.smoothingMaxSpeed;
 
-            synced = f.synced;
+            networkSynced = f.synced;
             // useContactsInVR = f.handle.useContactsInVR;
             desktopRaycastCollider = f.desktopRaycastCollider;
 
-            midiEnabled = f.midiEnabled;
-            midiChannel = f.midiChannel;
-            midiNumber = f.midiNumber;
-            midiInputRangeStart = f.midiInputRangeStart;
-            midiInputRangeEnd = f.midiInputRangeEnd;
-
-            handle = f.handle;
-            if (Utilities.IsValid(handle))
+            handleReference = f.handle;
+            if (Utilities.IsValid(handleReference))
             {
-                handleReset = handle.resetTransform;
+                handlePosition = handleReference.resetTransform;
             }
-
-            handleReset = f.handleResetDeprecated;
 
             minLimitIndicator = f.minLimitIndicator;
             maxLimitIndicator = f.maxLimitIndicator;
             targetIndicator = f.targetIndicator;
-            valueIndicator = f.valueIndicator;
+            smoothedIndicator = f.valueIndicator;
 
-            floatTargetValueDrivers = f.floatTargetValueDrivers;
-            floatSmoothedValueDrivers = f.floatSmoothedValueDrivers;
-            boolAuthorizedDrivers = f.EditorBoolAuthorizedDrivers;
+            floatTargetDriverSource = f.floatTargetValueDrivers;
+            floatSmoothedDriverSource = f.floatSmoothedValueDrivers;
+            boolAuthorizedDriverSource = f.EditorBoolAuthorizedDrivers;
 
             enforceACL = f.EditorEnforceACL;
             accessControl = f.EditorACL;
@@ -459,18 +566,28 @@ namespace nikkyai.Editor
             debugDesktopRaytrace = f.debugDesktopRaytrace;
             debugLog = f.EditorDebugLog;
 
-            initialized = true;
+            midiEnabled = f.midiEnabled;
+            midiChannel = f.midiChannel;
+            midiNumber = f.midiNumber;
+            midiInputRangeStart = f.midiInputRangeStart;
+            midiInputRangeEnd = f.midiInputRangeEnd;
+
+            _initialized = true;
             this.MarkDirty();
         }
 
         private void Awake()
         {
-            var f = GetFader();
-            if (Utilities.IsValid(f))
+            // var f = GetFader();
+            // if (Utilities.IsValid(f))
+            // {
+            //     fader = f;
+            // }
+            // initialized = true;
+            if (!_initialized)
             {
-                fader = f;
+                CopyFromFader();
             }
-            initialized = true;
 
             ApplyValues(onValidate: true);
         }

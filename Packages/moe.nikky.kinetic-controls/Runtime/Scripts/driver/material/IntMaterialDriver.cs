@@ -33,7 +33,7 @@ namespace nikkyai.driver.material
         }
 
 
-        public override void OnUpdateInt(int value)
+        protected override void OnUpdateInt(int value)
         {
             if (!enabled) return;
             for (var i = 0; i < materials.Length; i++)

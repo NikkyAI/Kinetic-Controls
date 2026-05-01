@@ -24,7 +24,7 @@ namespace nikkyai.driver.converter
             Log($"updating int: {value} -> {intValue} on {_intDrivers.Length} drivers");
             for (var i = 0; i < _intDrivers.Length; i++)
             {
-                _intDrivers[i].OnUpdateInt(intValue);
+                _intDrivers[i].UpdateIntRemap(intValue);
             }
         }
     }

@@ -34,7 +34,7 @@ namespace nikkyai.driver.converter
 
         private int oldValue = -1;
 
-        public override void OnUpdateInt(int value)
+        protected override void OnUpdateInt(int value)
         {
         
             var newDrivers = _boolDrivers[value];

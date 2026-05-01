@@ -1,4 +1,4 @@
-﻿// #define HIDE_INSPECTOR
+﻿// #define READONLY
 
 using System;
 using System.Runtime.CompilerServices;
@@ -29,27 +29,27 @@ namespace nikkyai.control.kinetic
             "should be the same as targetIndicator or a child, " +
             "handle will be reset to the given transform position / rotation on release")]
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         public Transform resetTransform;
 
         [SerializeField]
         [FieldChangeCallback(nameof(UseContactsInVR))]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         public bool useContactsInVR = true;
 
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal VRC_Pickup pickup;
 
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         private Rigidbody rigidBody;
 
@@ -789,13 +789,13 @@ namespace nikkyai.control.kinetic
                 var helperFader = baseKineticControl.GetComponent<FaderEditorHelper>();
                 if (Utilities.IsValid(helperFader))
                 {
-                    helperFader.handle = handle;
+                    helperFader.handleReference = handle;
                 }
 
                 var helperLever = baseKineticControl.GetComponent<LeverEditorHelper>();
                 if (Utilities.IsValid(helperLever))
                 {
-                    helperLever.handle = handle;
+                    helperLever.handleReference = handle;
                 }
             }
 

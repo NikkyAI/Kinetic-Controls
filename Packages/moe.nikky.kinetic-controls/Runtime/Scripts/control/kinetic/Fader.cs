@@ -1,4 +1,4 @@
-//#define HIDE_INSPECTOR
+#define READONLY
 
 using nikkyai.Editor;
 using nikkyai.Kinetic_Controls;
@@ -21,8 +21,8 @@ namespace nikkyai.control.kinetic
     {
         [Header("Fader")] // header
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Axis axis = Axis.Y;
 
@@ -30,38 +30,44 @@ namespace nikkyai.control.kinetic
 
         [Header("Fader - Desktop")] // header
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Collider desktopRaycastCollider;
 
         [Header("Fader - Components")] //
-        [FormerlySerializedAs("minLimit")]
         [SerializeField]
         [Tooltip("move this on the configured axis to the minumum fader range")]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Transform minLimitIndicator;
 
-        private float _minPos;
-        protected override float MinPosOrRot => _minPos;
+        [SerializeField]
+#if READONLY
+        [ReadOnly]
+#endif
+        internal float minPos;
+        protected override float MinPosOrRot => minPos;
 
-        [FormerlySerializedAs("maxLimit")]
         [SerializeField]
         [Tooltip("move this on the configured axis to the maximum fader range")]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         public Transform maxLimitIndicator;
 
-        private float _maxPos;
-        protected override float MaxPosOrRot => _maxPos;
+        [SerializeField]
+#if READONLY
+        [ReadOnly]
+#endif
+        internal float maxPos;
+        protected override float MaxPosOrRot => maxPos;
 
         [SerializeField]
         [Tooltip("will be moved to follow the smoothed value")]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Transform valueIndicator;
 
@@ -69,8 +75,8 @@ namespace nikkyai.control.kinetic
 
         [SerializeField]
         [Tooltip("will be moved to follow the handle (target value)")]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Transform targetIndicator;
 
@@ -91,10 +97,10 @@ namespace nikkyai.control.kinetic
 
             OnDeserialization();
             UpdateValueIndicator(
-                Mathf.Lerp(_minPos, _maxPos, smoothedCurrentNormalized)
+                Mathf.Lerp(minPos, maxPos, smoothedCurrentNormalized)
             );
             UpdateTargetIndicator(
-                Mathf.Lerp(_minPos, _maxPos, smoothingTargetNormalized)
+                Mathf.Lerp(minPos, maxPos, smoothingTargetNormalized)
             );
             handle.ResetTransform();
             // UpdateHandlePosition();
@@ -110,10 +116,10 @@ namespace nikkyai.control.kinetic
             _valueIndicatorValid = Utilities.IsValid(valueIndicator);
             _axisVector[(int)axis] = 1;
 
-            var minLocalPos = transform.InverseTransformPoint(minLimitIndicator.position);
-            var maxLocalPos = transform.InverseTransformPoint(maxLimitIndicator.position);
-            _minPos = minLocalPos[(int)axis];
-            _maxPos = maxLocalPos[(int)axis];
+            // var minLocalPos = transform.InverseTransformPoint(minLimitIndicator.position);
+            // var maxLocalPos = transform.InverseTransformPoint(maxLimitIndicator.position);
+            // _minPos = minLocalPos[(int)axis];
+            // _maxPos = maxLocalPos[(int)axis];
         }
 
         protected override void AccessChanged()
@@ -144,15 +150,15 @@ namespace nikkyai.control.kinetic
             var relativePos = transform.InverseTransformPoint(absolutePos);
             var clampedPos = Mathf.Clamp(
                 relativePos[(int)axis],
-                _minPos,
-                _maxPos
+                minPos,
+                maxPos
             );
 
             // UpdateIndicatorPosition(clampedPos);
 
             var normalizedValue = Mathf.InverseLerp(
-                _minPos,
-                _maxPos,
+                minPos,
+                maxPos,
                 clampedPos
             );
             Log($"calculating normalized value from {absolutePos} -> {clampedPos} -> {normalizedValue}");

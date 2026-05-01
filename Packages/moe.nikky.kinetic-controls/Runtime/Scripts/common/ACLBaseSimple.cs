@@ -62,6 +62,7 @@ namespace nikkyai.common
 
         [SerializeField] 
         [ReadOnly]
+        [NonReorderable]
         protected BoolDriver[] authorizedDrivers = { };
 
         protected override BoolDriver[] AuthorizedDrivers

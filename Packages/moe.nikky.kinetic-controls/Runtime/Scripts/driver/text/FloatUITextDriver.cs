@@ -7,11 +7,11 @@ using VRC;
 
 namespace nikkyai.driver.text
 {
-    public class FloatTextDriver : FloatDriver
+    public class FloatUITextDriver : FloatDriver
     {
         [Header("TextMeshPro")] // header
         [SerializeField]
-        private TextMeshPro textMeshPro;
+        private TextMeshProUGUI textMeshPro;
 
         [Tooltip(
             "What the slider value will be formated as.\n" +
@@ -21,7 +21,7 @@ namespace nikkyai.driver.text
         [SerializeField]
         private String valueDisplayFormat = "0.0";
 
-        protected override string LogPrefix => nameof(FloatTextDriver);
+        protected override string LogPrefix => nameof(FloatUITextDriver);
 
         void Start()
         {
@@ -44,23 +44,6 @@ namespace nikkyai.driver.text
         }
         
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        // protected override int ValidationHash => HashCode.Combine(base.GetHashCode(), valueDisplayFormat, cachedValue);
-        //
-        // public override void OnValidateApplyValues()
-        // {
-        //     if (Application.isPlaying) return;
-        //     base.OnValidateApplyValues();
-        //
-        //     if(float.IsNaN(cachedValue)) return;
-        //     
-        //     OnUpdateFloat(cachedValue);
-        //     if (textMeshPro)
-        //     {
-        //         textMeshPro.MarkDirty();
-        //     }
-        // }
-        
-        
         protected override void OnValidate()
         {
             if(!Application.isPlaying) return;
@@ -81,25 +64,7 @@ namespace nikkyai.driver.text
                 UpdateFloatRescale(cachedValue);
             }
         }
-
         
-        // [ContextMenu("Update UI")]
-        // private void OnValidate()
-        // {
-        //     if (Application.isPlaying) return;
-        //     UnityEditor.EditorUtility.SetDirty(this);
-        //
-        //     if (valueDisplayFormat != prevFormat && !float.IsNaN(cachedValue))
-        //     {
-        //         UpdateFloat(cachedValue);
-        //         if (textMeshPro)
-        //         {
-        //             textMeshPro.MarkDirty();
-        //         }
-        //         prevFormat = valueDisplayFormat;
-        //     }
-        // }
-        //
         public override void ApplyFloatValue(float value)
         {
             UpdateFloatRescale(value);

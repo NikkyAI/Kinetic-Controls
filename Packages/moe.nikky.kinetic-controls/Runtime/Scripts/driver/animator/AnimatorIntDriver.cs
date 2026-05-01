@@ -9,7 +9,7 @@ namespace nikkyai.driver.animator
         [SerializeField] private string intParameterName;
         protected override string LogPrefix => nameof(AnimatorIntDriver);
 
-        public override void OnUpdateInt(int value)
+        protected override void OnUpdateInt(int value)
         {
             if (!enabled) return;
             animator.SetInteger(intParameterName, value);

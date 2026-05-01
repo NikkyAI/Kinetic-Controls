@@ -23,7 +23,7 @@ public class IntUdonDriver : IntDriver
         _EnsureInit();
     }
 
-    public override void OnUpdateInt(int value)
+    protected override void OnUpdateInt(int value)
     {
         for (var i = 0; i < externalBehaviours.Length; i++)
         {

@@ -1,4 +1,4 @@
-﻿#define HIDE_INSPECTOR
+﻿#define READONLY
 
 using System;
 using nikkyai.Utils;
@@ -24,77 +24,46 @@ namespace nikkyai.control.kinetic
         [Header("Kinetic Control - MIDI - Requires VRC_MidiListener Component")] //
         [Tooltip("Requires a VRC MIDI Listened with CC enabled")]
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal bool midiEnabled = true;
-        [SerializeField] 
-        [Range(0,15)]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+        [SerializeField]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Range(0,15)]
         internal int midiChannel = 0;
         [SerializeField] 
-        [Range(0,127)]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Range(0,127)]
         internal int midiNumber = 0;
         [SerializeField] 
-        [Range(0,127)]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Range(0,127)]
         internal int midiInputRangeStart = 0;
         [SerializeField] 
-        [Range(0,127)]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Range(0,127)]
         internal int midiInputRangeEnd = 127;
-        
-        // [Header("Kinetic Control - VR")] // header
-        // [SerializeField]
-        // [Tooltip("switches between finger contacts and pickup (proxies to handle)")]
-        // [FieldChangeCallback(nameof(UseContactsInVR))]
-        // private bool useContactsInVR = true;
-        //
-        // public bool UseContactsInVR
-        // {
-        //     get => useContactsInVR;
-        //     set
-        //     {
-        //         useContactsInVR = value;
-        //         handle.UseContactsInVR = value;
-        //     }
-        // }
-
-        // public bool HandleUseContactsInVR
-        // {
-        //     get => handle.useContactsInVR;
-        //     set => handle.UseContactsInVR = value;
-        // }
 
         [Header("Kinetic Control - Components")] //
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal HandleAbstract handle;
-
-        [FormerlySerializedAs("handleReset")]
-        [SerializeField]
-        [Tooltip("should be the same as targetIndicator or a child, handle will be reset to the given transform position / rotation on release (proxied to handle)")] //
         
-#if HIDE_INSPECTOR
-        [HideInInspector]
-#endif
-        internal Transform handleResetDeprecated;
-
         [Header("Kinetic Control - Debug")] // header
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Transform debugDesktopRaytrace;
 

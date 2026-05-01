@@ -1,4 +1,4 @@
-﻿#define HIDE_INSPECTOR
+﻿#define READONLY
 
 using System;
 using System.ComponentModel;
@@ -60,6 +60,7 @@ namespace nikkyai.common
         
         [SerializeField] 
         [ReadOnly]
+        [NonReorderable]
         protected BoolDriver[] authorizedDrivers = { };
 
         protected override BoolDriver[] AuthorizedDrivers

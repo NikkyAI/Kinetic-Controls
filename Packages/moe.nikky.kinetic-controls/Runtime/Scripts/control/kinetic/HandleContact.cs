@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define READONLY
+
+using System;
 using System.Runtime.CompilerServices;
 using nikkyai.common;
 using nikkyai.extensions;
@@ -19,8 +21,8 @@ namespace nikkyai.control.kinetic
     public class HandleContact : HandleAbstract
     {
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         private VRCContactReceiver receiver;
         

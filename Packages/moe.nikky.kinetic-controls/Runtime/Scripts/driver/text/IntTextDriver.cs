@@ -37,7 +37,7 @@ namespace nikkyai.driver.text
             // or find the TMP component
         }
 
-        public override void OnUpdateInt(int value)
+        protected override void OnUpdateInt(int value)
         {
             if(textMeshPro) {
                 textMeshPro.text = value.ToString(valueDisplayFormat);
@@ -97,15 +97,15 @@ namespace nikkyai.driver.text
         //     }
         // }
         //
-        // public override void ApplyIntValue(int value)
-        // {
-        //     OnUpdateInt(value);
-        //     cachedValue = value;
-        //     if (textMeshPro)
-        //     {
-        //         textMeshPro.MarkDirty();
-        //     }
-        // }
+        public override void ApplyIntValue(int value)
+        {
+            OnUpdateInt(value);
+            cachedValue = value;
+            if (textMeshPro)
+            {
+                textMeshPro.MarkDirty();
+            }
+        }
 #endif
     }
 }

@@ -1,10 +1,11 @@
-﻿#define HIDE_INSPECTOR
+﻿#define READONLY
 
 using System;
 using System.ComponentModel;
 using nikkyai.common;
 using UdonSharp;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VRC.SDKBase;
 
 namespace nikkyai.control
@@ -19,27 +20,27 @@ namespace nikkyai.control
 
         [Header("Base Smoothed Control")]
         [SerializeField, UdonSynced] //
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal bool synced = true;
 
         [SerializeField]
         [Tooltip("The range of values that this behaviour will send to any attached float drivers")]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal Vector2 outputRange = new Vector2(0, 1);
 
         [SerializeField]
-        [Range(0, 1)]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Range(0, 1)]
         internal float defaultValueNormalized = 0.25f;
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal float defaultValue = 0;
 
@@ -52,19 +53,21 @@ namespace nikkyai.control
 
         [Header("Base Smoothed Control - Drivers")] // header
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Obsolete]
         internal GameObject floatTargetValueDrivers;
 
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Obsolete]
         internal GameObject floatSmoothedValueDrivers;
 
-        [SerializeField, ReadOnly] public FloatDriver[] _targetValueFloatDrivers = Array.Empty<FloatDriver>();
-        [SerializeField, ReadOnly] internal FloatDriver[] _smoothedValueFloatDrivers = Array.Empty<FloatDriver>();
+        [SerializeField, ReadOnly, NonReorderable] public FloatDriver[] targetValueFloatDrivers = Array.Empty<FloatDriver>();
+        [SerializeField, ReadOnly, NonReorderable] internal FloatDriver[] smoothedValueFloatDrivers = Array.Empty<FloatDriver>();
 
         #endregion
 
@@ -74,8 +77,8 @@ namespace nikkyai.control
         [Tooltip(
              "smoothes out value updates over time, may impact CPU frametimes AND cause more updates to FloatDrivers")]
         [SerializeField]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
         internal bool enableValueSmoothing = true;
 
@@ -88,10 +91,10 @@ namespace nikkyai.control
         [Tooltip("amount of frames to skip when approaching target value," +
                  "higher number == less load, but more choppy smoothing")]
         [SerializeField]
-        [Range(1, 10)]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Range(1, 10)]
         internal int smoothingUpdateInterval = 3;
 
         public int SmoothingFrames
@@ -112,24 +115,26 @@ namespace nikkyai.control
 
         [Tooltip("higher values -> faster synchronization with the target maxSpeed")]
         [SerializeField]
-        [Range(0f, 2.5f)]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Range(0f, 2.5f)]
         public float smoothingTime = 0.1f;
 
         [Tooltip("Maximum speed that smoothing can move at (see Unity Mathf.SmoothDamp maxSpeed parameter)")]
         [SerializeField]
-        [Range(0f, 1f)]
-#if HIDE_INSPECTOR
-        [HideInInspector]
+#if READONLY
+        [ReadOnly]
 #endif
+        [Range(0f, 1f)]
         public float smoothingMaxSpeed = 0.25f;
 
         protected float smoothingTargetNormalized;
         protected float smoothedCurrentNormalized;
 
-        protected bool IsCyclic = false;
+        [SerializeField]
+        [ReadOnly]
+        internal bool isCyclic = false;
 
         private const float Epsilon = 0.005f;
         private bool _valueInitialized = false;
@@ -162,7 +167,7 @@ namespace nikkyai.control
         {
             if (Utilities.IsValid(floatSmoothedValueDrivers))
             {
-                _smoothedValueFloatDrivers =
+                smoothedValueFloatDrivers =
                     floatSmoothedValueDrivers.gameObject.GetComponentsInChildren<FloatDriver>();
                 // Log($"found {_smoothedValueFloatDrivers.Length} drivers for value");
             }
@@ -173,7 +178,7 @@ namespace nikkyai.control
 
             if (Utilities.IsValid(floatTargetValueDrivers))
             {
-                _targetValueFloatDrivers = floatTargetValueDrivers.GetComponentsInChildren<FloatDriver>();
+                targetValueFloatDrivers = floatTargetValueDrivers.GetComponentsInChildren<FloatDriver>();
                 // Log($"found {_targetValueFloatDrivers.Length} drivers for target");
             }
             else
@@ -196,14 +201,14 @@ namespace nikkyai.control
         {
             //TODO: move into running in editor ?
 
-            if (_smoothedValueFloatDrivers != null)
+            if (smoothedValueFloatDrivers != null)
             {
-                Log($"found {_smoothedValueFloatDrivers.Length} drivers for value");
+                Log($"found {smoothedValueFloatDrivers.Length} drivers for value");
             }
 
-            if (_targetValueFloatDrivers != null)
+            if (targetValueFloatDrivers != null)
             {
-                Log($"found {_targetValueFloatDrivers.Length} drivers for target");
+                Log($"found {targetValueFloatDrivers.Length} drivers for target");
             }
 
             defaultValueNormalized = Mathf.Clamp01(defaultValueNormalized);
@@ -215,7 +220,7 @@ namespace nikkyai.control
         {
             base._Init();
 
-            FindDrivers();
+            // FindDrivers();
             SetupSmoothedControlValues();
 
             defaultValueNormalized = Mathf.Clamp01(defaultValueNormalized);
@@ -229,9 +234,9 @@ namespace nikkyai.control
             var clampedPosRotEuler = Mathf.Lerp(MinPosOrRot, MaxPosOrRot, normalizedTargetValue);
             UpdateTargetIndicator(clampedPosRotEuler);
             var floatValue = Mathf.Lerp(MinValue, MaxValue, normalizedTargetValue);
-            for (var i = 0; i < _targetValueFloatDrivers.Length; i++)
+            for (var i = 0; i < targetValueFloatDrivers.Length; i++)
             {
-                _targetValueFloatDrivers[i].UpdateFloatRescale(floatValue);
+                targetValueFloatDrivers[i].UpdateFloatRescale(floatValue);
             }
 
             // immediate update
@@ -241,9 +246,9 @@ namespace nikkyai.control
                 // {
                 //     _floatDrivers[i].UpdateFloat(floatValue);
                 // }
-                for (var i = 0; i < _smoothedValueFloatDrivers.Length; i++)
+                for (var i = 0; i < smoothedValueFloatDrivers.Length; i++)
                 {
-                    _smoothedValueFloatDrivers[i].UpdateFloatRescale(floatValue);
+                    smoothedValueFloatDrivers[i].UpdateFloatRescale(floatValue);
                 }
 
                 UpdateValueIndicator(clampedPosRotEuler);
@@ -284,7 +289,7 @@ namespace nikkyai.control
             var deltaTime = currentFrameTime - _lastFrameTime;
             _lastFrameTime = currentFrameTime;
 
-            if (IsCyclic)
+            if (isCyclic)
             {
                 // TODO: implement delta for 0-1 range to adjust target
                 // var delta = Mathf.Repeat(smoothingTargetNormalized - smoothedCurrentNormalized, 1f);
@@ -367,9 +372,9 @@ namespace nikkyai.control
             }
 
             var floatValue = Mathf.Lerp(MinValue, MaxValue, smoothedCurrentNormalized);
-            for (var i = 0; i < _smoothedValueFloatDrivers.Length; i++)
+            for (var i = 0; i < smoothedValueFloatDrivers.Length; i++)
             {
-                _smoothedValueFloatDrivers[i].UpdateFloatRescale(floatValue);
+                smoothedValueFloatDrivers[i].UpdateFloatRescale(floatValue);
             }
 
             UpdateValueIndicator(

@@ -8,7 +8,32 @@ namespace nikkyai.common
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public abstract class IntDriver: LoggingSimple
     {
-        public abstract void OnUpdateInt(int value);
+        
+        [SerializeField]
+        protected bool useRemap = false;
+        [SerializeField] //
+        private Vector2Int[] remapValues = { };
+        
+        private int RemapIndex(int index)
+        {
+            if (useRemap)
+            {
+                foreach (var remapValue in remapValues)
+                {
+                    if (remapValue.x == index)
+                    {
+                        return remapValue.y;
+                    }
+                }
+                return index;
+            }
+            else
+            {
+                return index;
+            }
+        }
+        
+        protected abstract void OnUpdateInt(int value);
         
         // defaults for Modern UI selector
         // ReSharper disable once InconsistentNaming
@@ -16,7 +41,12 @@ namespace nikkyai.common
         [UsedImplicitly]
         public void _SelectionChanged()
         {
-            OnUpdateInt(selectionId);
+            OnUpdateInt(RemapIndex(selectionId));
+        }
+
+        public void UpdateIntRemap(int value)
+        {
+            OnUpdateInt(RemapIndex(value));
         }
 
         protected int cachedValue = int.MinValue;
