@@ -189,7 +189,8 @@ MonoBehaviour:
   defaultIndex: 1
   clickOnActiveDisables: 0
   disabledIndex: 0
-  remapValues: 0100000002000000030000000400000005000000
+  useRemap: 0
+  remapValues: []
   intDrivers: {fileID: 1568311679965068286}
   interactCallbacks:
   - {fileID: 3076880041044184625}
@@ -237,6 +238,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2334f81953c448fd9e92c638afb5e4a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enabled: 1
 --- !u!1 &4359709742846247798
 GameObject:
   m_ObjectHideFlags: 0
@@ -336,7 +338,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 02
+  m_text: 01
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

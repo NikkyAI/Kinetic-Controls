@@ -46,11 +46,7 @@ namespace nikkyai.driver.control.kinetic
         }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        public override void ApplyFloatValue(float value)
-        {
-            base.ApplyFloatValue(value);
-            UpdateFloatRescale(value);
-        }
+        protected override bool UpdateInEditor => true;
 #endif
     }
 }

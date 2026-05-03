@@ -1,4 +1,5 @@
 ﻿using nikkyai.common;
+using UnityEditor;
 using UnityEngine;
 
 namespace nikkyai.driver.animator
@@ -16,11 +17,7 @@ namespace nikkyai.driver.animator
         }
         
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        public override void ApplyFloatValue(float value)
-        {
-            base.ApplyFloatValue(value);
-            UpdateFloatRescale(value);
-        }
+        protected override bool UpdateInEditor => true;
 #endif
     }
 }

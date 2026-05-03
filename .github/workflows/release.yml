@@ -93,3 +93,11 @@ jobs:
             ${{ env.unityPackage }}
             ${{ env.packagePath }}/package.json
           tag_name: ${{ env.version }}
+
+      - name: Trigger Workflow
+        run: gh workflow run $WORKFLOW --repo=$REPO --ref=$REF
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+          WORKFLOW: build-listing.yml
+          REPO: NikkyAi/vpm
+          REF: main

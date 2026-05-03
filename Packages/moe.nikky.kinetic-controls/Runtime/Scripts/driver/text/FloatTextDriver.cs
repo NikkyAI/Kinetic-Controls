@@ -43,23 +43,8 @@ namespace nikkyai.driver.text
             }
         }
         
+        protected float cachedValue = float.NaN;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        // protected override int ValidationHash => HashCode.Combine(base.GetHashCode(), valueDisplayFormat, cachedValue);
-        //
-        // public override void OnValidateApplyValues()
-        // {
-        //     if (Application.isPlaying) return;
-        //     base.OnValidateApplyValues();
-        //
-        //     if(float.IsNaN(cachedValue)) return;
-        //     
-        //     OnUpdateFloat(cachedValue);
-        //     if (textMeshPro)
-        //     {
-        //         textMeshPro.MarkDirty();
-        //     }
-        // }
-        
         
         protected override void OnValidate()
         {
@@ -81,34 +66,27 @@ namespace nikkyai.driver.text
                 UpdateFloatRescale(cachedValue);
             }
         }
-
         
-        // [ContextMenu("Update UI")]
-        // private void OnValidate()
-        // {
-        //     if (Application.isPlaying) return;
-        //     UnityEditor.EditorUtility.SetDirty(this);
-        //
-        //     if (valueDisplayFormat != prevFormat && !float.IsNaN(cachedValue))
-        //     {
-        //         UpdateFloat(cachedValue);
-        //         if (textMeshPro)
-        //         {
-        //             textMeshPro.MarkDirty();
-        //         }
-        //         prevFormat = valueDisplayFormat;
-        //     }
-        // }
-        //
-        public override void ApplyFloatValue(float value)
+        protected override bool UpdateInEditor => true;
+        protected override void PostEditorUpdate(float value)
         {
-            UpdateFloatRescale(value);
-            cachedValue = value;
             if (textMeshPro)
             {
                 textMeshPro.MarkDirty();
             }
         }
+
+        // protected override void EditorUpdateFloatValue(float value)
+        // {
+        //     // base.EditorUpdateFloatValue(value);
+        //     _EnsureInit();
+        //     cachedValue = value;
+        //     OnUpdateFloat(value);
+        //     if (textMeshPro)
+        //     {
+        //         textMeshPro.MarkDirty();
+        //     }
+        // }
 #endif
     }
 }

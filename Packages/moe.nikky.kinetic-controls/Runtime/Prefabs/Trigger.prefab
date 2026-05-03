@@ -111,6 +111,7 @@ MonoBehaviour:
   _udonSharpBackingUdonBehaviour: {fileID: 379776148486075503}
   debugLog: {fileID: 0}
   materialSource: {fileID: 6150766400804525124}
+  materialIndex: 0
   propertyName: _NeonColor
 --- !u!114 &379776148486075503
 MonoBehaviour:
@@ -352,6 +353,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2334f81953c448fd9e92c638afb5e4a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enabled: 1
 --- !u!1 &6176656632822096678
 GameObject:
   m_ObjectHideFlags: 0
@@ -462,10 +464,12 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 1541737667130932547}
   debugLog: {fileID: 0}
-  useRemapRange: 0
-  remapRange: {x: 0, y: 1}
+  enableValueRemapping: 0
+  remapFrom: {x: 0, y: 1}
+  remapTo: {x: 0, y: 1}
   sliderValue: 0
   materialSource: {fileID: 6150766400804525124}
+  materialIndex: 0
   propertyName: _FlickerStrengthMultiplier
 --- !u!114 &1541737667130932547
 MonoBehaviour:

@@ -20,6 +20,17 @@ namespace nikkyai.driver.material
 
         protected override string LogPrefix => nameof(FloatPropertyBlockDriver);
 
+        public string PropertyName
+        {
+            get => propertyName;
+            set
+            {
+                propertyName = value;
+                _propertyBlock = new MaterialPropertyBlock();
+                _propertyId = VRCShader.PropertyToID(propertyName);
+            }
+        }
+
         private void Start()
         {
             _EnsureInit();
@@ -54,12 +65,7 @@ namespace nikkyai.driver.material
         }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        public override void ApplyFloatValue(float value)
-        {
-            base.ApplyFloatValue(value);
-            Log($"applying new value: {value}");
-            UpdateFloatRescale(value);
-        }
+        protected override bool UpdateInEditor => true;
 #endif
     }
 }

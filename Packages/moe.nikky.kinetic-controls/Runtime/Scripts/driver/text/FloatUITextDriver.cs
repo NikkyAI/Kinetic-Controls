@@ -43,6 +43,7 @@ namespace nikkyai.driver.text
             }
         }
         
+        protected float cachedValue = float.NaN;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         protected override void OnValidate()
         {
@@ -64,16 +65,26 @@ namespace nikkyai.driver.text
                 UpdateFloatRescale(cachedValue);
             }
         }
-        
-        public override void ApplyFloatValue(float value)
+
+        protected override bool UpdateInEditor => true;
+        protected override void PostEditorUpdate(float value)
         {
-            UpdateFloatRescale(value);
-            cachedValue = value;
             if (textMeshPro)
             {
                 textMeshPro.MarkDirty();
             }
         }
+        // protected override void EditorUpdateFloatValue(float value)
+        // {
+        //     // base.EditorUpdateFloatValue(value);
+        //     _EnsureInit();
+        //     cachedValue = value;
+        //     OnUpdateFloat(value);
+        //     if (textMeshPro)
+        //     {
+        //         textMeshPro.MarkDirty();
+        //     }
+        // }
 #endif
     }
 }

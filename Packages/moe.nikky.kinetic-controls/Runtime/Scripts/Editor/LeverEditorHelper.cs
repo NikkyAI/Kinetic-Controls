@@ -363,14 +363,14 @@ namespace nikkyai.Editor
 
             foreach (var valueFloatDriver in l.smoothedValueFloatDrivers)
             {
-                valueFloatDriver.ApplyFloatValue(
+                valueFloatDriver.EditorUpdateFloatRescale(
                     Math.Clamp(defaultValueRemapped, minValue, maxValue)
                 );
             }
 
             foreach (var targetFloatDriver in l.targetValueFloatDrivers)
             {
-                targetFloatDriver.ApplyFloatValue(
+                targetFloatDriver.EditorUpdateFloatRescale(
                     Math.Clamp(defaultValueRemapped, minValue, maxValue)
                 );
             }

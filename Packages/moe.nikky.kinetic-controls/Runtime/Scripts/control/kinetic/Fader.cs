@@ -226,7 +226,11 @@ namespace nikkyai.control.kinetic
             }
             else
             {
-                LogError("handle is not set");
+// #if UNITY_EDITOR && !COMPILER_UDONSHARP
+//                 LogError($"handle is not set (hideInHierarchy: {hideFlags.HasFlag(HideFlags.HideInHierarchy)} {PrefabUtility.GetPrefabAssetType(this)} {PrefabUtility.GetPrefabInstanceStatus(this)})");
+// #else
+                LogError("handle is not set (you can ignore this warning for prefabs that aren't in the scene)");
+// #endif
             }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP

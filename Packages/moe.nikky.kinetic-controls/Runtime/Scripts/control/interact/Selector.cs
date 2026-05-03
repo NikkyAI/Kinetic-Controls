@@ -30,15 +30,23 @@ namespace nikkyai.control.interact
         [Tooltip("index to select when deactivated by clickign on current active, requires clickOnActiveDisables")]
         private int disabledIndex = 0;
 
+        [SerializeField]
+        protected bool useRemap = false;
         [SerializeField] //
-        [Tooltip("remaps index to value for indices that exist")]
-        private int[] remapValues = { };
-
+        private Vector2Int[] remapValues = { };
+        
         private int RemapIndex(int index)
         {
-            if (index >= 0 && index < remapValues.Length)
+            if (useRemap)
             {
-                return remapValues[index];
+                foreach (var remapValue in remapValues)
+                {
+                    if (remapValue.x == index)
+                    {
+                        return remapValue.y;
+                    }
+                }
+                return index;
             }
             else
             {
@@ -99,13 +107,12 @@ namespace nikkyai.control.interact
                 if (oldIndex != value)
                 {
                     _syncedIndex = value;
-                    Log($"index changed {oldIndex} => {_syncedIndex}");
                     var remappedValue = RemapIndex(_syncedIndex);
+                    Log($"index changed {oldIndex} => {_syncedIndex} (remapped: {remappedValue}");
                     // if (remapValues.Length - 1 >= _syncedIndex)
                     // {
                     //     remappedValue = remapValues[_syncedIndex];
                     // }
-
 
                     for (var i = 0; i < intDriversReadonly.Length; i++)
                     {
@@ -123,17 +130,6 @@ namespace nikkyai.control.interact
                             }
                         }
                     }
-                    // if (_syncedIndex >= 0 && _syncedIndex < _boolDrivers.Length)
-                    // {
-                    //     var newDrivers = _boolDrivers[_syncedIndex];
-                    //     if (newDrivers != null)
-                    //     {
-                    //         for (var i = 0; i < newDrivers.Length; i++)
-                    //         {
-                    //             newDrivers[i].OnUpdateBool(true);
-                    //         }
-                    //     }
-                    // }
 
                     if (oldIndex >= 0 && oldIndex < interactCallbacks.Length)
                     {
@@ -146,17 +142,6 @@ namespace nikkyai.control.interact
                             }
                         }
                     }
-                    // if (oldIndex >= 0 && oldIndex < _boolDrivers.Length)
-                    // {
-                    //     var oldDrivers = _boolDrivers[oldIndex];
-                    //     if (oldDrivers != null)
-                    //     {
-                    //         for (var i = 0; i < oldDrivers.Length; i++)
-                    //         {
-                    //             oldDrivers[i].OnUpdateBool(false);
-                    //         }
-                    //     }
-                    // }
                 }
                 // if (synced)
                 // {
@@ -175,11 +160,7 @@ namespace nikkyai.control.interact
             if (synced)
             {
                 Log("taking ownership and serializing");
-                if (!Networking.IsOwner(gameObject))
-                {
-                    Networking.SetOwner(Networking.LocalPlayer, gameObject);
-                }
-
+                TakeOwnership();
                 RequestSerialization();
             }
         }
@@ -297,7 +278,7 @@ namespace nikkyai.control.interact
         private int prevDefault = -1;
 
         /*[NonSerialized]*/
-        private int[] prevRemap = { };
+        private Vector2Int[] prevRemap = { };
 
         /*[NonSerialized]*/
         private AccessControl prevAccessControl;

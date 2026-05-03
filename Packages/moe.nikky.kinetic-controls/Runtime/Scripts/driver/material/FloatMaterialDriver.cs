@@ -76,12 +76,7 @@ namespace nikkyai.driver.material
         }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        public override void ApplyFloatValue(float value)
-        {
-            base.ApplyFloatValue(value);
-            Log($"applying new value: {value}");
-            UpdateFloatRescale(value);
-        }
+        protected override bool UpdateInEditor => true;
 #endif
     }
 }

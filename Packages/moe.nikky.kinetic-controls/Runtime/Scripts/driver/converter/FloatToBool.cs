@@ -68,11 +68,11 @@ namespace nikkyai.driver.converter
             _initialized = true;
         }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        public override void ApplyFloatValue(float value)
+        protected override bool UpdateInEditor => true;
+        protected override void EditorUpdateFloatValue(float value)
         {
-            base.ApplyFloatValue(value);
             _boolDrivers = boolDrivers.GetComponentsInChildren<BoolDriver>();
-            UpdateFloatRescale(value);
+            base.EditorUpdateFloatValue(value);
         }
 #endif
     }

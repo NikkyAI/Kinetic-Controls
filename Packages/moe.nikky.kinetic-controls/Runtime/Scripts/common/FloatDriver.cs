@@ -48,12 +48,31 @@ namespace nikkyai.common
             OnUpdateFloat(floatValue);
         }
         
-        protected float cachedValue = float.NaN;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        public virtual void ApplyFloatValue(float value)
+        protected virtual bool UpdateInEditor => false;
+        
+        protected virtual void EditorUpdateFloatValue(float value)
         {
+            if (!UpdateInEditor) return;
             _EnsureInit();
-            cachedValue = value;
+            OnUpdateFloat(value);
+            PostEditorUpdate(value);
+        }
+
+        protected virtual void PostEditorUpdate(float value)
+        {
+            
+        }
+
+        public void EditorUpdateFloatRescale(float inputValue)
+        {
+            if (!enabled) return;
+            if (enableValueRemapping)
+            {
+                inputValue = Mathf.InverseLerp(remapFrom.x, remapFrom.y, inputValue);
+                inputValue = Mathf.LerpUnclamped(remapTo.x, remapTo.y, inputValue);
+            }
+            EditorUpdateFloatValue(inputValue);
         }
 #endif
     }

@@ -226,10 +226,8 @@ namespace nikkyai.control.interact
             // _valueBoolDrivers = _valueBoolDrivers.AddRange(gameObject.GetComponents<BoolDriver>());
             if (Utilities.IsValid(boolStateDrivers))
             {
-                Log($"loading bool drivers");
-                valueBoolDrivers = valueBoolDrivers.AddRange(
-                    boolStateDrivers.GetComponentsInChildren<BoolDriver>()
-                );
+                Log("loading bool drivers");
+                valueBoolDrivers = valueBoolDrivers = boolStateDrivers.GetComponentsInChildren<BoolDriver>();
             }
             Log($"found {valueBoolDrivers.Length} bool drivers");
         }
